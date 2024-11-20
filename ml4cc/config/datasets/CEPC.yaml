@@ -1,0 +1,12 @@
+CEPC:
+  preprocessing:
+    branches: null
+    tree_path: sim
+    training_types:
+      - clusterization
+      - peakFinding
+    particle_types:
+      - kaon
+      - pion
+    raw_input_dir: /home/laurits/ML4CC/V2/samples/clusterization/test/kaon
+
