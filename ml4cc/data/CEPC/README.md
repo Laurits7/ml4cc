@@ -1,4 +1,5 @@
 # CEPC simulation files [![DOI](https://zenodo.org/badge/DOI/10.57760/sciencedb.16322.svg)](https://doi.org/10.57760/sciencedb.16322) [![arXiv](https://img.shields.io/badge/arXiv-2402.16493-b31b1b.svg)](https://doi.org/10.48550/arXiv.2402.16493)
+
 This is the dataset is introduced in the paper
 "[*Cluster Counting Algorithm for Drift Chamber using LSTM and DGCNN*](https://doi.org/10.48550/arXiv.2402.16493)"
 by Guang Zhao et al., and is made available at
@@ -8,13 +9,33 @@ by Guang Zhao et al., and is made available at
 
 In order to download the dataset run the following script with the option **-d**. If you want to additionally download
 also the software the authors of the dataset used in training, specify also the option **-s**:
+
 ```bash
 ./download_CEPC_files.sh -sd
 ```
 
+The meaning of the branches in the downloaded simulation files are the following:
+
+| branch        | meaning                                              |
+|---------------|------------------------------------------------------|
+| wf_i          | wave-form                                            |
+| sampling_rate | sampling rate                                        |
+| ncls          | number of primary clusters                           |
+| mom           | momentum                                             |
+| cluster_size  | cluster size                                         |
+| amp           | Amplification or amplitude??                         |
+| time          | time of **WHAT?**                                    |
+| height        | height of **WHAT?**                                  |
+| tag           | tag of **WHAT?**                                     |
+| xe            | x-coordinate where the electron cluster is generated |
+| ye            | y-coordinate where the electron cluster is generated |
+| ze            | z-coordinate where the electron cluster is generated |
+| amp_pri       | Pre-amplification of **WHAT?**                       |
+
 ## Dataset structure
 
 After downloading the CEPC dataset, the structure of the dataset will be as follows:
+
 ```text
 data/
 ├─ peakFinding/
