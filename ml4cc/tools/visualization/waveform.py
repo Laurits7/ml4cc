@@ -9,7 +9,7 @@ def plot_waveform(
         waveform: np.array = None,
         height: np.array = None,
         time: np.array = None,
-        figsize: tuple = (10, 10),
+        figsize: tuple = (16, 9),
         x_label: str = "Time",
         y_label: str = "Amplitude"
 ):
@@ -23,5 +23,5 @@ def plot_waveform(
         raise ValueError("Please provide either the waveform or height and time.")
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
-    ax.legend()
+    ax.legend(loc="upper right")
     return fig, ax

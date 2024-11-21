@@ -26,7 +26,7 @@ The meaning of the branches in the downloaded simulation files are the following
 | amp           | Amplification or amplitude??                                                                                                                     |
 | time          | time t for a given waveform height h                                                                                                             |
 | height        | height h of the waveform at time t                                                                                                               |
-| tag           | tag of **WHAT?**                                                                                                                                 |
+| tag           | Possible values [0, 1, 2]. 0: background, 1: primary peak, 2: secondary peak.                                                                    |
 | mother        | ??                                                                                                                                               | 
 | naval         | ??                                                                                                                                               |
 | xe            | x-coordinate where the electron cluster is generated                                                                                             |
