@@ -16,21 +16,27 @@ also the software the authors of the dataset used in training, specify also the 
 
 The meaning of the branches in the downloaded simulation files are the following:
 
-| branch        | meaning                                              |
-|---------------|------------------------------------------------------|
-| wf_i          | wave-form                                            |
-| sampling_rate | sampling rate                                        |
-| ncls          | number of primary clusters                           |
-| mom           | momentum                                             |
-| cluster_size  | cluster size                                         |
-| amp           | Amplification or amplitude??                         |
-| time          | time of **WHAT?**                                    |
-| height        | height of **WHAT?**                                  |
-| tag           | tag of **WHAT?**                                     |
-| xe            | x-coordinate where the electron cluster is generated |
-| ye            | y-coordinate where the electron cluster is generated |
-| ze            | z-coordinate where the electron cluster is generated |
-| amp_pri       | Pre-amplification of **WHAT?**                       |
+| branch        | meaning                                                                                                                                          |
+|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| wf_i          | wave-form. Has in principle the same info as the 'time' and 'height' branches. In order to get the time value, use just np.arange(len(waveform)) |
+| sampling_rate | sampling rate                                                                                                                                    |
+| ncls          | number of primary clusters                                                                                                                       |
+| mom           | momentum                                                                                                                                         |
+| cluster_size  | cluster size                                                                                                                                     |
+| amp           | Amplification or amplitude??                                                                                                                     |
+| time          | time t for a given waveform height h                                                                                                             |
+| height        | height h of the waveform at time t                                                                                                               |
+| tag           | tag of **WHAT?**                                                                                                                                 |
+| mother        | ??                                                                                                                                               | 
+| naval         | ??                                                                                                                                               |
+| xe            | x-coordinate where the electron cluster is generated                                                                                             |
+| ye            | y-coordinate where the electron cluster is generated                                                                                             |
+| ze            | z-coordinate where the electron cluster is generated                                                                                             |
+| amp_pri       | Pre-amplification (?) of **WHAT?**                                                                                                               |
+
+## Misc
+
+If height > 3sigma then it is defined as a peak (??)
 
 ## Dataset structure
 
