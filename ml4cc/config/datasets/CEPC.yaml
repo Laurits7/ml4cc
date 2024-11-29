@@ -1,12 +1,6 @@
 CEPC:
   preprocessing:
     branches: null
-    branches_to_create:
-      - EventNo
-      - ID
-      - Shift
-      - Sigma
-      - Time
     tree_path: sim
     training_types:
       - clusterization
@@ -14,5 +8,10 @@ CEPC:
     particle_types:
       - kaon
       - pion
-    raw_input_dir: /home/laurits/ml4cc/ml4cc/data/CEPC/data/
+    raw_input_dir: /scratch/persistent/laurits/ml4cc/data/
+    slurm:
+      use_it: True
+      slurm_run: False
+      files_per_job: 5
+      input_path: null
 

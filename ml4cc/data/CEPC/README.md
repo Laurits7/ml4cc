@@ -23,11 +23,11 @@ The meaning of the branches in the downloaded simulation files are the following
 | ncls          | number of primary clusters                                                                                                                       |
 | mom           | momentum                                                                                                                                         |
 | cluster_size  | cluster size                                                                                                                                     |
-| amp           | Amplification or amplitude??                                                                                                                     |
+| amp           | Signal amplitude **(?)**                                                                                                                         |
 | time          | time t for a given waveform height h                                                                                                             |
 | height        | height h of the waveform at time t                                                                                                               |
 | tag           | Possible values [0, 1, 2]. 0: background, 1: primary peak, 2: secondary peak.                                                                    |
-| mother        | ??                                                                                                                                               | 
+| mother        | The originating particle responsible for secondary ionization (?)                                                                                | 
 | naval         | ??                                                                                                                                               |
 | xe            | x-coordinate where the electron cluster is generated                                                                                             |
 | ye            | y-coordinate where the electron cluster is generated                                                                                             |

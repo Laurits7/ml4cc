@@ -1,5 +1,5 @@
-from tqdm import tqdm
 import numpy as np
+from tqdm import tqdm
 from omegaconf import DictConfig
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, IterableDataset
@@ -38,11 +38,6 @@ class CEPCDataset(Dataset):
     def __len__(self):  # TODO
         dataset = 'foobar'
         return len(dataset)
-
-
-class CEPCDataLoader(DataLoader):
-    def __init__(self):
-        super().__init__()
 
 
 class CEPCDataModule(LightningDataModule):

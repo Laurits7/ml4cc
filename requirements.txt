@@ -1,7 +1,8 @@
-pytorch
+torch
 pytorch-lightning
-awkwardautopep8
-boost_histogram
+awkward
+autopep8
+boost-histogram
 docopt
 hydra-core
 jupyter
@@ -21,4 +22,5 @@ tensorboard
 tqdm
 uproot
 vector
-zenodo_get
+wheel
+zenodo-get

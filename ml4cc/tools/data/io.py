@@ -2,7 +2,7 @@ import uproot
 import awkward as ak
 
 
-def load_root_file(path: str, tree_path: str = "sim", branches: list = None):
+def load_root_file(path: str, tree_path: str = "sim", branches: list = None) -> ak.Array:
     """ Loads the CEPC dataset .root file.
 
     Parameters:
@@ -23,6 +23,6 @@ def load_root_file(path: str, tree_path: str = "sim", branches: list = None):
     return arrays
 
 
-def save_record_to_file(data: ak.Record, output_path: str) -> None:
+def save_record_to_file(data: ak.Array, output_path: str) -> None:
     print(f"Saving {len(data)} processed entries to {output_path}")
-    ak.to_parquet(data, output_path)
+    ak.to_parquet(data, output_path, row_group_size=1024)
