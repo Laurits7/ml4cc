@@ -1,0 +1,9 @@
+training:
+  batch_size: 1024
+  num_dataloader_workers: 2
+  prefetch_factor: 100
+
+defaults:
+  - _self_
+  - datasets: datasets
+  - models: models

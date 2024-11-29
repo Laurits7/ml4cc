@@ -1,0 +1,12 @@
+DGCNN:
+  hyperparameters:
+    n_conv: 32
+    n_conv2: 32
+    n_conv3: 64
+    n_mlp1: 264
+    n_mlp2: 264
+    n_mlp3: 264
+    aggr: max
+    step: 10
+    gamma: 0.5
+    k: 4
