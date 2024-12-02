@@ -1,2 +1,3 @@
 defaults:
-  - LSTM: LSTM
+  - LSTM
+  - _self_

@@ -73,7 +73,7 @@ def prepare_job_file(
                 #SBATCH --ntasks=1
                 #SBATCH --partition=short
                 #SBATCH --time=02:00:00
-                #SBATCH --cpus-per-task=1
+                #SBATCH --cpus-per-task=10
                 #SBATCH -e {error_file}
                 #SBATCH -o {log_file}
                 env

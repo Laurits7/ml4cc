@@ -1,2 +1,3 @@
 defaults:
-  DGCNN: DGCNN
+  - DGCNN
+  - _self_

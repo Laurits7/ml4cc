@@ -1,3 +1,4 @@
 defaults:
   - cluster_counting: cluster_counting
   - peak_finding: peak_finding
+  - _self_

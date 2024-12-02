@@ -1,17 +1,18 @@
 CEPC:
-  preprocessing:
-    branches: null
-    tree_path: sim
-    training_types:
-      - clusterization
-      - peakFinding
-    particle_types:
-      - kaon
-      - pion
-    raw_input_dir: /scratch/persistent/laurits/ml4cc/data/
-    slurm:
-      use_it: True
-      slurm_run: False
-      files_per_job: 5
-      input_path: null
-
+    preprocessing:
+        branches: null
+        tree_path: sim
+        training_types:
+            - clusterization
+            - peakFinding
+        particle_types:
+            - kaon
+            - pion
+        raw_input_dir: /scratch/persistent/laurits/ml4cc/data/
+        slurm:
+            use_it: True
+            slurm_run: False
+            files_per_job: 1
+            input_path: null
+    data_dir: /scratch/persistent/laurits/ml4cc/data
+    row_group_size: 1024

@@ -1,12 +1,12 @@
-torch
-pytorch-lightning
 awkward
 autopep8
+black
 boost-histogram
 docopt
 hydra-core
 jupyter
 jupyter-book
+lightning
 matplotlib
 mplhep
 notebook
@@ -19,6 +19,7 @@ scipy
 seaborn
 setGPU
 tensorboard
+torch
 tqdm
 uproot
 vector

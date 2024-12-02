@@ -1,9 +1,14 @@
 training:
-  batch_size: 1024
-  num_dataloader_workers: 2
-  prefetch_factor: 100
+    batch_size: 1024
+    num_dataloader_workers: 2
+    prefetch_factor: 100
+    trainer:
+        max_epochs: 10
+    data:
+        fraction_valid: 0.2
+
 
 defaults:
-  - _self_
-  - datasets: datasets
-  - models: models
+    - _self_
+    - datasets: datasets
+    - models: models
