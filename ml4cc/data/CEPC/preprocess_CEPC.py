@@ -42,7 +42,7 @@ def save_processed_data(arrays: ak.Array, path: str) -> None:
     Returns:
         None
     """
-    output_path = path.replace("CEPC/data/", "CEPC/preprocessed_data/")
+    output_path = path.replace("data/", "preprocessed_data/")
     output_path = output_path.replace(".root", ".parquet")
     output_dir = os.path.dirname(output_path)
     os.makedirs(output_dir, exist_ok=True)
@@ -108,6 +108,7 @@ def prepare_inputs(cfg: DictConfig) -> None:
     if cfg.slurm.use_it:
         prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg.slurm)
     else:
+        print(all_paths_to_process)
         for path in all_paths_to_process:
             process_root_file(path, cfg)
 

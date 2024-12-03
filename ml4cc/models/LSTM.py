@@ -5,11 +5,11 @@ import torch.nn.functional as F
 
 
 class LSTM(torch.nn.Module):
-    def __init__(self, lstm_hidden_dim: int = 32):
+    def __init__(self, input_dim: int = 3000, lstm_hidden_dim: int = 32):
         super().__init__()
-        self.lstm = torch.nn.LSTM(input_size=1, num_layers=1, hidden_size=lstm_hidden_dim, batch_first=True)
+        self.lstm = torch.nn.LSTM(input_size=input_dim, num_layers=1, hidden_size=lstm_hidden_dim, batch_first=True)
         self.fc3 = torch.nn.Linear(lstm_hidden_dim, 32)
-        self.fc4 = torch.nn.Linear(32, 1)
+        self.fc4 = torch.nn.Linear(32, input_dim)
 
     def forward(self, x):
         ula, _ = self.lstm(x)

@@ -9,7 +9,7 @@ from ml4cc.data.CEPC import dataloader as dl
 @hydra.main(config_path="../config", config_name="training.yaml", version_base=None)
 def train(cfg: DictConfig):
     lstm = LSTM.LSTMModule()
-    bar = pb.LitProgressBar()
+    bar = pb.ProgressBar()
     trainer = L.Trainer(max_epochs=cfg.training.trainer.max_epochs, callbacks=[bar])
     datamodule = dl.CEPCDataModule(cfg=cfg, training_task="peakFinding", samples="all")
     trainer.fit(model=lstm, datamodule=datamodule)

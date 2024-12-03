@@ -27,18 +27,12 @@ class CEPCDataset(Dataset):
         all_row_groups = []
         data_wcp = glob.glob(os.path.join(self.data_dir, "*"))
         for data_path in data_wcp:
-            print(data_path)
-            try:
-                metadata = ak.metadata_from_parquet(data_path)
-                num_row_groups = metadata["num_row_groups"]
-                col_counts = metadata["col_counts"]
-                all_row_groups.extend(
-                    [RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
-                )
-                print("SUCCESS:", data_path)
-            except:
-                print("Bad path", data_path)
-                continue
+            metadata = ak.metadata_from_parquet(data_path)
+            num_row_groups = metadata["num_row_groups"]
+            col_counts = metadata["col_counts"]
+            all_row_groups.extend(
+                [RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
+            )
         return all_row_groups
 
     def __getitem__(self, index):
@@ -57,9 +51,12 @@ class IterableCEPCDataset(IterableDataset):
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")
 
     def build_tensors(self, data: ak.Array):
-        waveform = torch.tensor(data.waveform)
-        target = torch.tensor(data.target)
+        waveform = torch.tensor(data.waveform, dtype=torch.float32)
+        target = torch.tensor(data.target, dtype=torch.float32)
         return waveform, target
+
+    def __len__(self):
+        return self.num_rows
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
