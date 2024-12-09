@@ -20,6 +20,7 @@ seaborn
 setGPU
 tensorboard
 torch
+torch-geometric
 tqdm
 uproot
 vector

@@ -26,7 +26,7 @@ class CEPCDataset(Dataset):
     def load_row_groups(self) -> Sequence[RowGroup]:
         all_row_groups = []
         data_wcp = glob.glob(os.path.join(self.data_dir, "*"))
-        for data_path in data_wcp:
+        for data_path in data_wcp[:5]:
             metadata = ak.metadata_from_parquet(data_path)
             num_row_groups = metadata["num_row_groups"]
             col_counts = metadata["col_counts"]
@@ -43,20 +43,34 @@ class CEPCDataset(Dataset):
 
 
 class IterableCEPCDataset(IterableDataset):
-    def __init__(self, dataset: Dataset, dataset_type: str):
+    def __init__(self, dataset: Dataset, cfg: DictConfig, dataset_type: str):
         self.dataset = dataset
+        self.cfg = cfg
         self.dataset_type = dataset_type
         self.row_groups = [d for d in self.dataset]
         self.num_rows = sum([rg.num_rows for rg in self.row_groups])
+        self.window_size = self.cfg.datasets.CEPC.slidig_window.size
+        self.stride = self.cfg.datasets.CEPC.slidig_window.stride
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")
+        print(f"Each waveform will be split into sliding windows of size {self.window_size}")
 
     def build_tensors(self, data: ak.Array):
-        waveform = torch.tensor(data.waveform, dtype=torch.float32)
-        target = torch.tensor(data.target, dtype=torch.float32)
-        return waveform, target
+        waveform = ak.Array(data.waveform)
+        target = ak.Array(data.target)
+        waveforms = []
+        targets = []
+        waveform_indices = []
+        for wf_idx, (wf, t) in enumerate(zip(waveform, target)):
+            for start_idx in range(0, len(waveform) - self.window_size + 1, self.stride):
+                waveforms.extend(wf[start_idx: start_idx + self.window_size])
+                if 1 in t[start_idx: start_idx + self.window_size]:
+                    targets.append(1)
+                waveform_indices.append(wf_idx)
+        waveforms = torch.tensor(waveforms, dtype=torch.float32)
+        targets = torch.tensor(targets, dtype=torch.float32)
+        waveform_indices = torch.tensor(waveform_indices, dtype=torch.float32)
+        return waveforms.unsqueeze(-1), targets, waveform_indices
 
-    def __len__(self):
-        return self.num_rows
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
@@ -124,9 +138,11 @@ class CEPCDataModule(LightningDataModule):
             )
             self.train_dataset = IterableCEPCDataset(
                 dataset=train_subset,
+                cfg=self.cfg,
                 dataset_type="train",
             )
             self.val_dataset = IterableCEPCDataset(
+                cfg=self.cfg,
                 dataset=val_subset,
                 dataset_type="validation",
             )
@@ -152,6 +168,7 @@ class CEPCDataModule(LightningDataModule):
             test_concat_dataset = ConcatDataset(test_datasets)
             self.test_dataset = IterableCEPCDataset(
                 dataset=test_concat_dataset,
+                cfg=self.cfg,
                 dataset_type="test",
             )
             self.test_loader = DataLoader(self.test_dataset, batch_size=self.cfg.training.batch_size)

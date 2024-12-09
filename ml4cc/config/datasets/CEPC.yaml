@@ -14,5 +14,8 @@ CEPC:
             slurm_run: False
             files_per_job: 1
             input_path: null
-    data_dir: /scratch/persistent/laurits/ml4cc/preprocessed_data/
+    data_dir: /scratch/persistent/laurits/ml4cc_/preprocessed_data/
     row_group_size: 1024
+    slidig_window:
+        size: 15
+        stride: 15

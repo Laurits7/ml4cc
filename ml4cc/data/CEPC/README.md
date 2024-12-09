@@ -1,7 +1,7 @@
-# CEPC simulation files [![DOI](https://zenodo.org/badge/DOI/10.57760/sciencedb.16322.svg)](https://doi.org/10.57760/sciencedb.16322) [![arXiv](https://img.shields.io/badge/arXiv-2402.16493-b31b1b.svg)](https://doi.org/10.48550/arXiv.2402.16493)
+# CEPC simulation files [![DOI:10.57760/sciencedb.16322](http://img.shields.io/badge/DOI-10.57760/sciencedb.16322-f9f107.svg)](https://doi.org/10.57760/sciencedb.16322) [![arXiv](https://img.shields.io/badge/arXiv-2402.16493-b31b1b.svg)](https://doi.org/10.48550/arXiv.2402.16493)
 
 This is the dataset is introduced in the paper
-"[*Cluster Counting Algorithm for Drift Chamber using LSTM and DGCNN*](https://doi.org/10.48550/arXiv.2402.16493)"
+"[_Cluster Counting Algorithm for Drift Chamber using LSTM and DGCNN_](https://doi.org/10.48550/arXiv.2402.16493)"
 by Guang Zhao et al., and is made available at
 [https://doi.org/10.57760/sciencedb.16322](https://doi.org/10.57760/sciencedb.16322).
 
@@ -17,7 +17,7 @@ also the software the authors of the dataset used in training, specify also the 
 The meaning of the branches in the downloaded simulation files are the following:
 
 | branch        | meaning                                                                                                                                          |
-|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | wf_i          | wave-form. Has in principle the same info as the 'time' and 'height' branches. In order to get the time value, use just np.arange(len(waveform)) |
 | sampling_rate | sampling rate                                                                                                                                    |
 | ncls          | number of primary clusters                                                                                                                       |
@@ -27,7 +27,7 @@ The meaning of the branches in the downloaded simulation files are the following
 | time          | time t for a given waveform height h                                                                                                             |
 | height        | height h of the waveform at time t                                                                                                               |
 | tag           | Possible values [0, 1, 2]. 0: background, 1: primary peak, 2: secondary peak.                                                                    |
-| mother        | The originating particle responsible for secondary ionization (?)                                                                                | 
+| mother        | The originating particle responsible for secondary ionization (?)                                                                                |
 | naval         | ??                                                                                                                                               |
 | xe            | x-coordinate where the electron cluster is generated                                                                                             |
 | ye            | y-coordinate where the electron cluster is generated                                                                                             |

@@ -3,7 +3,6 @@ import glob
 import json
 import time
 import hydra
-import ml4cc
 import numpy as np
 import awkward as ak
 from ml4cc.tools.data import io
@@ -108,7 +107,6 @@ def prepare_inputs(cfg: DictConfig) -> None:
     if cfg.slurm.use_it:
         prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg.slurm)
     else:
-        print(all_paths_to_process)
         for path in all_paths_to_process:
             process_root_file(path, cfg)
 

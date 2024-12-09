@@ -4,12 +4,12 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 
-class LSTM(torch.nn.Module):
+class LSTM(torch.nn.Module):  # TODO: Is this implemented like in their paper? In their paper they have multiple LSTMs.
     def __init__(self, input_dim: int = 3000, lstm_hidden_dim: int = 32):
         super().__init__()
-        self.lstm = torch.nn.LSTM(input_size=input_dim, num_layers=1, hidden_size=lstm_hidden_dim, batch_first=True)
+        self.lstm = torch.nn.LSTM(input_size=1, num_layers=1, hidden_size=lstm_hidden_dim, batch_first=True)
         self.fc3 = torch.nn.Linear(lstm_hidden_dim, 32)
-        self.fc4 = torch.nn.Linear(32, input_dim)
+        self.fc4 = torch.nn.Linear(32, 1)
 
     def forward(self, x):
         ula, _ = self.lstm(x)
@@ -26,18 +26,29 @@ class LSTMModule(L.LightningModule):
     def training_step(self, batch, batch_idx):
         waveform, target = batch
         predicted_labels = self.lstm(waveform)
-        loss = F.mse_loss(predicted_labels, target)
+        loss = F.mse_loss(predicted_labels.squeeze(), target)
+        self.log("train_loss", loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         waveform, target = batch
         predicted_labels = self.lstm(waveform)
-        loss = F.mse_loss(predicted_labels, target)
-        self.log("val_loss", loss)
+        loss = F.mse_loss(predicted_labels.squeeze(), target)
+        self.log("val_loss", loss, on_epoch=True)
         return loss
 
     def configure_optimizers(self):
         return optim.Adam(self.parameters(), lr=0.001)
+
+    def predict_step(self, batch, batch_idx):
+        waveform, target = batch
+        predicted_labels = self.lstm(waveform)
+        return predicted_labels
+
+    def test_step(self, batch, batch_idx):
+        waveform, target = batch
+        predicted_labels = self.lstm(waveform)
+        return predicted_labels
 
     # def validation_epoch_end(self, val_step_outputs):
     #     for pred in val_step_outputs:
