@@ -26,7 +26,7 @@ class CEPCDataset(Dataset):
     def load_row_groups(self) -> Sequence[RowGroup]:
         all_row_groups = []
         data_wcp = glob.glob(os.path.join(self.data_dir, "*"))
-        for data_path in data_wcp[:5]:
+        for data_path in data_wcp:
             metadata = ak.metadata_from_parquet(data_path)
             num_row_groups = metadata["num_row_groups"]
             col_counts = metadata["col_counts"]
@@ -62,9 +62,11 @@ class IterableCEPCDataset(IterableDataset):
         waveform_indices = []
         for wf_idx, (wf, t) in enumerate(zip(waveform, target)):
             for start_idx in range(0, len(waveform) - self.window_size + 1, self.stride):
-                waveforms.extend(wf[start_idx: start_idx + self.window_size])
+                waveforms.append(wf[start_idx: start_idx + self.window_size])
                 if 1 in t[start_idx: start_idx + self.window_size]:
                     targets.append(1)
+                else:
+                    targets.append(0)
                 waveform_indices.append(wf_idx)
         waveforms = torch.tensor(waveforms, dtype=torch.float32)
         targets = torch.tensor(targets, dtype=torch.float32)
@@ -107,13 +109,14 @@ class CEPCDataModule(LightningDataModule):
         """
         self.cfg = cfg
         self.training_task = training_task
-        self.samples = samples
+        self.samples = ["f"] if samples == "all" else samples  # TODO: Do something with this also
         self.test_loader = None
         self.train_loader = None
         self.val_loader = None
         self.test_dataset = None
         self.train_dataset = None
         self.val_dataset = None
+        self.save_hyperparameters()
         super().__init__()
 
     def get_dataset_path(self, sample: str, dataset_type: str) -> str:
@@ -160,12 +163,9 @@ class CEPCDataModule(LightningDataModule):
             )
 
         elif stage == "test":
-            test_datasets = []
-            for sample in self.samples:
-                data_dir = self.get_dataset_path(sample=sample, dataset_type="test")
-                test_dataset = CEPCDataset(data_dir=data_dir)
-                test_datasets.append(test_dataset)
-            test_concat_dataset = ConcatDataset(test_datasets)
+            data_dir = self.get_dataset_path(sample="A", dataset_type="test")
+            test_dataset = CEPCDataset(data_dir=data_dir)
+            test_concat_dataset = ConcatDataset([test_dataset])
             self.test_dataset = IterableCEPCDataset(
                 dataset=test_concat_dataset,
                 cfg=self.cfg,

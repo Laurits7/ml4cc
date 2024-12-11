@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 
+
 class LSTM(torch.nn.Module):  # TODO: Is this implemented like in their paper? In their paper they have multiple LSTMs.
     def __init__(self, input_dim: int = 3000, lstm_hidden_dim: int = 32):
         super().__init__()
@@ -12,9 +13,10 @@ class LSTM(torch.nn.Module):  # TODO: Is this implemented like in their paper? I
         self.fc4 = torch.nn.Linear(32, 1)
 
     def forward(self, x):
-        ula, _ = self.lstm(x)
-        out = F.relu(self.fc3(ula))
-        clf = F.sigmoid(self.fc4(out))
+        ula, (h, _) = self.lstm(x)
+        out = h[-1]
+        out = F.relu(self.fc3(out))  # If we would like to have a prediction for each point in wf, then we would use ula instead of out here
+        clf = F.sigmoid(self.fc4(out)).squeeze()
         return clf
 
 
@@ -26,15 +28,15 @@ class LSTMModule(L.LightningModule):
     def training_step(self, batch, batch_idx):
         waveform, target = batch
         predicted_labels = self.lstm(waveform)
-        loss = F.mse_loss(predicted_labels.squeeze(), target)
-        self.log("train_loss", loss, on_epoch=True)
+        loss = F.mse_loss(predicted_labels, target)
+        self.log("train_loss", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
         waveform, target = batch
         predicted_labels = self.lstm(waveform)
-        loss = F.mse_loss(predicted_labels.squeeze(), target)
-        self.log("val_loss", loss, on_epoch=True)
+        loss = F.mse_loss(predicted_labels, target)
+        self.log("val_loss", loss)
         return loss
 
     def configure_optimizers(self):
@@ -42,12 +44,13 @@ class LSTMModule(L.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         waveform, target = batch
-        predicted_labels = self.lstm(waveform)
+        predicted_labels = self.lstm(waveform).squeeze()
         return predicted_labels
 
     def test_step(self, batch, batch_idx):
         waveform, target = batch
-        predicted_labels = self.lstm(waveform)
+        predicted_labels = self.lstm(waveform).squeeze()
+        print("TESTING TESTING")
         return predicted_labels
 
     # def validation_epoch_end(self, val_step_outputs):

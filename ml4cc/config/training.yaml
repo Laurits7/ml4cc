@@ -1,10 +1,10 @@
 training:
-    output_dir: /home/laurits/tmp/training1
+    output_dir: /home/laurits/ml4cc/training-outputs/20241211_BigRun_peakFinding
     batch_size: 8192
     num_dataloader_workers: 2
     prefetch_factor: 100
     trainer:
-        max_epochs: 5
+        max_epochs: 50 # 50 epochs in Guang paper
     data:
         fraction_valid: 0.2
 
