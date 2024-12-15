@@ -40,7 +40,8 @@ class LSTMModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.Adam(self.parameters(), lr=0.001)
+        return optim.SGD(self.parameters())
+        # return optim.Adam(self.parameters(), lr=0.001)
 
     def predict_step(self, batch, batch_idx):
         waveform, target = batch
@@ -50,7 +51,11 @@ class LSTMModule(L.LightningModule):
     def test_step(self, batch, batch_idx):
         waveform, target = batch
         predicted_labels = self.lstm(waveform).squeeze()
-        print("TESTING TESTING")
+        return predicted_labels
+
+    def forward(self, batch):
+        waveform, target = batch
+        predicted_labels = self.lstm(waveform).squeeze()
         return predicted_labels
 
     # def validation_epoch_end(self, val_step_outputs):

@@ -5,8 +5,8 @@ import lightning as L
 from ml4cc.models import LSTM
 from omegaconf import DictConfig
 from ml4cc.data.CEPC import dataloader as dl
-from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger
+from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 
 
 @hydra.main(config_path="../config", config_name="training.yaml", version_base=None)

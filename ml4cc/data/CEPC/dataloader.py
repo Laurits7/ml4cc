@@ -73,6 +73,8 @@ class IterableCEPCDataset(IterableDataset):
         waveform_indices = torch.tensor(waveform_indices, dtype=torch.float32)
         return waveforms.unsqueeze(-1), targets, waveform_indices
 
+    def __len__(self):
+        return self.num_rows
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
