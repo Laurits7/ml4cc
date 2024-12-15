@@ -3,7 +3,6 @@ import glob
 import json
 import time
 import hydra
-import ml4cc
 import numpy as np
 import awkward as ak
 from ml4cc.tools.data import io
@@ -42,7 +41,7 @@ def save_processed_data(arrays: ak.Array, path: str) -> None:
     Returns:
         None
     """
-    output_path = path.replace("CEPC/data/", "CEPC/preprocessed_data/")
+    output_path = path.replace("data/", "preprocessed_data/")
     output_path = output_path.replace(".root", ".parquet")
     output_dir = os.path.dirname(output_path)
     os.makedirs(output_dir, exist_ok=True)
