@@ -2,20 +2,12 @@ import os
 import glob
 import math
 import torch
-import random
-import numpy as np
 import awkward as ak
+from ml4cc.tools.data import io
 from omegaconf import DictConfig
 from collections.abc import Sequence
 from lightning import LightningDataModule
-from torch.utils.data import Dataset, DataLoader, IterableDataset, ConcatDataset, Subset
-
-
-class RowGroup:
-    def __init__(self, filename, row_group, num_rows):
-        self.filename = filename
-        self.row_group = row_group
-        self.num_rows = num_rows
+from torch.utils.data import Dataset, DataLoader, IterableDataset, ConcatDataset
 
 
 class CEPCDataset(Dataset):
@@ -23,7 +15,7 @@ class CEPCDataset(Dataset):
         self.data_dir = data_dir
         self.row_groups = self.load_row_groups()
 
-    def load_row_groups(self) -> Sequence[RowGroup]:
+    def load_row_groups(self) -> Sequence[io.RowGroup]:
         all_row_groups = []
         data_wcp = glob.glob(os.path.join(self.data_dir, "*"))
         for data_path in data_wcp:
@@ -31,7 +23,7 @@ class CEPCDataset(Dataset):
             num_row_groups = metadata["num_row_groups"]
             col_counts = metadata["col_counts"]
             all_row_groups.extend(
-                [RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
+                [io.RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
             )
         return all_row_groups
 
@@ -61,7 +53,7 @@ class IterableCEPCDataset(IterableDataset):
         targets = []
         waveform_indices = []
         for wf_idx, (wf, t) in enumerate(zip(waveform, target)):
-            for start_idx in range(0, len(waveform) - self.window_size + 1, self.stride):
+            for start_idx in range(0, len(wf) - self.window_size + 1, self.stride):
                 waveforms.append(wf[start_idx: start_idx + self.window_size])
                 if 1 in t[start_idx: start_idx + self.window_size]:
                     targets.append(1)
@@ -94,7 +86,7 @@ class IterableCEPCDataset(IterableDataset):
 
             # return individual jets from the dataset
             for idx_wf in range(len(data)):
-                yield tensors[0][idx_wf], tensors[1][idx_wf]
+                yield tensors[0][idx_wf], tensors[1][idx_wf], tensors[2][idx_wf]
 
 
 class CEPCDataModule(LightningDataModule):
@@ -135,7 +127,7 @@ class CEPCDataModule(LightningDataModule):
                 full_train_dataset = CEPCDataset(data_dir=data_dir)
                 train_datasets.append(full_train_dataset)
             train_concat_dataset = ConcatDataset(train_datasets)
-            train_subset, val_subset = train_val_split_shuffle(
+            train_subset, val_subset = io.train_val_split_shuffle(
                 concat_dataset=train_concat_dataset,
                 val_split=self.cfg.training.data.fraction_valid,
                 max_waveforms_for_training=-1,
@@ -189,28 +181,75 @@ class CEPCDataModule(LightningDataModule):
     #     print(f"Exception occurred: {exception}")
 
 
-def train_val_split_shuffle(
-    concat_dataset: ConcatDataset,
-    val_split: float = 0.2,
-    seed: int = 42,
-    max_waveforms_for_training: int = -1,
-    row_group_size: int = 1024,
-):
-    total_len = len(concat_dataset)
-    indices = list(range(total_len))
-    random.seed(seed)
-    random.shuffle(indices)
 
-    split = int(total_len * val_split)
-    if max_waveforms_for_training == -1:
-        train_end_idx = None
-    else:
-        num_train_rows = int(np.ceil(max_waveforms_for_training / row_group_size))
-        train_end_idx = split + num_train_rows
-    val_indices = indices[:split]
-    train_indices = indices[split:train_end_idx]
+class ClusterizationIterableDataSet(IterableDataset):
+    def __init__(self, data_path: str, cfg: DictConfig, dataset_type: str, pred_dataset: bool = False):
+        self.data_path = data_path
+        self.cfg = cfg
+        self.dataset_type = dataset_type
+        self.pred_dataset = pred_dataset
+        self.row_groups = self.load_row_groups()
+        self.num_rows = self.num_rows = sum([rg.num_rows for rg in self.row_groups])
+        print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")
+        super().__init__()
 
-    train_subset = Subset(concat_dataset, train_indices)
-    val_subset = Subset(concat_dataset, val_indices)
+    def load_row_groups(self) -> list:
+        all_row_groups = []
+        input_files = []
+        if isinstance(self.data_path, list):
+            input_files = self.data_path
+        elif isinstance(self.data_path, str):
+            if os.path.isdir(self.data_path):
+                self.data_path = os.path.expandvars(self.data_path)
+                input_files = glob.glob(os.path.join(self.data_path, "*.parquet"))
+            elif "*" in self.data_path:
+                input_files = glob.glob(self.data_path)
+            elif os.path.isfile(self.data_path):
+                input_files = [self.data_path]
+            else:
+                raise ValueError(f"Unexpected data_path: {self.data_path}")
+        for data_path in input_files:
+            metadata = ak.metadata_from_parquet(data_path)
+            num_row_groups = metadata["num_row_groups"]
+            col_counts = metadata["col_counts"]
+            all_row_groups.extend(
+                [io.RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
+            )
+        return all_row_groups
 
-    return train_subset, val_subset
+    def build_tensors(self, data: ak.Array):
+        if self.pred_dataset:
+            pred_peaks = ak.Array(data.detected_peaks)
+            gen_peaks = ak.Array(data.target)
+            peaks = pred_peaks * (gen_peaks == 1)
+        else:
+            peaks  = ak.Array(data.target)
+        targets = ak.sum(peaks == 1, axis = -1)
+        targets = torch.tensor(targets, dtype=torch.float32)
+        peaks = torch.tensor(peaks, dtype=torch.float32)
+        return peaks, targets
+
+    def __len__(self):
+        return self.num_rows
+
+    def __iter__(self):
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is None:
+            row_groups_to_process = self.row_groups
+        else:
+            per_worker = int(math.ceil(float(len(self.row_groups)) / float(worker_info.num_workers)))
+            worker_id = worker_info.id
+            row_groups_start = worker_id * per_worker
+            row_groups_end = row_groups_start + per_worker
+            row_groups_to_process = self.row_groups[row_groups_start:row_groups_end]
+
+        for row_group in row_groups_to_process:
+            # load one chunk from one file
+            data = ak.from_parquet(row_group.filename, row_groups=[row_group.row_group])
+            tensors = self.build_tensors(data)
+
+            # return individual jets from the dataset
+            for idx_wf in range(len(data)):
+                yield tensors[0][idx_wf], tensors[1][idx_wf]
+
+# count_x / sampling_rate = idx -> x-axis values in the waveform?

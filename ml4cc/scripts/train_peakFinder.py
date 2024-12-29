@@ -55,17 +55,13 @@ def train(cfg: DictConfig):
         cfg=cfg,
         dataset_type="test",
     )
-    test_loader = dl.DataLoader(test_dataset, batch_size=cfg.training.batch_size)
+    test_loader = dl.DataLoader(test_dataset, batch_size=200)
     pf.evaluate_training(
         model=model,
         dataloader=test_loader,
         metrics_path=metrics_path,
         cfg=cfg
     )
-
-
-    # Need to write to new .parquet file?
-
 
 
 if __name__ == "__main__":

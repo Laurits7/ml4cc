@@ -26,15 +26,13 @@ class LSTMModule(L.LightningModule):
         self.lstm = LSTM()
 
     def training_step(self, batch, batch_idx):
-        waveform, target = batch
-        predicted_labels = self.lstm(waveform)
+        predicted_labels, target = self.forward(batch)
         loss = F.mse_loss(predicted_labels, target)
         self.log("train_loss", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        waveform, target = batch
-        predicted_labels = self.lstm(waveform)
+        predicted_labels, target = self.forward(batch)
         loss = F.mse_loss(predicted_labels, target)
         self.log("val_loss", loss)
         return loss
@@ -43,19 +41,17 @@ class LSTMModule(L.LightningModule):
         return optim.AdamW(self.parameters(), lr=0.001)
 
     def predict_step(self, batch, batch_idx):
-        waveform, target = batch
-        predicted_labels = self.lstm(waveform).squeeze()
+        predicted_labels, target = self.forward(batch)
         return predicted_labels
 
     def test_step(self, batch, batch_idx):
-        waveform, target = batch
-        predicted_labels = self.lstm(waveform).squeeze()
+        predicted_labels, target = self.forward(batch)
         return predicted_labels
 
     def forward(self, batch):
-        waveform, target = batch
+        waveform, target, wf_idx = batch
         predicted_labels = self.lstm(waveform).squeeze()
-        return predicted_labels
+        return predicted_labels, target
 
     # def validation_epoch_end(self, val_step_outputs):
     #     for pred in val_step_outputs:
