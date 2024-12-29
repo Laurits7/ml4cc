@@ -7,6 +7,7 @@ training:
         max_epochs: 150 # 50 epochs in Guang paper
     data:
         fraction_valid: 0.2
+        dataset: FCC
 model_evaluation_only: False
 checkpoints:
     peakFinding:

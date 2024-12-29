@@ -6,10 +6,9 @@ FCC:
             - clusterization
             - peakFinding
         particle_types:
-            - kaon
-            - pion
+            - muon
         raw_input_dir: /scratch/persistent/laurits/ml4cc/FCC/data/
-        train_frac: 0.8
+        train_val_test_split: [0.7, 0.1, 0.2]
     data_dir: /scratch/persistent/laurits/ml4cc/FCC/preprocessed_data/
     row_group_size: 1024
     slidig_window:

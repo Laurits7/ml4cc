@@ -5,8 +5,10 @@ from ml4cc.tools.evaluation import peakFinding as pf
 import lightning as L
 from ml4cc.models import LSTM
 from omegaconf import DictConfig
-from ml4cc.data.CEPC import dataloader as dl
+from ml4cc.data.CEPC import dataloader as cdl
+from ml4cc.data.FCC import dataloader as fdl
 from lightning.pytorch.loggers import CSVLogger
+from torch.utils.data import DataLoader
 from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 
 
@@ -34,7 +36,10 @@ def train(cfg: DictConfig):
             ],
             logger=CSVLogger(log_dir, name="peakFinding")
         )
-        datamodule = dl.CEPCDataModule(cfg=cfg, training_task="peakFinding", samples="all")
+        if cfg.training.data.dataset == "CEPC":
+            datamodule = cdl.CEPCDataModule(cfg=cfg, training_task="peakFinding", samples="all")
+        else:
+            datamodule = fdl.FCCDataModule(cfg=cfg)
         trainer.fit(model=lstm, datamodule=datamodule)
 
         # Get best model
@@ -48,14 +53,23 @@ def train(cfg: DictConfig):
 
     model = LSTM.LSTMModule.load_from_checkpoint(best_model_path, weights_only=True)
     model.eval()
-    data_dir = os.path.join(cfg.datasets.CEPC.data_dir, 'peakFinding', 'test')
-    dataset = dl.CEPCDataset(data_dir=data_dir)
-    test_dataset = dl.IterableCEPCDataset(
-        dataset=dataset,
-        cfg=cfg,
-        dataset_type="test",
-    )
-    test_loader = dl.DataLoader(test_dataset, batch_size=200)
+    if cfg.training.data.dataset == "CEPC":
+        data_dir = os.path.join(cfg.datasets.CEPC.data_dir, 'peakFinding', 'test')
+        dataset = cdl.CEPCDataset(data_dir=data_dir)
+        test_dataset = cdl.IterableCEPCDataset(
+            dataset=dataset,
+            cfg=cfg,
+            dataset_type="test",
+        )
+        test_loader = DataLoader(test_dataset, batch_size=200)
+    else:
+        data_dir = os.path.join(cfg.datasets.FCC.data_dir, 'test')
+        test_dataset = fdl.IterableFCCDataset(
+            data_path=data_dir,
+            cfg=cfg,
+            dataset_type="test",
+        )
+        test_loader = DataLoader(test_dataset, batch_size=200)
     pf.evaluate_training(
         model=model,
         dataloader=test_loader,

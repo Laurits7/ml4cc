@@ -44,9 +44,11 @@ def process_root_file(path: str, cfg: DictConfig) -> None:
     indices = list(range(total_len))
     random.seed(42)
     random.shuffle(indices)
-    num_train_rows = int(np.ceil(total_len*cfg.train_frac))
+    num_train_rows = int(np.ceil(total_len*cfg.train_val_test_split[0]))
+    num_val_rows =  int(np.ceil(total_len*cfg.train_val_test_split[1]))
     train_indices = indices[:num_train_rows]
-    test_indices = indices[num_train_rows:]
+    val_indices = indices[num_train_rows: num_train_rows + num_val_rows]
+    test_indices = indices[num_train_rows + num_val_rows:]
 
     primary_ionization_mask = indices_to_booleans(arrays['time'][arrays['tag'] == 1], arrays['wf_i'])
     secondary_ionization_mask = indices_to_booleans(arrays['time'][arrays['tag'] == 2], arrays['wf_i'])
@@ -56,8 +58,10 @@ def process_root_file(path: str, cfg: DictConfig) -> None:
         "target": target
     })
     train_array = processed_array[train_indices]
+    val_array = processed_array[val_indices]
     test_array = processed_array[test_indices]
     save_processed_data(train_array, path, "train")
+    save_processed_data(val_array, path, "val")
     save_processed_data(test_array, path, "test")
 
 
@@ -93,9 +97,9 @@ def prepare_inputs(cfg: DictConfig) -> None:
         start = time.time()
         process_root_file(input_path, cfg)
         end = time.time()
-        print(f"Processing {input_path} took {end-start} seconds.")
+        print(f"Processing {input_path} took {end-start:.2f} seconds.")
     zero_end = time.time()
-    print(f"Processing all samples took {zero_end-zero_start} seconds.")
+    print(f"Processing all samples took {zero_end-zero_start:.2f} seconds.")
 
 
 if __name__ == '__main__':
