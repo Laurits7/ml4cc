@@ -48,7 +48,7 @@ class DGCNNModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.Adam(self.parameters(), lr=0.001)
+        return optim.AdamW(self.parameters(), lr=0.001)
 
 
 # def train():

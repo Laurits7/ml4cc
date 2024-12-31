@@ -7,13 +7,17 @@ training:
         max_epochs: 150 # 50 epochs in Guang paper
     data:
         fraction_valid: 0.2
-        dataset: FCC
+        dataset: CEPC
 model_evaluation_only: False
 checkpoints:
     peakFinding:
         LSTM:
             model: /home/laurits/ml4cc/training-outputs/20241214_150Epoch_LSTM/models/best_model.ckpt
             losses: /home/laurits/ml4cc/training-outputs/20241214_150Epoch_LSTM/logs/peakFinding/version_0/metrics.csv
+    clusterization:
+        DGCNN:
+            model: null
+            losses: null
 defaults:
     - _self_
     - datasets: datasets

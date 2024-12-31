@@ -6,4 +6,5 @@
 
 env | grep CUDA
 nvidia-smi -L
-./run.sh python3 ml4cc/scripts/train_peakFinder.py "$@"
+./run.sh python3 ml4cc/scripts/train_clusterization.py "$@"
+# ./run.sh python3 ml4cc/scripts/train_peakFinder.py "$@"
