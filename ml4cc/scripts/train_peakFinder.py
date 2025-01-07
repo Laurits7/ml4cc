@@ -69,7 +69,7 @@ def train(cfg: DictConfig):
             cfg=cfg,
             dataset_type="test",
         )
-        test_loader = DataLoader(test_dataset, batch_size=200)
+        test_loader = DataLoader(test_dataset, batch_size=80)  # As the wf len is generated to be 1200.
     pf.evaluate_training(
         model=model,
         dataloader=test_loader,

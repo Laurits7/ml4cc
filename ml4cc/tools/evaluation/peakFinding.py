@@ -33,7 +33,7 @@ def create_pred_values(preds: np.array, cfg: DictConfig):
         if pred > 0.5:  # If detected peak
             pred_vector.extend([0]*zero_count + [1] + [0]*zero_count)  # So the middle of the window is the location of the peak
         else:
-            pred_vector.extend([0]*zero_count)
+            pred_vector.extend([0]*window_size)
     return np.array(pred_vector)
 
 
@@ -45,7 +45,7 @@ def create_true_values(true: np.array, cfg: DictConfig):
         if t > 0.5:
             true_vector.extend([0]*zero_count + [1] + [0]*zero_count)
         else:
-            true_vector.extend([0]*zero_count)
+            true_vector.extend([0]*window_size)
     return np.array(true_vector)
 
 

@@ -18,6 +18,7 @@ class IterableFCCDataset(IterableDataset):
         self.num_rows = sum([rg.num_rows for rg in self.row_groups])
         self.window_size = self.cfg.datasets.CEPC.slidig_window.size
         self.stride = self.cfg.datasets.CEPC.slidig_window.stride
+        self.waveform_len = 1200
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")
         print(f"Each waveform will be split into sliding windows of size {self.window_size}")
         super().__init__()
@@ -47,7 +48,7 @@ class IterableFCCDataset(IterableDataset):
         return all_row_groups
 
     def __len__(self):
-            return self.num_rows
+            return self.num_rows * int(self.waveform_len / self.window_size)
 
     def build_tensors(self, data: ak.Array):
         waveform = ak.Array(data.waveform)
@@ -82,11 +83,11 @@ class IterableFCCDataset(IterableDataset):
         for row_group in row_groups_to_process:
             # load one chunk from one file
             data = ak.from_parquet(row_group.filename, row_groups=[row_group.row_group])
-            tensors = self.build_tensors(data)
+            waveforms, targets, waveform_indices = self.build_tensors(data)
 
-            # return individual jets from the dataset
-            for idx_wf in range(len(data)):
-                yield tensors[0][idx_wf], tensors[1][idx_wf], tensors[2][idx_wf]
+            # return individual waveform (pieces) from the dataset
+            for idx_wf in range(len(waveforms)):
+                yield waveforms[idx_wf], targets[idx_wf], waveform_indices[idx_wf]
 
 
 class FCCDataModule(LightningDataModule):
