@@ -29,7 +29,8 @@ def plot_roc_curve(truth: np.array, preds: np.array, output_path: str='') -> Non
     plt.ylabel("TPR")
     plt.figtext(0.5, 0.5, f'AUC={auc_value:.4f}')
     if output_path != '':
-        plt.savefig(output_path)
+        plt.savefig(output_path, bbox_inches='tight')
+    plt.close("all")
 
 
 def plot_classifier_scores_distribution(truth: np.array, preds: np.array, output_path: str='') -> None:
@@ -56,6 +57,7 @@ def plot_classifier_scores_distribution(truth: np.array, preds: np.array, output
     plt.ylabel("Count [a.u.]")
     if output_path != '':
         plt.savefig(output_path)
+    plt.close("all")
 
 
 def plot_classification(truth: np.array, preds: np.array, output_dir: str='') -> None:
@@ -72,7 +74,7 @@ def plot_classification(truth: np.array, preds: np.array, output_dir: str='') ->
     Returns:
         None
     """
-    roc_output_path = os.path.join(output_dir, "roc.pdf")
+    roc_output_path = os.path.join(output_dir, "roc.png")
     plot_roc_curve(truth=truth, preds=preds, output_path=roc_output_path)
-    classifier_score_path = os.path.join(output_dir, "cls_scores.pdf")
+    classifier_score_path = os.path.join(output_dir, "cls_scores.png")
     plot_classifier_scores_distribution(truth=truth, preds=preds, output_path=classifier_score_path)

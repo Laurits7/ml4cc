@@ -27,13 +27,15 @@ def plot_loss_evolution(
     """
     # if multirun case?
     plt.plot(val_loss, label="val_loss", color='k')
-    plt.plot(train_loss, label="train_loss", ls="--", color='k')
+    if train_loss is not None:
+        plt.plot(train_loss, label="train_loss", ls="--", color='k')
     plt.grid()
     plt.yscale('log')
     plt.ylabel(f'{loss_name} loss [a.u.]')
     plt.xlabel('epoch')
     plt.xlim(0, len(val_loss))
     plt.legend()
-    plt.savefig(output_path, format="pdf")
+    plt.savefig(output_path)
     if output_path != '':
-        plt.savefig(output_path)
+        plt.savefig(output_path, bbox_inches='tight')
+    plt.close("all")

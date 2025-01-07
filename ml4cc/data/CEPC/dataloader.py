@@ -11,8 +11,8 @@ from torch.utils.data import Dataset, DataLoader, IterableDataset, ConcatDataset
 
 
 class CEPCDataset(Dataset):
-    def __init__(self, data_dir: str):
-        self.data_dir = data_dir
+    def __init__(self, data_path: str):
+        self.data_path = data_path
         self.row_groups = self.load_row_groups()
 
     def load_row_groups(self) -> Sequence[io.RowGroup]:
@@ -136,7 +136,7 @@ class CEPCDataModule(LightningDataModule):
         if stage == "fit":
             train_datasets = []
             data_dir = self.get_dataset_path(dataset_type="train")
-            full_train_dataset = CEPCDataset(data_dir=data_dir)
+            full_train_dataset = CEPCDataset(data_path=data_dir)
             train_datasets.append(full_train_dataset)
             train_concat_dataset = ConcatDataset(train_datasets)
             train_subset, val_subset = io.train_val_split_shuffle(
@@ -170,7 +170,7 @@ class CEPCDataModule(LightningDataModule):
 
         elif stage == "test":
             data_dir = self.get_dataset_path(dataset_type="test")  # Testing should be done separately
-            test_dataset = CEPCDataset(data_dir=data_dir)
+            test_dataset = CEPCDataset(data_path=data_dir)
             test_concat_dataset = ConcatDataset([test_dataset])
             self.test_dataset = IterableCEPCDataset(
                 dataset=test_concat_dataset,
@@ -199,7 +199,7 @@ class ClusterizationIterableDataSet(IterableDataset):
         self.dataset = dataset
         self.cfg = cfg
         self.dataset_type = dataset_type
-        self.row_groups = [d for d in self.dataset]
+        self.row_groups = [d for d in self.dataset][:2]
         self.pred_dataset = pred_dataset
         self.num_rows = self.num_rows = sum([rg.num_rows for rg in self.row_groups])
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")
@@ -265,7 +265,7 @@ class ClusterizationCEPCDataModule(LightningDataModule):
         if stage == "fit":
             train_datasets = []
             data_dir = self.get_dataset_path(dataset_type="train")
-            full_train_dataset = CEPCDataset(data_dir=data_dir)
+            full_train_dataset = CEPCDataset(data_path=data_dir)
             train_datasets.append(full_train_dataset)
             train_concat_dataset = ConcatDataset(train_datasets)
             train_subset, val_subset = io.train_val_split_shuffle(
@@ -299,7 +299,7 @@ class ClusterizationCEPCDataModule(LightningDataModule):
 
         elif stage == "test":
             data_dir = self.get_dataset_path(dataset_type="test")
-            test_dataset = CEPCDataset(data_dir=data_dir)
+            test_dataset = CEPCDataset(data_path=data_dir)
             test_concat_dataset = ConcatDataset([test_dataset])
             self.test_dataset = ClusterizationIterableDataSet(
                 dataset=test_concat_dataset,

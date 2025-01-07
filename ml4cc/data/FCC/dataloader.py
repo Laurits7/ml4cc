@@ -15,7 +15,7 @@ class IterableFCCDataset(IterableDataset):
         self.cfg = cfg
         self.dataset_type = dataset_type
         self.row_groups = self.load_row_groups()
-        self.num_rows = self.num_rows = sum([rg.num_rows for rg in self.row_groups])
+        self.num_rows = sum([rg.num_rows for rg in self.row_groups])
         self.window_size = self.cfg.datasets.CEPC.slidig_window.size
         self.stride = self.cfg.datasets.CEPC.slidig_window.stride
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")

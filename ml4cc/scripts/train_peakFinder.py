@@ -55,7 +55,7 @@ def train(cfg: DictConfig):
     model.eval()
     if cfg.training.data.dataset == "CEPC":
         data_dir = os.path.join(cfg.datasets.CEPC.data_dir, 'peakFinding', 'test')
-        dataset = cdl.CEPCDataset(data_dir=data_dir)
+        dataset = cdl.CEPCDataset(data_path=data_dir)
         test_dataset = cdl.IterableCEPCDataset(
             dataset=dataset,
             cfg=cfg,

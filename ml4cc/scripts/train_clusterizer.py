@@ -4,6 +4,7 @@ import shutil
 from ml4cc.tools.evaluation import clusterization as cl
 import lightning as L
 from ml4cc.models import DGCNN
+from ml4cc.models import simpler_models as sm
 from omegaconf import DictConfig
 from ml4cc.data.CEPC import dataloader as cdl
 from ml4cc.data.FCC import dataloader as fdl
@@ -14,7 +15,8 @@ from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 
 @hydra.main(config_path="../config", config_name="training.yaml", version_base=None)
 def train(cfg: DictConfig):
-    dgcnn = DGCNN.DGCNNModule(cfg.models.cluster_counting.DGCNN)
+    # model = DGCNN.DGCNNModule(cfg.models.cluster_counting.DGCNN.hyperparameters)
+    model = sm.SimplerModelModule(lr=0.0001, model_=sm.CNNModel, n_features=3000) #For DNN it is 0.001
     if not cfg.model_evaluation_only:
         models_dir = os.path.join(cfg.training.output_dir, "models")
         log_dir = os.path.join(cfg.training.output_dir, "logs")
@@ -40,7 +42,7 @@ def train(cfg: DictConfig):
             datamodule = cdl.ClusterizationCEPCDataModule(cfg=cfg)
         else:  # TODO: Implement
             datamodule = fdl.FCCDataModule(cfg=cfg)
-        trainer.fit(model=dgcnn, datamodule=datamodule)
+        trainer.fit(model=model, datamodule=datamodule)
 
         # Get best model
         best_model_path = checkpoint_callback.best_model_path
@@ -57,7 +59,7 @@ def train(cfg: DictConfig):
         # TODO: for sample in samples:
         sample = 'kaon'
         data_dir = os.path.join(cfg.datasets.CEPC.data_dir, 'clusterization', 'test', sample)
-        dataset = cdl.CEPCDataset(data_dir=data_dir)
+        dataset = cdl.CEPCDataset(data_path=data_dir)
         test_dataset = cdl.ClusterizationIterableDataSet(
             dataset=dataset,
             cfg=cfg,
@@ -72,6 +74,8 @@ def train(cfg: DictConfig):
             dataset_type="test",
         )
         test_loader = DataLoader(test_dataset, batch_size=200)
+
+    cl.evaluate_training(model, test_loader, metrics_path, cfg)
     # TODO: Write evalution part - plotting distribution, losses, etc.
 
 

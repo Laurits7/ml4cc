@@ -19,8 +19,7 @@ class DGCNN(nn.Module):
             norm=None,
         )
 
-    def forward(self, data):
-        x, batch = data.x, data.batch
+    def forward(self, x, batch):
         x1 = self.conv1(x, batch)
         x2 = self.conv2(x1, batch)
         x3 = self.conv3(x2, batch)
@@ -35,38 +34,22 @@ class DGCNNModule(L.LightningModule):
         self.dgcnn = DGCNN(cfg=cfg)
 
     def training_step(self, batch, batch_idx):
-        waveform, target = batch
-        predicted = self.lstm(waveform)
-        loss = F.nll_loss(predicted, target)
+        predicted_labels, target = self.forward(batch, batch_idx)
+        loss = F.nll_loss(predicted_labels, target)
+        self.log("train_loss", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        waveform, target = batch
-        predicted = self.lstm(waveform)
-        loss = F.nll_loss(predicted, target)
+        predicted_labels, target = self.forward(batch, batch_idx)
+        loss = F.nll_loss(predicted_labels, target)
         self.log("val_loss", loss)
         return loss
 
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=0.001)
 
-
-# def train():
-#     model.train()
-
-#     total_loss = 0
-#     correct = 0
-#     total = 0
-#     for data in train_loader:
-#         data = data.to(device)
-#         optimizer.zero_grad()
-#         out = model(data)
-#         loss = F.nll_loss(out, data.y.long())
-#         loss.backward()
-#         total_loss += loss.item() * data.num_graphs
-
-#         correct += out.max(dim=1)[1].eq(data.y).sum().item()
-#         total += data.num_nodes
-
-#         optimizer.step()
-#     return total_loss / train_dataset.__len__(), correct/total
+    def forward(self, batch, batch_idx):
+        peaks, target = batch
+        batch_indices = [batch_idx] * len(target)
+        predicted_labels = self.dgcnn(peaks, batch_indices).squeeze()
+        return predicted_labels, target
