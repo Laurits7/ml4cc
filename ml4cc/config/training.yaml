@@ -1,13 +1,13 @@
 training:
-    output_dir: /home/laurits/ml4cc/training-outputs/20250103_FCC_longer_run
-    batch_size: 8192
+    output_dir: /home/laurits/ml4cc/training-outputs/20250109_CEPC_150_epoch
+    batch_size: 65536
     num_dataloader_workers: 2
     prefetch_factor: 100
     trainer:
-        max_epochs: 250 # 50 epochs in Guang paper
+        max_epochs: 150 # 50 epochs in Guang paper
     data:
         fraction_valid: 0.2
-        dataset: FCC
+        dataset: CEPC
 model_evaluation_only: False
 checkpoints:
     peakFinding:
