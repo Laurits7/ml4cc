@@ -1,2 +1,2 @@
 from . import CEPC
-from . import IDEA
+from . import FCC

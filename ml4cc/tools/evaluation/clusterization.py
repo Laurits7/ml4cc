@@ -30,8 +30,8 @@ def evaluate_training(model, dataloader, metrics_path, cfg):
     prediction_save = []
     print("Prediction progress for TEST dataset")
     for batch_idx, batch in tqdm.tqdm(enumerate(dataloader), total=len(dataloader)):
-        wfs, true, wf_idx = batch
-        pred = model(batch)
+        wfs, true = batch
+        pred, _ = model(batch)
         waveform_save.append(np.concatenate(wfs.squeeze().detach().cpu().numpy()))
         prediction_save.append(pred.detach().cpu().numpy())
         true_save.append(true.detach().cpu().cpu().numpy())

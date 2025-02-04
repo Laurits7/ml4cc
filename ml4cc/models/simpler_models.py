@@ -23,7 +23,7 @@ class DNNModel(nn.Module):
 
 class CNNModel(nn.Module):
     def __init__(self, nfeature):
-        super(CNNModel, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv1d(1, 32, kernel_size=4)
         self.pool1 = nn.MaxPool1d(kernel_size=2)
         self.conv2 = nn.Conv1d(32, 16, kernel_size=4)
@@ -45,16 +45,19 @@ class CNNModel(nn.Module):
 
 class RNNModel(nn.Module):
     def __init__(self, nfeature):
-        super(RNNModel, self).__init__()
+        super().__init__()
         self.lstm = nn.LSTM(input_size=1, hidden_size=16, num_layers=1, batch_first=True)
         self.fc1 = nn.Linear(16, 16)
         self.output = nn.Linear(16, 1)
 
     def forward(self, x):
-        x, _ = self.lstm(x)  # Output and hidden state
-        x = x[:, -1, :]  # Take the last output for prediction
-        x = self.fc1(x)
+        x = x.unsqueeze(-1)
+        ula, (h, _) = self.lstm(x)
+        # Output and hidden state
+        out = h[-1]  # Take the last output for prediction
+        x = self.fc1(out)
         x = self.output(x)
+        x = x.squeeze()
         return x
 
 

@@ -16,7 +16,7 @@ from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 @hydra.main(config_path="../config", config_name="training.yaml", version_base=None)
 def train(cfg: DictConfig):
     # model = DGCNN.DGCNNModule(cfg.models.cluster_counting.DGCNN.hyperparameters)
-    model = sm.SimplerModelModule(lr=0.0001, model_=sm.CNNModel, n_features=3000) #For DNN it is 0.001
+    model = sm.SimplerModelModule(lr=0.0001, model_=sm.RNNModel, n_features=3000) #For DNN it is 0.001
     if not cfg.model_evaluation_only:
         models_dir = os.path.join(cfg.training.output_dir, "models")
         log_dir = os.path.join(cfg.training.output_dir, "logs")
@@ -41,7 +41,7 @@ def train(cfg: DictConfig):
         if cfg.training.data.dataset == "CEPC":
             datamodule = cdl.ClusterizationCEPCDataModule(cfg=cfg)
         else:  # TODO: Implement
-            datamodule = fdl.FCCDataModule(cfg=cfg)
+            datamodule = fdl.ClusterizationFCCDataModule(cfg=cfg)
         trainer.fit(model=model, datamodule=datamodule)
 
         # Get best model
@@ -53,7 +53,8 @@ def train(cfg: DictConfig):
         best_model_path = cfg.checkpoints.clusterization.DGCNN.model
         metrics_path = cfg.checkpoints.clusterization.DGCNN.losses
 
-    model = DGCNN.DGCNNModule.load_from_checkpoint(best_model_path, weights_only=True)
+    # model = sm.SimplerModelModule(lr=0.0001, model_=sm.DNNModel, n_features=3000)
+    # DGCNN.DGCNNModule.load_from_checkpoint(best_model_path, weights_only=True)
     model.eval()
     if cfg.training.data.dataset == "CEPC":
         # TODO: for sample in samples:

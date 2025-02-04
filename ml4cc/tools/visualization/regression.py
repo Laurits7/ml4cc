@@ -25,7 +25,7 @@ def evaluate_resolution(truth: np.array, preds: np.array, output_path: str) -> N
     resolution, ratios = calculate_resolution(truth, preds)
     bins = np.linspace(0.5, 1.5, 101)
     hep.histplot(to_bh(ratios, bins=bins), ax=plt.gca(), density=True)
-    plt.axvline(x=1, y0=0, y1=1, ls='--')
+    plt.axvline(x=1, ls='--')
     plt.figtext(0.5, 0.5, f'IQR={resolution:.4f}')
     plt.xlabel(r"$n_{cls}^{true}/n_{cls}^{pred}$")
     plt.close("all")
