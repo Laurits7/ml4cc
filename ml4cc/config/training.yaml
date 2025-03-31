@@ -4,7 +4,7 @@ training:
     num_dataloader_workers: 2
     prefetch_factor: 100
     trainer:
-        max_epochs: 5 # 50 epochs in Guang paper
+        max_epochs: 150 # 50 epochs in Guang paper
     data:
         fraction_valid: 0.2
         dataset: CEPC

@@ -33,6 +33,7 @@ class CNNModel(nn.Module):
         self.output = nn.Linear(32, 1)
 
     def forward(self, x):
+        x = x.unsqueeze(1)  # To have a shape of (batch_size, in_channels, sequence_length) ; sequence length is the len of time series
         x = torch.relu(self.conv1(x))
         x = self.pool1(x)
         x = torch.relu(self.conv2(x))
@@ -40,6 +41,7 @@ class CNNModel(nn.Module):
         x = self.flatten(x)
         x = self.fc1(x)
         x = self.output(x)
+        x = x.squeeze()
         return x
 
 
