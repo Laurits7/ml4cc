@@ -1,7 +1,7 @@
 DGCNN:
     _target_: ml4cc.models.DGCNN
     hyperparameters:
-        n_conv: 32
+        n_conv1: 32
         n_conv2: 32
         n_conv3: 64
         n_mlp1: 264

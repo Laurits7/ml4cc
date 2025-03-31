@@ -1,0 +1,17 @@
+FCC:
+    preprocessing:
+        branches: null
+        tree_path: sim
+        training_types:
+            - clusterization
+            - peakFinding
+        particle_types:
+            - muon
+        raw_input_dir: /scratch/persistent/laurits/ml4cc/FCC/data/
+        train_val_test_split: [0.7, 0.1, 0.2]
+    data_dir: /scratch/project_465001293/ML4CC/data/FCC/preprocessed_data/
+    # data_dir: /scratch/persistent/laurits/ml4cc/FCC/preprocessed_data/
+    row_group_size: 1024
+    slidig_window:
+        size: 15
+        stride: 15

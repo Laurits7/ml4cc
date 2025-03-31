@@ -45,7 +45,7 @@ def save_processed_data(arrays: ak.Array, path: str) -> None:
     output_path = output_path.replace(".root", ".parquet")
     output_dir = os.path.dirname(output_path)
     os.makedirs(output_dir, exist_ok=True)
-    io.save_record_to_file(data=arrays, output_path=output_path)
+    io.save_array_to_file(data=arrays, output_path=output_path)
 
 
 def indices_to_booleans(indices: ak.Array, array_to_slice: ak.Array) -> ak.Array:
