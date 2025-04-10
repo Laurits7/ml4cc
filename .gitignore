@@ -166,3 +166,8 @@ sftp-config.json
 
 # Python virutal venvironment
 .venv/
+
+# Training related
+training-outputs/
+outputs/
+logs/
