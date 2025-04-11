@@ -48,8 +48,8 @@ def save_processed_data(arrays: ak.Array, path: str) -> None:
     io.save_array_to_file(data=arrays, output_path=output_path)
 
 
-def process_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright: int = 9) -> None:
-    """ Processes the .root file into the format Guang used for 2-step training.
+def process_peakfinding_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright: int = 9) -> None:
+    """ Processes the peakfinding .root file into the format Guang used for 2-step training.
 
     Parameters:
         path : str
@@ -86,6 +86,8 @@ def process_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright: int = 
     save_processed_data(processed_array, path)
 
 
+# TODO: Twostep approach needs different preprocessing for clusterization and peak finding
+# TODO: Need a study into the efficiency of bump finding.
 def prepare_inputs(cfg: DictConfig) -> None:
     all_paths_to_process = []
     for training_type in cfg.training_types:
@@ -106,7 +108,7 @@ def prepare_inputs(cfg: DictConfig) -> None:
         prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg.slurm)
     else:
         for path in all_paths_to_process:
-            process_root_file(path, cfg)
+            process_peakfinding_root_file(path, cfg)
 
 
 def run_job(cfg: DictConfig) -> None:
