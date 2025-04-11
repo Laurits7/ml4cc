@@ -6,7 +6,7 @@ docopt
 hydra-core
 jupyter
 jupyter-book
-pytorch-lightning
+lightning
 matplotlib
 mplhep
 notebook

@@ -80,14 +80,13 @@ def process_peakfinding_root_file(path: str, cfg: DictConfig, nleft: int = 5, nr
         all_targets.append(target_window)
         all_windows.append(wf_windows)
     processed_array = ak.Array({
-        'target': all_targets,
-        'waveform': all_windows
+        "target": all_targets,
+        "waveform": all_windows,
+        "wf_i": arrays.wf_i,
     })
     save_processed_data(processed_array, path)
 
 
-# TODO: Twostep approach needs different preprocessing for clusterization and peak finding
-# TODO: Need a study into the efficiency of bump finding.
 def prepare_inputs(cfg: DictConfig) -> None:
     all_paths_to_process = []
     for training_type in cfg.training_types:
@@ -113,13 +112,13 @@ def prepare_inputs(cfg: DictConfig) -> None:
 
 def run_job(cfg: DictConfig) -> None:
     input_paths = []
-    with open(cfg.slurm.input_path, 'rt') as inFile:
+    with open(cfg.slurm.input_path, "rt") as inFile:
         for line in inFile:
-            input_paths.append(line.strip('\n'))
+            input_paths.append(line.strip("\n"))
     total_start_time = time.time()
     for path in input_paths:
         file_start_time = time.time()
-        process_root_file(path, cfg)
+        process_peakfinding_root_file(path, cfg)
         file_end_time = time.time()
         print(f"Processing {path} took {file_end_time - file_start_time:.2f} seconds")
     total_end_time = time.time()
@@ -142,5 +141,5 @@ def main(cfg: DictConfig) -> None:
         prepare_inputs(cfg.preprocessing)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
