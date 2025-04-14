@@ -1,4 +1,5 @@
 CEPC:
+    input_dim: 3000
     preprocessing:
         branches: null
         tree_path: sim

@@ -1,4 +1,5 @@
 FCC:
+    input_dim: 1200
     preprocessing:
         branches: null
         tree_path: sim

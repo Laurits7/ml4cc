@@ -14,7 +14,8 @@ from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 
 @hydra.main(config_path="../config", config_name="training.yaml", version_base=None)
 def train(cfg: DictConfig):
-    model = transformer.TransformerModule(input_dim=3000)
+    input_dim = cfg.datasets[cfg.training.data.dataset].input_dim
+    model = transformer.TransformerModule(input_dim=input_dim)
     if not cfg.model_evaluation_only:
         models_dir = os.path.join(cfg.training.output_dir, "models")
         log_dir = os.path.join(cfg.training.output_dir, "logs")
