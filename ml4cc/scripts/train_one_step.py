@@ -1,14 +1,14 @@
 import os
 import hydra
 import shutil
-from ml4cc.tools.evaluation import peakFinding as pf
+# from ml4cc.tools.evaluation import peakFinding as pf
 import lightning as L
 from ml4cc.models import transformer
 from omegaconf import DictConfig
 from ml4cc.data.CEPC import dataloader as cdl
 from ml4cc.data.FCC import dataloader as fdl
 from lightning.pytorch.loggers import CSVLogger
-from torch.utils.data import DataLoader
+# from torch.utils.data import DataLoader
 from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 
 
@@ -39,8 +39,8 @@ def train(cfg: DictConfig):
         )
         if cfg.training.data.dataset == "CEPC":
             datamodule = cdl.OneStepCEPCDataModule(cfg=cfg)
-        # else:
-        #     datamodule = fdl.FCCDataModule(cfg=cfg)
+        else:
+            datamodule = fdl.OneStepFCCDataModule(cfg=cfg)
         trainer.fit(model=model, datamodule=datamodule)
 
         # Get best model
