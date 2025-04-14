@@ -311,18 +311,18 @@ class OneStepIterableDataSet(IterableDataset):
     def load_row_groups(self) -> list:
         all_row_groups = []
         input_files = []
-        if isinstance(self.data_path, list):
-            input_files = self.data_path
-        elif isinstance(self.data_path, str):
-            if os.path.isdir(self.data_path):
-                self.data_path = os.path.expandvars(self.data_path)
-                input_files = glob.glob(os.path.join(self.data_path, "*.parquet"))
-            elif "*" in self.data_path:
-                input_files = glob.glob(self.data_path)
-            elif os.path.isfile(self.data_path):
-                input_files = [self.data_path]
+        if isinstance(self.data_paths, list):
+            input_files = self.data_paths
+        elif isinstance(self.data_paths, str):
+            if os.path.isdir(self.data_paths):
+                self.data_paths = os.path.expandvars(self.data_paths)
+                input_files = glob.glob(os.path.join(self.data_paths, "*.parquet"))
+            elif "*" in self.data_paths:
+                input_files = glob.glob(self.data_paths)
+            elif os.path.isfile(self.data_paths):
+                input_files = [self.data_paths]
             else:
-                raise ValueError(f"Unexpected data_path: {self.data_path}")
+                raise ValueError(f"Unexpected data_path: {self.data_paths}")
         for data_path in input_files:
             metadata = ak.metadata_from_parquet(data_path)
             num_row_groups = metadata["num_row_groups"]
@@ -384,8 +384,8 @@ class OneStepFCCDataModule(LightningDataModule):
 
     def setup(self, stage: str):
         if stage == "fit":
-            train_paths = self.get_dataset_path(dataset_type="train")
-            val_paths = self.get_dataset_path(dataset_type="val")
+            train_paths = self.get_dataset_paths(dataset_type="train")
+            val_paths = self.get_dataset_paths(dataset_type="val")
             self.train_dataset = OneStepIterableDataSet(
                 data_paths=train_paths,
                 cfg=self.cfg,
@@ -410,7 +410,7 @@ class OneStepFCCDataModule(LightningDataModule):
             )
 
         elif stage == "test":
-            test_paths = self.get_dataset_path(dataset_type="test")
+            test_paths = self.get_dataset_paths(dataset_type="test")
             self.test_dataset = OneStepIterableDataSet(
                 data_paths=test_paths,
                 cfg=self.cfg,
