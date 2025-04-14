@@ -32,7 +32,7 @@ class WaveFormTransformer(nn.Module):
             dropout: float=0.1
     ):
         super().__init__()
-        self.input_projection = nn.Linear(input_dim, d_model)
+        self.input_projection = nn.Linear(1, d_model)
         self.positional_encoding = PositionalEncoding(d_model, max_len)
 
         encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout)
@@ -41,12 +41,11 @@ class WaveFormTransformer(nn.Module):
         self.classifier = nn.Linear(d_model, num_classes)
 
     def forward(self, x):
-        print("x", x.shape)
+        x = x.unsqueeze(-1)
         x = self.input_projection(x)
         x = self.positional_encoding(x)
         x = self.transformer_encoder(x)
         x = self.classifier(x)  # Shape: [batch_size, seq_length, num_classes]
-        print("x2", x.shape)
         return x
 
 
@@ -88,7 +87,6 @@ class TransformerModule(L.LightningModule):
         return predicted_labels
 
     def forward(self, batch):
-        waveform, target, _ = batch
-        print("waveform", waveform.shape)
+        waveform, target = batch
         predicted_labels = self.transformer(waveform).squeeze()
         return predicted_labels, target

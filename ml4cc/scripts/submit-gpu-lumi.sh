@@ -9,6 +9,6 @@
 #SBATCH --gpus-per-task=1
 #SBATCH --partition=small-g
 #SBATCH --no-requeue
-#SBATCH -o logs/slurm-%x-%j-%N.out
+#SBATCH -o slurm-logs/slurm-%x-%j-%N.out
 
 ./run-lumi.sh "$@"

@@ -421,13 +421,13 @@ class OneStepCEPCDataModule(LightningDataModule):
             )
             self.train_loader = DataLoader(
                 self.train_dataset,
-                batch_size=self.cfg.training.batch_size,
+                batch_size=128,
                 num_workers=self.cfg.training.num_dataloader_workers,
                 prefetch_factor=self.cfg.training.prefetch_factor,
             )
             self.val_loader = DataLoader(
                 self.val_dataset,
-                batch_size=self.cfg.training.batch_size,
+                batch_size=128,
                 num_workers=self.cfg.training.num_dataloader_workers,
                 prefetch_factor=self.cfg.training.prefetch_factor,
             )
@@ -441,7 +441,7 @@ class OneStepCEPCDataModule(LightningDataModule):
                 cfg=self.cfg,
                 dataset_type="test",
             )
-            self.test_loader = DataLoader(self.test_dataset, batch_size=self.cfg.training.batch_size)
+            self.test_loader = DataLoader(self.test_dataset, batch_size=128)
 
     def train_dataloader(self):
         return self.train_loader

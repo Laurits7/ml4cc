@@ -171,3 +171,4 @@ sftp-config.json
 training-outputs/
 outputs/
 logs/
+slurm-logs/

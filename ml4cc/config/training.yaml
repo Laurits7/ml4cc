@@ -1,10 +1,10 @@
 training:
     output_dir: /home/laurits/ml4cc/training-outputs/20250119_DNN_FCC_clusterization_150epoch
-    batch_size: 65536
+    batch_size: 512
     num_dataloader_workers: 2
     prefetch_factor: 100
     trainer:
-        max_epochs: 150 # 50 epochs in Guang paper
+        max_epochs: 3 # 50 epochs in Guang paper
     data:
         fraction_valid: 0.2
         dataset: CEPC
@@ -22,3 +22,8 @@ defaults:
     - _self_
     - datasets: datasets
     - models: models
+
+hydra:
+    output_subdir: null
+    run:
+        dir: .
