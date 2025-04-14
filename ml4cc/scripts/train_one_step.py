@@ -2,6 +2,7 @@ import os
 import glob
 import hydra
 import shutil
+import torch
 # from ml4cc.tools.evaluation import peakFinding as pf
 import lightning as L
 from ml4cc.models import transformer
@@ -54,7 +55,9 @@ def train(cfg: DictConfig):
         best_model_path = cfg.models.one_step.transformer.checkpoint.model  # TODO: Change for different models
         metrics_path = cfg.models.one_step.transformer.checkpoint.losses  # TODO: Change for different models
 
-    model = transformer.TransformerModule.load_from_checkpoint(best_model_path, weights_only=True)  # TODO: Change for different models
+    # model = transformer.TransformerModule(input_dim=input_dim)
+    checkpoint = torch.load(best_model_path, weights_only=True)
+    model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
     if cfg.training.data.dataset == "CEPC":
         data_paths = os.path.join(cfg.datasets.CEPC.data_dir, 'peakFinding', 'test')
