@@ -79,11 +79,11 @@ class TransformerModule(L.LightningModule):
         return optim.AdamW(self.parameters(), lr=0.001)
 
     def predict_step(self, batch, batch_idx):
-        predicted_labels, target = self.forward(batch)
+        predicted_labels, _ = self.forward(batch)
         return predicted_labels
 
     def test_step(self, batch, batch_idx):
-        predicted_labels, target = self.forward(batch)
+        predicted_labels, _ = self.forward(batch)
         return predicted_labels
 
     def forward(self, batch):

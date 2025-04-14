@@ -1,4 +1,5 @@
 import os
+import glob
 import hydra
 import shutil
 # from ml4cc.tools.evaluation import peakFinding as pf
@@ -7,8 +8,9 @@ from ml4cc.models import transformer
 from omegaconf import DictConfig
 from ml4cc.data.CEPC import dataloader as cdl
 from ml4cc.data.FCC import dataloader as fdl
+from ml4cc.tools.evaluation import one_step
 from lightning.pytorch.loggers import CSVLogger
-# from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader
 from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 
 
@@ -48,35 +50,34 @@ def train(cfg: DictConfig):
         new_best_model_path = os.path.join(models_dir, "best_model.ckpt")
         shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
-    # else:
-    #     best_model_path = cfg.checkpoints.peakFinding.LSTM.model  # TODO: Change for different models
-    #     metrics_path = cfg.checkpoints.peakFinding.LSTM.losses  # TODO: Change for different models
+    else:
+        best_model_path = cfg.models.one_step.transformer.checkpoint.model  # TODO: Change for different models
+        metrics_path = cfg.models.one_step.transformer.checkpoint.losses  # TODO: Change for different models
 
-    # model = LSTM.LSTMModule.load_from_checkpoint(best_model_path, weights_only=True)  # TODO: Change for different models
-    # model.eval()
-    # if cfg.training.data.dataset == "CEPC":
-    #     data_dir = os.path.join(cfg.datasets.CEPC.data_dir, 'peakFinding', 'test')
-    #     dataset = cdl.CEPCDataset(data_path=data_dir)
-    #     test_dataset = cdl.IterableCEPCDataset(
-    #         dataset=dataset,
-    #         cfg=cfg,
-    #         dataset_type="test",
-    #     )
-    #     test_loader = DataLoader(test_dataset, batch_size=200)
-    # else:
-    #     data_dir = os.path.join(cfg.datasets.FCC.data_dir, 'test')
-    #     test_dataset = fdl.IterableFCCDataset(
-    #         data_path=data_dir,
-    #         cfg=cfg,
-    #         dataset_type="test",
-    #     )
-    #     test_loader = DataLoader(test_dataset, batch_size=80)  # As the wf len is generated to be 1200.
-    # pf.evaluate_training(
-    #     model=model,
-    #     dataloader=test_loader,
-    #     metrics_path=metrics_path,
-    #     cfg=cfg
-    # )
+    model = transformer.TransformerModule.load_from_checkpoint(best_model_path, weights_only=True)  # TODO: Change for different models
+    model.eval()
+    if cfg.training.data.dataset == "CEPC":
+        data_paths = os.path.join(cfg.datasets.CEPC.data_dir, 'peakFinding', 'test')
+        test_dataset = cdl.OneStepIterableDataSet(
+            dataset=data_paths,
+            cfg=cfg,
+            dataset_type="test",
+        )
+        test_loader = DataLoader(test_dataset)
+    else:
+        data_paths = list(glob.glob(os.path.join(cfg.datasets.FCC.data_dir, 'test', "*.parquet")))
+        test_dataset = fdl.OneStepIterableDataSet(
+            data_paths=data_paths,
+            cfg=cfg,
+            dataset_type="test",
+        )
+        test_loader = DataLoader(test_dataset)
+    one_step.evaluate_training(
+        model=model,
+        dataloader=test_loader,
+        metrics_path=metrics_path,
+        cfg=cfg
+    )
 
 
 if __name__ == "__main__":
