@@ -28,6 +28,7 @@ def evaluate_resolution(truth: np.array, preds: np.array, output_path: str) -> N
     plt.axvline(x=1, ls='--')
     plt.figtext(0.5, 0.5, f'IQR={resolution:.4f}')
     plt.xlabel(r"$n_{cls}^{true}/n_{cls}^{pred}$")
+    plt.savefig(output_path, bbox_inches='tight')
     plt.close("all")
 
 

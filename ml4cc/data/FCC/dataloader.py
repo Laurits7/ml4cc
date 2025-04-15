@@ -333,9 +333,10 @@ class OneStepIterableDataSet(IterableDataset):
 
     def build_tensors(self, data: ak.Array):
         targets = np.array(data.target == 1, dtype=int)
+        targets = np.sum(targets, axis=-1)
         targets = torch.tensor(targets, dtype=torch.float32)
-        peaks = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
-        return peaks, targets
+        waveform = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
+        return waveform, targets
 
     def __len__(self):
         return self.num_rows

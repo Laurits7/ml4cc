@@ -38,16 +38,19 @@ class WaveFormTransformer(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
-        self.classifier = nn.Linear(d_model, num_classes)
+        self.peak_finding_classifier = nn.Linear(d_model, num_classes)
+        self.clusterizer = nn.Linear(d_model, 1)
+        self.layernorm = nn.LayerNorm(d_model)
 
     def forward(self, x):
         x = x.unsqueeze(-1)
         x = self.input_projection(x)
         x = self.positional_encoding(x)
         x = self.transformer_encoder(x)
-        x = self.classifier(x)  # Shape: [batch_size, seq_length, num_classes]
+        x = self.layernorm(x)
+        x = self.peak_finding_classifier(x)  # Shape: [batch_size, seq_length, num_classes]
+        x = x.sum(dim=1)
         return x
-
 
 
 class TransformerModule(L.LightningModule):

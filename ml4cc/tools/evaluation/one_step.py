@@ -2,9 +2,10 @@ import os
 import tqdm
 import pandas as pd
 import numpy as np
+import awkward as ak
 from ml4cc.tools.data import io
 from ml4cc.tools.visualization import losses as l
-from ml4cc.tools.visualization import classification as cl
+from ml4cc.tools.visualization import regression as r
 
 
 
@@ -38,9 +39,21 @@ def evaluate_training(model, dataloader, metrics_path, cfg):
     pred_file_path = os.path.join(results_dir, "predictions.parquet")
     io.save_array_to_file(data=pred_file_data, output_path=pred_file_path)
 
-    cl.plot_classification(truth=all_true, preds=all_preds, output_dir=results_dir)
+    truth = ak.flatten(all_true, axis=None)
+    preds = ak.flatten(all_preds, axis=None)
+    # cl.plot_classification(
+    #     truth=ak.flatten(all_true, axis=None),
+    #     preds=ak.flatten(all_preds, axis=None),
+    #     output_dir=results_dir
+    # )
+
+    resolution_output_path = os.path.join(results_dir, "resolution.pdf")
+    r.evaluate_resolution(truth, preds, output_path=resolution_output_path)
+
+    distribution_output_path = os.path.join(results_dir, "true_pred_distributions.pdf")
+    r.plot_true_pred_distributions(truth, preds, output_path=distribution_output_path)
 
     # val_loss, train_loss = filter_losses(metrics_path)
     val_loss = filter_losses(metrics_path)
-    losses_output_path = os.path.join(output_dir, "losses.png")
+    losses_output_path = os.path.join(cfg.training.output_dir, "losses.png")
     l.plot_loss_evolution(val_loss=val_loss, train_loss=None, output_path=losses_output_path)

@@ -341,17 +341,18 @@ class OneStepIterableDataSet(IterableDataset):
         self.dataset = dataset
         self.cfg = cfg
         self.dataset_type = dataset_type
-        self.row_groups = [d for d in self.dataset][:2] # TODO: temporary for prototyping
+        self.row_groups = [d for d in self.dataset]
         self.pred_dataset = pred_dataset
-        self.num_rows = self.num_rows = sum([rg.num_rows for rg in self.row_groups])
+        self.num_rows = sum([rg.num_rows for rg in self.row_groups])
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")
         super().__init__()
 
     def build_tensors(self, data: ak.Array):
         targets = np.array(data.target == 1, dtype=int)
+        targets = np.sum(targets, axis=-1)
         targets = torch.tensor(targets, dtype=torch.float32)
-        peaks = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
-        return peaks, targets
+        waveform = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
+        return waveform, targets
 
     def __len__(self):
         return self.num_rows

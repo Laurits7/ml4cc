@@ -55,14 +55,14 @@ def train(cfg: DictConfig):
         best_model_path = cfg.models.one_step.transformer.checkpoint.model  # TODO: Change for different models
         metrics_path = cfg.models.one_step.transformer.checkpoint.losses  # TODO: Change for different models
 
-    # model = transformer.TransformerModule(input_dim=input_dim)
-    checkpoint = torch.load(best_model_path, weights_only=True)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    checkpoint = torch.load(best_model_path, weights_only=False)
+    model.load_state_dict(checkpoint['state_dict'])
     model.eval()
     if cfg.training.data.dataset == "CEPC":
         data_paths = os.path.join(cfg.datasets.CEPC.data_dir, 'peakFinding', 'test')
+        dataset = cdl.CEPCDataset(data_path=data_paths)
         test_dataset = cdl.OneStepIterableDataSet(
-            dataset=data_paths,
+            dataset=dataset,
             cfg=cfg,
             dataset_type="test",
         )
