@@ -1,27 +1,12 @@
 CEPC:
     input_dim: 3000
-    preprocessing:
-        branches: null
-        tree_path: sim
-        training_types:
-            - clusterization
-            - peakFinding
-        particle_types:
-            - kaon
-            - pion
-        raw_input_dir: /scratch/persistent/laurits/ml4cc/CEPC/data/
-        slurm:
-            host: lumi
-            use_it: False
-            slurm_run: False
-            files_per_job: 1
-            input_path: null
-            tmp_dir:
-                lumi: /scratch/project_465001293/ML4CC/tmp/
-                default: null
-    data_dir: /scratch/project_465001293/ML4CC/data/CEPC/preprocessed_data/  # TODO: Add central place for this
-    # data_dir: /scratch/persistent/laurits/ml4cc/CEPC/preprocessed_data/
-    row_group_size: 1024
-    slidig_window:  # TODO: Not needed anymore, remove
-        size: 15
-        stride: 15
+    branches: null
+    tree_path: sim
+    training_types:
+        - clusterization
+        - peakFinding
+    particle_types:
+        - kaon
+        - pion
+    raw_input_dir: ${host.data_dir}/CEPC/data/
+    data_dir: ${host.data_dir}/CEPC/preprocessed_data/

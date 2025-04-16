@@ -1,0 +1,6 @@
+defaults:
+    - _self_
+    - environment@host: lumi
+    - datasets@dataset: CEPC
+    - preprocessing
+    - training

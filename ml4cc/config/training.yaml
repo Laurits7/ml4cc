@@ -1,7 +1,4 @@
 training:
-    # host: lumi # Options: lumi, manivald
-    # dataset: CEPC # Options: CEPC, FCC
-    # model_type: one_step # Options: one_step, two_step
     output_dir: null
     dataloader:
         batch_size: 512
@@ -12,9 +9,7 @@ training:
     model_evaluation_only: False
 defaults:
     - _self_
-    - datasets@dataset: CEPC
     - models: models
-    - environment@host: lumi
 
 hydra:
     output_subdir: null

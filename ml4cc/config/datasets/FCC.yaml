@@ -8,20 +8,5 @@ FCC:
             - peakFinding
         particle_types:
             - muon
-        slurm:  # TODO: Add new config to avoid cfg duplication
-            host: lumi
-            use_it: False
-            slurm_run: False
-            files_per_job: 1
-            input_path: null
-            tmp_dir:
-                lumi: /scratch/project_465001293/ML4CC/tmp/
-                default: null
-        raw_input_dir: /scratch/persistent/laurits/ml4cc/FCC/data/
-        train_val_test_split: [0.7, 0.1, 0.2]
-    data_dir: /scratch/project_465001293/ML4CC/data/FCC/preprocessed_data/  # TODO: Allow changing this in one central config
-    # data_dir: /scratch/persistent/laurits/ml4cc/FCC/preprocessed_data/
-    row_group_size: 1024
-    slidig_window:  # TODO: Not needed anymore
-        size: 15
-        stride: 15
+    data_dir: ${host.data_dir}/FCC/preprocessed_data/
+    raw_input_dir: ${host.data_dir}/FCC/raw_data/
