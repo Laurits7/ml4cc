@@ -39,7 +39,7 @@ class WaveFormTransformer(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
         self.peak_finding_classifier = nn.Linear(d_model, num_classes)
-        self.clusterizer = nn.Linear(d_model, 1)
+        # self.clusterizer = nn.Linear(d_model, 1)
         self.layernorm = nn.LayerNorm(d_model)
 
     def forward(self, x):
@@ -49,7 +49,9 @@ class WaveFormTransformer(nn.Module):
         x = self.transformer_encoder(x)
         x = self.layernorm(x)
         x = self.peak_finding_classifier(x)  # Shape: [batch_size, seq_length, num_classes]
-        x = x.sum(dim=1)
+        x = F.relu(x)
+        x = x.sum(dim=1)  # Shape: [batch_size, num_classes]
+        # x = self.clusterizer(x)
         return x
 
 

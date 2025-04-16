@@ -1,0 +1,8 @@
+name: transformer
+checkpoint:
+    model: null
+    losses: null
+_target_: ml4cc.models.transformer
+
+defaults:
+    - _self_

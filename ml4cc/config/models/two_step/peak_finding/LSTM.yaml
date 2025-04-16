@@ -1,0 +1,5 @@
+_target_: ml4cc.models.LSTM
+name: LSTM
+
+defaults:
+    - _self_

@@ -302,7 +302,7 @@ class OneStepIterableDataSet(IterableDataset):
         self.data_paths = data_paths
         self.cfg = cfg
         self.dataset_type = dataset_type
-        self.row_groups = self.load_row_groups()[:2] # TODO: temporary for prototyping
+        self.row_groups = self.load_row_groups()
         self.num_rows = self.num_rows = sum([rg.num_rows for rg in self.row_groups])
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")
         super().__init__()

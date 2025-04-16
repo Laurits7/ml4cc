@@ -10,10 +10,10 @@ from ml4cc.tools.data import slurm_tools as st
 from omegaconf import DictConfig, OmegaConf
 
 
-def prepare_slurm_inputs(input_files: list, cfg: DictConfig):
+def prepare_slurm_inputs(input_files: list, cfg: DictConfig, dataset: str) -> None:
     input_path_chunks = list(np.array_split(input_files, len(input_files) // cfg.files_per_job))
     print(f"From {len(input_files)} input files created {len(input_path_chunks)} chunks")
-    st.multipath_slurm_processor(input_path_chunks=input_path_chunks, job_script=__file__)
+    st.multipath_slurm_processor(input_path_chunks=input_path_chunks, job_script=__file__, cfg=cfg, dataset=dataset)
 
 
 def print_config(cfg: DictConfig) -> None:
@@ -87,7 +87,7 @@ def process_peakfinding_root_file(path: str, cfg: DictConfig, nleft: int = 5, nr
     save_processed_data(processed_array, path)
 
 
-def prepare_inputs(cfg: DictConfig) -> None:
+def prepare_inputs(cfg: DictConfig, dataset) -> None:
     all_paths_to_process = []
     for training_type in cfg.training_types:
         for dataset in ["test", "train"]:
@@ -104,7 +104,7 @@ def prepare_inputs(cfg: DictConfig) -> None:
             raw_data_input_paths = glob.glob(input_file_wcp)
             all_paths_to_process.extend(raw_data_input_paths)
     if cfg.slurm.use_it:
-        prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg.slurm)
+        prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg.slurm, dataset=dataset)
     else:
         for path in all_paths_to_process:
             process_peakfinding_root_file(path, cfg)
@@ -132,13 +132,13 @@ def main(cfg: DictConfig) -> None:
     os.environ["MKL_NUM_THREADS"] = "1"
     os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
     os.environ["NUMEXPR_NUM_THREADS"] = "1"
+    cfg = cfg.CEPC.preprocessing
     print_config(cfg)
-    cfg = cfg.CEPC
 
-    if cfg.preprocessing.slurm.slurm_run:
-        run_job(cfg.preprocessing)
+    if cfg.slurm.slurm_run:
+        run_job(cfg)
     else:
-        prepare_inputs(cfg.preprocessing)
+        prepare_inputs(cfg, dataset="CEPC")
 
 
 if __name__ == "__main__":

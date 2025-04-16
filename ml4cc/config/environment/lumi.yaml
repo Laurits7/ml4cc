@@ -1,0 +1,12 @@
+name: lumi
+home_dir: /scratch/project_465001293/
+project_dir: ${home_dir}/ML4CC/ml4cc
+data_dir: ${home_dir}/ML4CC/data/
+slurm:
+  queue:
+    ntupelizer:
+      partition: small
+      time: 02:00:00
+      cpus: 1
+      mem: 4G
+
