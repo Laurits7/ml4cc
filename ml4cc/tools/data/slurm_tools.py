@@ -52,6 +52,8 @@ def prepare_job_file(
         Number of the job.
     output_dir : str
         Directory where the temporary output will be written
+    run_script : str
+        Path to the script that will be executed by slurm
     cfg : DictConfig
         The configuration to be used for processing
 
@@ -89,12 +91,12 @@ def prepare_job_file(
 
 
 def multipath_slurm_processor(input_path_chunks, job_script, cfg):
-    tmp_dir = create_tmp_run_dir(cfg=cfg)
-    input_file_paths = create_job_input_list(input_path_chunks, tmp_dir)
+    output_dir = create_tmp_run_dir(cfg=cfg)
+    input_file_paths = create_job_input_list(input_path_chunks, output_dir)
     for job_idx, input_file_path in enumerate(input_file_paths):
-        prepare_job_file(input_file=input_file_path, job_idx=job_idx, tmp_dir=tmp_dir, job_script=job_script, cfg=cfg)
-    print(f"Temporary directory created to {tmp_dir}")
-    print(f"Run `bash ml4cc/scripts/submit_batchJobs.sh {tmp_dir}/executables/`")
+        prepare_job_file(input_file=input_file_path, job_idx=job_idx, output_dir=output_dir, run_script=job_script, cfg=cfg)
+    print(f"Temporary directory created to {output_dir}")
+    print(f"Run `bash ml4cc/scripts/submit_batchJobs.sh {output_dir}/executables/`")
 
 
 def create_job_input_list(input_path_chunks: list, output_dir: str):

@@ -50,7 +50,7 @@ def prepare_inputs(cfg: DictConfig) -> None:
         all_paths_to_process = prepare_cepc_inputs(cfg.dataset)
     else:
         raise ValueError(f"Unknown experiment: {experiment}")
-    if cfg.slurm.use_it:
+    if cfg.preprocessing.slurm.use_it:
         prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg)
     else:
         for path in all_paths_to_process:
