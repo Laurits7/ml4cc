@@ -1,90 +1,17 @@
 import os
 import glob
-import json
 import time
 import hydra
 import numpy as np
-import awkward as ak
-from ml4cc.tools.data import io
+from omegaconf import DictConfig
 from ml4cc.tools.data import slurm_tools as st
-from omegaconf import DictConfig, OmegaConf
+from ml4cc.tools.data import preprocessing as pp
 
 
 def prepare_slurm_inputs(input_files: list, cfg: DictConfig, dataset: str) -> None:
     input_path_chunks = list(np.array_split(input_files, len(input_files) // cfg.files_per_job))
     print(f"From {len(input_files)} input files created {len(input_path_chunks)} chunks")
     st.multipath_slurm_processor(input_path_chunks=input_path_chunks, job_script=__file__, cfg=cfg, dataset=dataset)
-
-
-def print_config(cfg: DictConfig) -> None:
-    """ Prints the configuration used for the processing
-
-    Parameters:
-        cfg : DictConfig
-            The configuration to be used
-
-    Returns:
-        None
-    """
-    print("Used configuration:")
-    print(json.dumps(OmegaConf.to_container(cfg), indent=4))
-
-
-def save_processed_data(arrays: ak.Array, path: str) -> None:
-    """
-    Parameters:
-        arrays: ak.Array
-            The awkward array to be saved into file
-        path: str
-            The path of the output file
-
-    Returns:
-        None
-    """
-    output_path = path.replace("data/", "preprocessed_twoStep_data/")
-    output_path = output_path.replace(".root", ".parquet")
-    output_dir = os.path.dirname(output_path)
-    os.makedirs(output_dir, exist_ok=True)
-    io.save_array_to_file(data=arrays, output_path=output_path)
-
-
-def process_peakfinding_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright: int = 9) -> None:
-    """ Processes the peakfinding .root file into the format Guang used for 2-step training.
-
-    Parameters:
-        path : str
-            Path to the .parquet file to be processed
-        cfg : DictConfig
-            The configuration to be used for processing
-        nleft : int
-            Defines the distance from the peak to the left edge in the waveform window
-        nleft : int
-            Defines the distance from the peak to the right edge in the waveform window
-
-    Returns:
-        None
-    """
-    arrays = io.load_root_file(path=path, tree_path=cfg.tree_path, branches=cfg.branches)
-    all_windows = []
-    all_targets = []
-    for event_idx in range(len(arrays.time)):
-        wf_windows = []
-        target_window = []
-        peak_indices = np.array(arrays.time[event_idx], dtype=int)
-        for peak_idx, peak_loc in enumerate(peak_indices):
-            if peak_loc < nleft: continue
-            wf_window = arrays.wf_i[event_idx][peak_loc - nleft: peak_loc + nright + 1]
-            target = arrays.tag[event_idx][peak_idx]
-            wf_windows.append(wf_window)
-            target_window.append(target)
-        all_targets.append(target_window)
-        all_windows.append(wf_windows)
-    processed_array = ak.Array({
-        "target": all_targets,
-        "waveform": all_windows,
-        "wf_i": arrays.wf_i,
-    })
-    save_processed_data(processed_array, path)
 
 
 def prepare_inputs(cfg: DictConfig, dataset) -> None:
@@ -104,10 +31,10 @@ def prepare_inputs(cfg: DictConfig, dataset) -> None:
             raw_data_input_paths = glob.glob(input_file_wcp)
             all_paths_to_process.extend(raw_data_input_paths)
     if cfg.slurm.use_it:
-        prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg.slurm, dataset=dataset)
+        pp.prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg.slurm, dataset=dataset)
     else:
         for path in all_paths_to_process:
-            process_peakfinding_root_file(path, cfg)
+            pp.process_twostep_root_file(path, cfg)
 
 
 def run_job(cfg: DictConfig) -> None:
@@ -118,14 +45,14 @@ def run_job(cfg: DictConfig) -> None:
     total_start_time = time.time()
     for path in input_paths:
         file_start_time = time.time()
-        process_peakfinding_root_file(path, cfg)
+        pp.process_twostep_root_file(path, cfg)
         file_end_time = time.time()
         print(f"Processing {path} took {file_end_time - file_start_time:.2f} seconds")
     total_end_time = time.time()
     print(f"Processing {len(input_paths)} took{total_end_time - total_start_time:.2f} seconds")
 
 
-@hydra.main(config_path="../../config/datasets", config_name="CEPC", version_base=None)
+@hydra.main(config_path="../../config/datasets", config_name="CEPC", version_base=None)  # TODO: change according to new config structure
 def main(cfg: DictConfig) -> None:
     os.environ["OMP_NUM_THREADS"] = "1"
     os.environ["OPENBLAS_NUM_THREADS"] = "1"
@@ -133,7 +60,7 @@ def main(cfg: DictConfig) -> None:
     os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
     os.environ["NUMEXPR_NUM_THREADS"] = "1"
     cfg = cfg.CEPC.preprocessing
-    print_config(cfg)
+    pp.print_config(cfg)
 
     if cfg.slurm.slurm_run:
         run_job(cfg)

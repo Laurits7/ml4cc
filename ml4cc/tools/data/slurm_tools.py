@@ -30,9 +30,7 @@ def create_tmp_run_dir(cfg):
             Path to the temporary directory
     """
     run_id = generate_run_id()
-    host_tmp_dir = cfg.tmp_dir[cfg.host]
-    default_tmp_dir = os.path.join(os.path.expandvars("$HOME"), "tmp", run_id)
-    tmp_dir = host_tmp_dir if host_tmp_dir is not None else default_tmp_dir
+    tmp_dir = os.path.join(cfg.tmp_dir, run_id)
     os.makedirs(tmp_dir, exist_ok=True)
     return tmp_dir
 
@@ -42,8 +40,7 @@ def prepare_job_file(
         job_idx,
         output_dir,
         run_script,
-        host="lumi",
-        dataset="CEPC",
+        cfg,
 ):
     """Writes the job file that will be executed by slurm
 
@@ -55,10 +52,8 @@ def prepare_job_file(
         Number of the job.
     output_dir : str
         Directory where the temporary output will be written
-    host : str
-        [default: lumi] Name of the host where the job will be executed
-    dataset : str
-        [default: CEPC] Name of the dataset to be processed
+    cfg : DictConfig
+        The configuration to be used for processing
 
     Returns:
     -------
@@ -74,7 +69,7 @@ def prepare_job_file(
     job_file = os.path.join(job_dir, 'execute' + str(job_idx) + '.sh')
     error_file = os.path.join(error_dir, 'error' + str(job_idx))
     log_file = os.path.join(log_dir, 'output' + str(job_idx))
-    queue_name = "small" if host == "lumi" else "short"
+    queue_name = cfg.slurm.queue.preprocessing.partition
     with open(job_file, 'wt') as filehandle:
         filehandle.writelines(dedent(
             f"""
@@ -88,16 +83,16 @@ def prepare_job_file(
                 #SBATCH -o {log_file}
                 env
                 date
-                ./run.sh python {run_script} {dataset}.preprocessing.slurm.slurm_run=True {dataset}.preprocessing.slurm.input_path={input_file}
+                ./run.sh python {run_script} preprocessing.slurm.slurm_run=True preprocessing.slurm.input_path={input_file}
             """).strip('\n'))
     return job_file
 
 
-def multipath_slurm_processor(input_path_chunks, job_script, cfg, dataset):
+def multipath_slurm_processor(input_path_chunks, job_script, cfg):
     tmp_dir = create_tmp_run_dir(cfg=cfg)
     input_file_paths = create_job_input_list(input_path_chunks, tmp_dir)
     for job_idx, input_file_path in enumerate(input_file_paths):
-        prepare_job_file(input_file=input_file_path, job_idx=job_idx, tmp_dir=tmp_dir, job_script=job_script, host=cfg.host, dataset=dataset)
+        prepare_job_file(input_file=input_file_path, job_idx=job_idx, tmp_dir=tmp_dir, job_script=job_script, cfg=cfg)
     print(f"Temporary directory created to {tmp_dir}")
     print(f"Run `bash ml4cc/scripts/submit_batchJobs.sh {tmp_dir}/executables/`")
 

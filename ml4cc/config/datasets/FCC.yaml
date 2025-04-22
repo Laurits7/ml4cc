@@ -1,12 +1,11 @@
-FCC:
-    input_dim: 1200
-    preprocessing:
-        branches: null
-        tree_path: sim
-        training_types:
-            - clusterization
-            - peakFinding
-        particle_types:
-            - muon
-    data_dir: ${host.data_dir}/FCC/preprocessed_data/
-    raw_input_dir: ${host.data_dir}/FCC/raw_data/
+name: FCC
+input_dim: 1200
+branches: null
+tree_path: sim
+training_types:
+    - clusterization
+    - peakFinding
+particle_types:
+    - muon
+raw_input_dir: ${host.data_dir}/FCC/data/
+data_dir: ${host.data_dir}/FCC/preprocessed_data/

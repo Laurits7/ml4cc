@@ -1,6 +1,7 @@
 name: manivald
 project_dir: /home/laurits/ml4cc
 data_dir: /scratch/persistent/laurits/ml4cc
+tmp_dir: /home/laurits/tmp
 slurm:
   queue:
     preprocessing:

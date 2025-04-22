@@ -1,12 +1,12 @@
-CEPC:
-    input_dim: 3000
-    branches: null
-    tree_path: sim
-    training_types:
-        - clusterization
-        - peakFinding
-    particle_types:
-        - kaon
-        - pion
-    raw_input_dir: ${host.data_dir}/CEPC/data/
-    data_dir: ${host.data_dir}/CEPC/preprocessed_data/
+name: CEPC
+input_dim: 3000
+branches: null
+tree_path: sim
+training_types:
+    - clusterization
+    - peakFinding
+particle_types:
+    - kaon
+    - pion
+raw_input_dir: ${host.data_dir}/CEPC/data/
+data_dir: ${host.data_dir}/CEPC/preprocessed_data/
