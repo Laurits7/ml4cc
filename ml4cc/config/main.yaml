@@ -1,6 +1,6 @@
 defaults:
     - _self_
-    - environment@host: lumi  # Options: lumi, manivald
-    - datasets@dataset: CEPC  # Options: FCC, CEPC
+    - environment@host: manivald  # Options: lumi, manivald
+    - datasets@dataset: FCC  # Options: FCC, CEPC
     - preprocessing
     - training

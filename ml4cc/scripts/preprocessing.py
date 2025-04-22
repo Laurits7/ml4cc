@@ -42,7 +42,6 @@ def prepare_cepc_inputs(cfg: DictConfig) -> list:
 
 def prepare_inputs(cfg: DictConfig) -> None:
     experiment = cfg.dataset.name
-    data_type = cfg.preprocessing.data_type
     all_paths_to_process = []
     if experiment == "FCC":
         all_paths_to_process = prepare_fcc_inputs(cfg.dataset)
@@ -53,32 +52,29 @@ def prepare_inputs(cfg: DictConfig) -> None:
     if cfg.preprocessing.slurm.use_it:
         prepare_slurm_inputs(input_files=all_paths_to_process, cfg=cfg)
     else:
-        for path in all_paths_to_process:
-            if data_type == "two_step_data":
-                pp.process_twostep_root_file(path, cfg)
-            elif data_type == "one_step_data":
-                pp.process_onestep_root_file(path, cfg)
-            else:
-                raise ValueError(f"Unknown data type: {data_type}")
+        process_files(input_files=all_paths_to_process, cfg=cfg)
+
+
+def process_files(input_files: list, cfg: DictConfig) -> None:
+    for path in input_files:
+        file_start_time = time.time()
+        if cfg.preprocessing.data_type == "two_step_data":
+            pp.process_twostep_root_file(path, cfg)
+        elif cfg.preprocessing.data_type == "one_step_data":
+            pp.process_onestep_root_file(path, cfg)
+        else:
+            raise ValueError(f"Unknown data type: {cfg.preprocessing.data_type}")
+        file_end_time = time.time()
+        print(f"Processing {path} took {file_end_time - file_start_time:.2f} seconds")
 
 
 def run_job(cfg: DictConfig) -> None:
     input_paths = []
-    data_type = cfg.preprocessing.data_type
     with open(cfg.preprocessing.slurm.input_path, 'rt') as inFile:
         for line in inFile:
             input_paths.append(line.strip('\n'))
     total_start_time = time.time()
-    for path in input_paths:
-        file_start_time = time.time()
-        if data_type == "two_step_data":
-            pp.process_twostep_root_file(path, cfg)
-        elif data_type == "one_step_data":
-            pp.process_onestep_root_file(path, cfg)
-        else:
-            raise ValueError(f"Unknown data type: {data_type}")
-        file_end_time = time.time()
-        print(f"Processing {path} took {file_end_time - file_start_time:.2f} seconds")
+    process_files(input_files=input_paths, cfg=cfg)
     total_end_time = time.time()
     print(f"Processing {len(input_paths)} took{total_end_time - total_start_time:.2f} seconds")
 
