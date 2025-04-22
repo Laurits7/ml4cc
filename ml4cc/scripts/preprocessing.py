@@ -76,7 +76,7 @@ def run_job(cfg: DictConfig) -> None:
     total_start_time = time.time()
     process_files(input_files=input_paths, cfg=cfg)
     total_end_time = time.time()
-    print(f"Processing {len(input_paths)} took{total_end_time - total_start_time:.2f} seconds")
+    print(f"Processing {len(input_paths)} took {total_end_time - total_start_time:.2f} seconds")
 
 
 @hydra.main(config_path="../config", config_name="main", version_base=None)

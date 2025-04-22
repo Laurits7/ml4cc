@@ -8,5 +8,5 @@ slurm:
       output_dir: ${data_dir}
       partition: small
       time: 02:00:00
-      cpus: 5
+      cpus: 10
 

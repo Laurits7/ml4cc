@@ -23,7 +23,7 @@ def save_processed_data(arrays: ak.Array, path: str, cfg: DictConfig, data_type:
     """
     dataset_dir = f"{dataset}/" if dataset != "" else dataset
     output_path = path.replace("data/", f"{data_type}/{dataset_dir}")
-    output_path = output_path.replace(cfg.host.data_dir, cfg.host.slurm.queue.preprcessing.output_dir)
+    output_path = output_path.replace(cfg.host.data_dir, cfg.host.slurm.queue.preprocessing.output_dir)
     output_path = output_path.replace(".root", ".parquet")
     output_dir = os.path.dirname(output_path)
     os.makedirs(output_dir, exist_ok=True)

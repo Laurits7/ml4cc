@@ -8,4 +8,4 @@ slurm:
       output_dir: /home/laurits/ML4CC_preprocessing
       partition: short
       time: 02:00:00
-      cpus: 5
+      cpus: 10
