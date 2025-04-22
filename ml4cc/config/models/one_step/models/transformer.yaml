@@ -1,0 +1,10 @@
+name: transformer
+checkpoint:
+    model: null
+    losses: null
+_target_: ml4cc.models.transformer
+
+# TODO: Maybe need to have name and target under "model" key to instantiate the class?
+
+defaults:
+    - _self_

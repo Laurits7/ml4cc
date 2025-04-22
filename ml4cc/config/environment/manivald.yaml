@@ -1,0 +1,11 @@
+name: manivald
+project_dir: /home/laurits/ml4cc
+data_dir: /scratch/persistent/laurits/ml4cc
+tmp_dir: /home/laurits/tmp
+slurm:
+  queue:
+    preprocessing:
+      output_dir: /home/laurits/ML4CC_preprocessing
+      partition: short
+      time: 02:00:00
+      cpus: 10

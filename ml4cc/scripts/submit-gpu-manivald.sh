@@ -2,7 +2,7 @@
 #SBATCH -p gpu
 #SBATCH --gres gpu:rtx
 #SBATCH --mem-per-gpu 40G
-#SBATCH -o logs/slurm-%x-%j-%N.out
+#SBATCH -o slurm-logs/slurm-%x-%j-%N.out
 
 # env | grep CUDA
 # nvidia-smi -L

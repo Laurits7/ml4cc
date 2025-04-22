@@ -1,24 +1,17 @@
 training:
-    output_dir: /home/laurits/ml4cc/training-outputs/20250119_DNN_FCC_clusterization_150epoch
-    batch_size: 65536
-    num_dataloader_workers: 2
-    prefetch_factor: 100
+    output_dir: null
+    dataloader:
+        batch_size: 512
+        num_dataloader_workers: 2
+        prefetch_factor: 100
     trainer:
-        max_epochs: 150 # 50 epochs in Guang paper
-    data:
-        fraction_valid: 0.2
-        dataset: CEPC
-model_evaluation_only: False
-checkpoints:
-    peakFinding:
-        LSTM:
-            model: /home/laurits/ml4cc/training-outputs/20241214_150Epoch_LSTM/models/best_model.ckpt
-            losses: /home/laurits/ml4cc/training-outputs/20241214_150Epoch_LSTM/logs/peakFinding/version_0/metrics.csv
-    clusterization:
-        DGCNN:
-            model: null
-            losses: null
+        max_epochs: 5 # 50 epochs in Guang paper
+    model_evaluation_only: False
 defaults:
     - _self_
-    - datasets: datasets
     - models: models
+
+hydra:
+    output_subdir: null
+    run:
+        dir: .

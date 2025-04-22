@@ -1,0 +1,9 @@
+preprocessing:
+  train_val_test_split: [0.7, 0.1, 0.2]
+  row_group_size: 1024
+  data_type: one_step_data  # Options: one_step_data, two_step_data
+  slurm:
+      use_it: True
+      slurm_run: False
+      files_per_job: 1
+      input_path: null

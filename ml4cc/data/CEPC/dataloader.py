@@ -2,6 +2,7 @@ import os
 import glob
 import math
 import torch
+import numpy as np
 import awkward as ak
 from ml4cc.tools.data import io
 from omegaconf import DictConfig
@@ -9,6 +10,12 @@ from collections.abc import Sequence
 from lightning import LightningDataModule
 from torch.utils.data import Dataset, DataLoader, IterableDataset, ConcatDataset
 
+
+#####################################################################################
+#####################################################################################
+######################        Peak finding       ####################################
+#####################################################################################
+#####################################################################################
 
 class CEPCDataset(Dataset):
     def __init__(self, data_path: str):
@@ -188,10 +195,12 @@ class CEPCDataModule(LightningDataModule):
     def test_dataloader(self):
         return self.test_loader
 
-    # def on_exception(self, exception: Exception) -> None:
-    #     # Handle the exception here (e.g., log it or take some action)
-    #     print(f"Exception occurred: {exception}")
 
+#####################################################################################
+#####################################################################################
+######################      Clusterization       ####################################
+#####################################################################################
+#####################################################################################
 
 
 class ClusterizationIterableDataSet(IterableDataset):
@@ -318,3 +327,128 @@ class ClusterizationCEPCDataModule(LightningDataModule):
         return self.test_loader
 
 # count_x / sampling_rate = idx -> x-axis values in the waveform?
+
+
+#####################################################################################
+#####################################################################################
+######################      One-step cluster counting      ##########################
+#####################################################################################
+#####################################################################################
+
+
+class OneStepIterableDataSet(IterableDataset):
+    def __init__(self, dataset: Dataset, cfg: DictConfig, dataset_type: str, pred_dataset: bool = False):
+        self.dataset = dataset
+        self.cfg = cfg
+        self.dataset_type = dataset_type
+        self.row_groups = [d for d in self.dataset]
+        self.pred_dataset = pred_dataset
+        self.num_rows = sum([rg.num_rows for rg in self.row_groups])
+        print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the {dataset_type} dataset.")
+        super().__init__()
+
+    def build_tensors(self, data: ak.Array):
+        targets = np.array(data.target == 1, dtype=int)
+        targets = np.sum(targets, axis=-1)
+        targets = torch.tensor(targets, dtype=torch.float32)
+        waveform = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
+        return waveform, targets
+
+    def __len__(self):
+        return self.num_rows
+
+    def __iter__(self):
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is None:
+            row_groups_to_process = self.row_groups
+        else:
+            per_worker = int(math.ceil(float(len(self.row_groups)) / float(worker_info.num_workers)))
+            worker_id = worker_info.id
+            row_groups_start = worker_id * per_worker
+            row_groups_end = row_groups_start + per_worker
+            row_groups_to_process = self.row_groups[row_groups_start:row_groups_end]
+
+        for row_group in row_groups_to_process:
+            # load one chunk from one file
+            data = ak.from_parquet(row_group.filename, row_groups=[row_group.row_group])
+            tensors = self.build_tensors(data)
+
+            # return individual jets from the dataset
+            for idx_wf in range(len(data)):
+                yield tensors[0][idx_wf], tensors[1][idx_wf]
+
+
+class OneStepCEPCDataModule(LightningDataModule):
+    # Should merge with the peakFinding DataModule
+    def __init__(self, cfg: DictConfig):
+        self.cfg = cfg
+        self.test_loader = None
+        self.train_loader = None
+        self.val_loader = None
+        self.test_dataset = None
+        self.train_dataset = None
+        self.val_dataset = None
+        self.save_hyperparameters()
+        super().__init__()
+
+    def get_dataset_path(self, dataset_type: str) -> str:
+        return os.path.join(self.cfg.datasets.CEPC.data_dir, "peakFinding", dataset_type)
+
+    def prepare_data(self) -> None:
+        pass
+
+    def setup(self, stage: str):
+        if stage == "fit":
+            train_datasets = []
+            data_dir = self.get_dataset_path(dataset_type="train")
+            full_train_dataset = CEPCDataset(data_path=data_dir)
+            train_datasets.append(full_train_dataset)
+            train_concat_dataset = ConcatDataset(train_datasets)
+            train_subset, val_subset = io.train_val_split_shuffle(
+                concat_dataset=train_concat_dataset,
+                val_split=self.cfg.training.data.fraction_valid,
+                max_waveforms_for_training=-1,
+                row_group_size=self.cfg.datasets.CEPC.row_group_size,
+            )
+            self.train_dataset = OneStepIterableDataSet(
+                cfg=self.cfg,
+                dataset=train_subset,
+                dataset_type="train",
+            )
+            self.val_dataset = OneStepIterableDataSet(
+                cfg=self.cfg,
+                dataset=val_subset,
+                dataset_type="validation",
+            )
+            self.train_loader = DataLoader(
+                self.train_dataset,
+                batch_size=128,
+                num_workers=self.cfg.training.num_dataloader_workers,
+                prefetch_factor=self.cfg.training.prefetch_factor,
+            )
+            self.val_loader = DataLoader(
+                self.val_dataset,
+                batch_size=128,
+                num_workers=self.cfg.training.num_dataloader_workers,
+                prefetch_factor=self.cfg.training.prefetch_factor,
+            )
+
+        elif stage == "test":
+            data_dir = self.get_dataset_path(dataset_type="test")
+            test_dataset = CEPCDataset(data_path=data_dir)
+            test_concat_dataset = ConcatDataset([test_dataset])
+            self.test_dataset = OneStepIterableDataSet(
+                dataset=test_concat_dataset,
+                cfg=self.cfg,
+                dataset_type="test",
+            )
+            self.test_loader = DataLoader(self.test_dataset, batch_size=128)
+
+    def train_dataloader(self):
+        return self.train_loader
+
+    def val_dataloader(self):
+        return self.val_loader
+
+    def test_dataloader(self):
+        return self.test_loader
