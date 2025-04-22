@@ -71,14 +71,13 @@ def prepare_job_file(
     job_file = os.path.join(job_dir, 'execute' + str(job_idx) + '.sh')
     error_file = os.path.join(error_dir, 'error' + str(job_idx))
     log_file = os.path.join(log_dir, 'output' + str(job_idx))
-    queue_name = cfg.slurm.queue.preprocessing.partition
     with open(job_file, 'wt') as filehandle:
         filehandle.writelines(dedent(
             f"""
                 #!/bin/bash
                 #SBATCH --job-name=ntupelizer
-                #SBATCH --ntasks=1
-                #SBATCH --partition={queue_name}
+                #SBATCH --ntasks={cfg.slurm.queue.preprocessing.cpus}
+                #SBATCH --partition={cfg.slurm.queue.preprocessing.partition}
                 #SBATCH --time=02:00:00
                 #SBATCH --cpus-per-task=1
                 #SBATCH -e {error_file}
