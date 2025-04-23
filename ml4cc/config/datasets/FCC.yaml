@@ -9,3 +9,6 @@ particle_types:
     - muon
 raw_input_dir: ${host.data_dir}/FCC/data/
 data_dir: ${host.data_dir}/FCC/preprocessed_data/
+test_dataset: combined  # Options: combined, or list of energies
+train_dataset: combined  # Options: combined, or list of energies
+

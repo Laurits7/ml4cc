@@ -3,10 +3,10 @@ project_dir: /scratch/project_465001293/ML4CC/ml4cc
 data_dir: /scratch/project_465001293/ML4CC/data
 tmp_dir: /scratch/project_465001293/ML4CC/tmp
 slurm:
-  queue:
-    preprocessing:
-      output_dir: ${data_dir}
-      partition: small
-      time: 02:00:00
-      cpus: 10
+    queue:
+        preprocessing:
+            output_dir: ${data_dir}
+            partition: small
+            time: 02:00:00
+            cpus: 10
 
