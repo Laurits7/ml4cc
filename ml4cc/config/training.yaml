@@ -1,7 +1,9 @@
 training:
     output_dir: null
     dataloader:
-        batch_size: 512
+        batch_size:
+            one_step: 128
+            two_step: 512
         num_dataloader_workers: 2
         prefetch_factor: 100
     trainer:

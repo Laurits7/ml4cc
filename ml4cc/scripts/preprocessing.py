@@ -58,9 +58,9 @@ def prepare_inputs(cfg: DictConfig) -> None:
 def process_files(input_files: list, cfg: DictConfig) -> None:
     for path in input_files:
         file_start_time = time.time()
-        if cfg.preprocessing.data_type == "two_step_data":
+        if cfg.preprocessing.data_type == "two_step":
             pp.process_twostep_root_file(path, cfg)
-        elif cfg.preprocessing.data_type == "one_step_data":
+        elif cfg.preprocessing.data_type == "one_step":
             pp.process_onestep_root_file(path, cfg)
         else:
             raise ValueError(f"Unknown data type: {cfg.preprocessing.data_type}")

@@ -6,7 +6,7 @@ from ml4cc.tools.data import io
 from omegaconf import DictConfig
 
 
-def save_processed_data(arrays: ak.Array, path: str, cfg: DictConfig, data_type: str = "one_step_data", dataset: str = "") -> None:
+def save_processed_data(arrays: ak.Array, path: str, cfg: DictConfig, data_type: str = "one_step", dataset: str = "") -> None:
     """
     Parameters:
         arrays: ak.Array
@@ -14,7 +14,7 @@ def save_processed_data(arrays: ak.Array, path: str, cfg: DictConfig, data_type:
         path: str
             The path of the output file
         data_type: str
-            [default: one_step_data] Data type for the training, either one-step or two-step
+            [default: one_step] Data type for the training, either one-step or two-step
         dataset: str
             [default: ""] The dataset to be used for the training, either train, val or test
 
@@ -75,7 +75,7 @@ def train_val_test_split(arrays: ak.Array, cfg: DictConfig) -> tuple:
     return train_indices, test_indices, val_indices
 
 
-def save_split_data(arrays, path, train_indices, val_indices, test_indices, cfg: DictConfig, data_type: str = "one_step_data") -> None:
+def save_split_data(arrays, path, train_indices, val_indices, test_indices, cfg: DictConfig, data_type: str = "one_step") -> None:
     """ Saves the split data into train, val and test sets.
 
     Parameters:
@@ -90,7 +90,7 @@ def save_split_data(arrays, path, train_indices, val_indices, test_indices, cfg:
         test_indices : list
             The indices of the test set
         data_type : str
-            [default: one_step_data] Data type for the training, either one-step or two-step
+            [default: one_step] Data type for the training, either "one_step" or "two_step"
 
     Returns:
         None
@@ -126,9 +126,9 @@ def process_onestep_root_file(path: str, cfg: DictConfig) -> None:
 
     if cfg.dataset.name == "FCC":
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
-        save_split_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step_data")
+        save_split_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
     elif cfg.dataset.name == "CEPC":
-        save_processed_data(processed_array, path, cfg=cfg, data_type="one_step_data")
+        save_processed_data(processed_array, path, cfg=cfg, data_type="one_step")
     else:
         raise ValueError(f"Unknown experiment: {cfg.dataset.name}")
 
@@ -171,8 +171,8 @@ def process_twostep_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright
     })
     if cfg.dataset.name == "FCC":
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
-        save_split_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step_data")
+        save_split_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step")
     elif cfg.dataset.name == "CEPC":
-        save_processed_data(processed_array, path, data_type="two_step_data", cfg=cfg)
+        save_processed_data(processed_array, path, data_type="two_step", cfg=cfg)
     else:
         raise ValueError(f"Unknown experiment: {cfg.dataset.name}")

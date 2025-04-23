@@ -10,3 +10,5 @@ particle_types:
     - pion
 raw_input_dir: ${host.data_dir}/CEPC/data/
 data_dir: ${host.data_dir}/CEPC/preprocessed_data/
+test_dataset: combined  # Options: combined, [Only for cluserization: kaon, pion]
+train_dataset: combined  # Options: combined
