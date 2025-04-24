@@ -1,17 +1,16 @@
 training:
+    type: one_step
     output_dir: null
     dataloader:
-        batch_size:
+        batch_sizes:
             one_step: 128
             two_step: 512
+        batch_size: ${training.dataloader.batch_sizes[${training.type}]}
         num_dataloader_workers: 2
         prefetch_factor: 100
     trainer:
         max_epochs: 5 # 50 epochs in Guang paper
     model_evaluation_only: False
-defaults:
-    - _self_
-    - models: models
 
 hydra:
     output_subdir: null
