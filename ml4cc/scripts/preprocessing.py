@@ -23,15 +23,14 @@ def prepare_fcc_inputs(cfg: DictConfig) -> list:
 
 def prepare_cepc_inputs(cfg: DictConfig) -> list:
     all_paths_to_process = []
-    for training_type in cfg.training_types:
-        for dataset in ["test", "train"]:
-            input_file_wcp = os.path.join(
-                cfg.raw_input_dir,
-                training_type,
-                "*"
-            )
-            raw_data_input_paths = list(glob.glob(input_file_wcp))
-            all_paths_to_process.extend(raw_data_input_paths)
+    for dataset in ["test", "train"]:
+        input_file_wcp = os.path.join(
+            cfg.raw_input_dir,
+            dataset,
+            "*"
+        )
+        raw_data_input_paths = list(glob.glob(input_file_wcp))
+        all_paths_to_process.extend(raw_data_input_paths)
     return all_paths_to_process
 
 

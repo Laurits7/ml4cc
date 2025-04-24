@@ -21,10 +21,12 @@ def save_processed_data(arrays: ak.Array, path: str, cfg: DictConfig, data_type:
     Returns:
         None
     """
+    path = path.replace("train", "") if "train" in path else path
     dataset_dir = f"{dataset}/" if dataset != "" else dataset
     output_path = path.replace("data/", f"{data_type}/{dataset_dir}")
     output_path = output_path.replace(cfg.host.data_dir, cfg.host.slurm.queue.preprocessing.output_dir)
     output_path = output_path.replace(".root", ".parquet")
+    print(f"Saving {path} to {output_path}")
     output_dir = os.path.dirname(output_path)
     os.makedirs(output_dir, exist_ok=True)
     io.save_array_to_file(data=arrays, output_path=output_path)
@@ -138,8 +140,13 @@ def process_onestep_root_file(path: str, cfg: DictConfig) -> None:
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
         save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
     elif cfg.dataset.name == "CEPC":
-        train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing, test_also=False)
-        save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
+        if "test" in path:
+            save_processed_data(processed_array, path, data_type="one_step", cfg=cfg)
+        elif "train" in path:
+            train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing, test_also=False)
+            save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
+        else:
+            raise ValueError(f"Unknown dataset in path: {path}")
     else:
         raise ValueError(f"Unknown experiment: {cfg.dataset.name}")
 
@@ -183,7 +190,12 @@ def process_twostep_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright
     if cfg.dataset.name == "FCC":
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
         save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step")
-    elif cfg.dataset.name == "CEPC":
-        save_processed_data(processed_array, path, data_type="two_step", cfg=cfg)
+        if "test" in path:
+            save_processed_data(processed_array, path, data_type="two_step", cfg=cfg)
+        elif "train" in path:
+            train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing, test_also=False)
+            save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step")
+        else:
+            raise ValueError(f"Unknown dataset in path: {path}")
     else:
         raise ValueError(f"Unknown experiment: {cfg.dataset.name}")
