@@ -47,7 +47,7 @@ def indices_to_booleans(indices: ak.Array, array_to_slice: ak.Array) -> ak.Array
     return ak.any(whole_set == in_set, axis=-1)
 
 
-def train_val_test_split(arrays: ak.Array, cfg: DictConfig) -> tuple:
+def train_val_test_split(arrays: ak.Array, cfg: DictConfig, test_also: bool = True) -> tuple:
     """ Splits the data into train, val and test sets.
     
     Parameters:
@@ -67,15 +67,24 @@ def train_val_test_split(arrays: ak.Array, cfg: DictConfig) -> tuple:
     indices = list(range(total_len))
     random.seed(42)
     random.shuffle(indices)
-    num_train_rows = int(np.ceil(total_len*cfg.train_val_test_split[0]))
-    num_val_rows =  int(np.ceil(total_len*cfg.train_val_test_split[1]))
-    train_indices = indices[:num_train_rows]
-    val_indices = indices[num_train_rows: num_train_rows + num_val_rows]
-    test_indices = indices[num_train_rows + num_val_rows:]
+    if test_also:
+        num_train_rows = int(np.ceil(total_len*cfg.train_val_test_split[0]))
+        num_val_rows =  int(np.ceil(total_len*cfg.train_val_test_split[1]))
+        train_indices = indices[:num_train_rows]
+        val_indices = indices[num_train_rows: num_train_rows + num_val_rows]
+        test_indices = indices[num_train_rows + num_val_rows:]
+    else:
+        frac_train_raw = cfg.train_val_test_split[0]
+        frac_val_raw = cfg.train_val_test_split[1]
+        frac_train = frac_train_raw / (frac_train_raw + frac_val_raw)
+        frac_val = frac_val_raw / (frac_train_raw + frac_val_raw)
+        train_indices = indices[:int(np.ceil(total_len*frac_train))]
+        val_indices = indices[int(np.ceil(total_len*frac_train)):int(np.ceil(total_len*(frac_train + frac_val)))]
+        test_indices = None
     return train_indices, test_indices, val_indices
 
 
-def save_split_data(arrays, path, train_indices, val_indices, test_indices, cfg: DictConfig, data_type: str = "one_step") -> None:
+def save_train_val_test_data(arrays, path, train_indices, val_indices, test_indices, cfg: DictConfig, data_type: str = "one_step") -> None:
     """ Saves the split data into train, val and test sets.
 
     Parameters:
@@ -96,11 +105,12 @@ def save_split_data(arrays, path, train_indices, val_indices, test_indices, cfg:
         None
     """
     train_array = arrays[train_indices]
-    val_array = arrays[val_indices]
-    test_array = arrays[test_indices]
     save_processed_data(train_array, path, data_type=data_type, cfg=cfg, dataset="train")
+    val_array = arrays[val_indices]
     save_processed_data(val_array, path, data_type=data_type, cfg=cfg, dataset="val")
-    save_processed_data(test_array, path, data_type=data_type, cfg=cfg, dataset="test")
+    if test_indices is not None:
+        test_array = arrays[test_indices]
+        save_processed_data(test_array, path, data_type=data_type, cfg=cfg, dataset="test")
 
 
 def process_onestep_root_file(path: str, cfg: DictConfig) -> None:
@@ -126,9 +136,10 @@ def process_onestep_root_file(path: str, cfg: DictConfig) -> None:
 
     if cfg.dataset.name == "FCC":
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
-        save_split_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
+        save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
     elif cfg.dataset.name == "CEPC":
-        save_processed_data(processed_array, path, cfg=cfg, data_type="one_step")
+        train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing, test_also=False)
+        save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
     else:
         raise ValueError(f"Unknown experiment: {cfg.dataset.name}")
 
@@ -171,7 +182,7 @@ def process_twostep_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright
     })
     if cfg.dataset.name == "FCC":
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
-        save_split_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step")
+        save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step")
     elif cfg.dataset.name == "CEPC":
         save_processed_data(processed_array, path, data_type="two_step", cfg=cfg)
     else:

@@ -40,7 +40,7 @@ If height > 3sigma then it is defined as a peak (??)
 
 ## Dataset structure
 
-After downloading the CEPC dataset, the structure of the dataset will be as follows:
+After downloading the CEPC dataset, in the current version the structure of the dataset will be as follows:
 
 ```text
 data/
@@ -57,6 +57,24 @@ data/
 │  │  │  ├─ signal_K_12.5_*.root
 │  ├─ train/
 │  │  ├─ signal_noise05_*.root
+```
+
+However, in order to have similar data structure, the new structure would be the following:
+
+```text
+data/
+
+├─ train/
+│  ├─ signal_noise05_*.root
+├─ test/
+│  ├─ signal_pi_{5.0 .. 20.0}_{0..49}.root
+│  ├─ signal_K_{5.0 .. 20.0}_{0..49}.root
+```
+Under the "train", the file numbering follows the following rules from the old structure:
+``` text
+clusterization/train/signal_noise05_{0..49}  ---> train/signal_noise05_{0..49}
+peakFinding/train/signal_noise05_{0..49}  ---> train/ignal_noise05_{50..99}
+peakFinding/test/signal_noise05_{0..49}  ---> train/ignal_noise05_{100..149}
 ```
 
 ## Processing CEPC dataset

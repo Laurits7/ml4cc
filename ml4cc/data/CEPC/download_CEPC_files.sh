@@ -36,6 +36,9 @@ echo DOWNLOAD_DATA $DOWNLOAD_DATA
 echo DOWNLOAD_SOFTWARE $DOWNLOAD_SOFTWARE
 
 # Now download the chosen files.
+# TODO: The structure of the raw data should be changed as such: 
+# - Everything in the peakFinding and the train in clusterization goes to data/train
+# - Everything in the test in clusterization goes to data/test
 while read line; do
     URL=`echo $line | awk '{split($0,a,"&"); print a[1]}'`
     BROKEN_FILENAME=`echo $line | awk '{split($0,a,"&"); print a[2]}'`
@@ -47,7 +50,7 @@ while read line; do
         FILENAME=${FILENAME//clusterization_test_samples/clusterization\/test}
         FILENAME=${FILENAME//clusterization_train_samples/clusterization\/train}
         FILENAME=${FILENAME//peakFinding_test_samples/peakFinding\/test}
-        FILENAME=${FILENAME//peakFinding_train_samples/peakFinding\/train}
+        FILENAME=${FILENAME//peakFinding_train_samples/peakFinding\/train}  # TODO: Changes here
         curl $URL --create-dirs -o $FILENAME
       fi
     else

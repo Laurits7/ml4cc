@@ -25,17 +25,12 @@ def prepare_cepc_inputs(cfg: DictConfig) -> list:
     all_paths_to_process = []
     for training_type in cfg.training_types:
         for dataset in ["test", "train"]:
-            if (training_type == "clusterization") and (dataset == "test"):
-                sample_dir = os.path.join(dataset, "*")
-            else:
-                sample_dir = dataset
             input_file_wcp = os.path.join(
                 cfg.raw_input_dir,
                 training_type,
-                sample_dir,
                 "*"
             )
-            raw_data_input_paths = glob.glob(input_file_wcp)
+            raw_data_input_paths = list(glob.glob(input_file_wcp))
             all_paths_to_process.extend(raw_data_input_paths)
     return all_paths_to_process
 
