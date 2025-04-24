@@ -313,3 +313,38 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
         return wf_windows, target_windows  # TODO: Unsqueeze?
 
+
+class TwoStepMinimalDataModule(BaseDataModule):
+    def __init__(self, cfg: DictConfig, data_type: str):
+        """ Data module for the minimal two-step approach. This is a simplified version of the two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
+        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """
+        iter_dataset = TwoStepMinimalIterableDataset
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
+
+
+class TwoStepPeakFindingDataModule(BaseDataModule):
+    def __init__(self, cfg: DictConfig, data_type: str):
+        """ Data module for the two-step approach. This is a simplified version of the two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
+        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """
+        iter_dataset = TwoStepPeakFindingIterableDataset
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
+
+
+class TwoStepClusterizationDataModule(BaseDataModule):
+    def __init__(self, cfg: DictConfig, data_type: str):
+        """ Data module for the two-step approach. This is a simplified version of the two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
+        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """
+        iter_dataset = TwoStepClusterizationIterableDataset
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
+
+
+class OneStepDataModule(BaseDataModule):
+    def __init__(self, cfg: DictConfig, data_type: str):
+        """ Data module for the one-step approach. This is a simplified version of the two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
+        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """
+        iter_dataset = OneStepIterableDataset
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
