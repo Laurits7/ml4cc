@@ -16,4 +16,4 @@ slurm:
         FCC:
           one_step: 12G
           two_step: null
-      mem: ${host.slurm.queue.preprocess.mem_map[${dataset.dataset}][${preprocessing.data_type}]}
+      mem: ${host.slurm.queue.preprocessing.mem_map[${dataset.name}][${preprocessing.data_type}]}
