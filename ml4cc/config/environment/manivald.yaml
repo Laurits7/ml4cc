@@ -12,8 +12,8 @@ slurm:
       mem_map:
         CEPC:
           one_step: 25G
-          two_step: null
+          two_step: 25G
         FCC:
           one_step: 12G
-          two_step: null
+          two_step: 12G
       mem: ${host.slurm.queue.preprocessing.mem_map[${dataset.name}][${preprocessing.data_type}]}

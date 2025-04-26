@@ -80,6 +80,7 @@ def prepare_job_file(
                 #SBATCH --partition={cfg.slurm.queue.preprocessing.partition}
                 #SBATCH --time=02:00:00
                 #SBATCH --cpus-per-task=1
+                #SBATCH --mem-per-cpu={cfg.slurm.queue.preprocessing.mem}
                 #SBATCH -e {error_file}
                 #SBATCH -o {log_file}
                 env
