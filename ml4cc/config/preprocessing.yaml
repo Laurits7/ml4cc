@@ -1,7 +1,7 @@
 preprocessing:
     train_val_test_split: [0.7, 0.1, 0.2]
     row_group_size: 1024
-    data_type: one_step  # Options: one_step, two_step
+    data_type: two_step  # Options: one_step, two_step
     slurm:
         use_it: True
         slurm_run: False
