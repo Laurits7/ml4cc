@@ -166,13 +166,13 @@ class BaseDataModule(LightningDataModule):
     def setup(self, stage: str) -> None:
         if stage == "fit":
             if self.cfg.dataset.name == "CEPC":
-                train_dir = self.get_dataset_paths(dataset_type="train")
-                val_dir = self.get_dataset_paths(dataset_type="val")
+                train_dir = self.get_CEPC_dataset_path(dataset_type="train")
+                val_dir = self.get_CEPC_dataset_path(dataset_type="val")
                 self.train_dataset = RowGroupDataset(data_loc=train_dir)
                 self.val_dataset = RowGroupDataset(data_loc=val_dir)
             elif self.cfg.dataset.name == "FCC":
-                train_dir = self.get_dataset_paths(dataset_type="train")
-                val_dir = self.get_dataset_paths(dataset_type="val")
+                train_dir = self.get_FCC_dataset_path(dataset_type="train")
+                val_dir = self.get_FCC_dataset_path(dataset_type="val")
                 self.train_dataset = RowGroupDataset(data_loc=train_dir)
                 self.val_dataset = RowGroupDataset(data_loc=val_dir)
             self.train_dataset = self.iter_dataset(
@@ -194,7 +194,12 @@ class BaseDataModule(LightningDataModule):
                 prefetch_factor=self.cfg.training.prefetch_factor,
             )
         elif stage == "test":
-            test_dir = self.get_dataset_paths(dataset_type="test")
+            if self.cfg.dataset.name == "CEPC":
+                test_dir = self.get_CEPC_dataset_path(dataset_type="test")
+            elif self.cfg.dataset.name == "FCC":
+                test_dir = self.get_FCC_dataset_path(dataset_type="test")
+            else:
+                raise ValueError(f"Unexpected dataset type: {self.cfg.dataset.name}. Please use 'CEPC' or 'FCC'.")
             self.test_dataset = RowGroupDataset(data_loc=test_dir)
             self.test_dataset = self.iter_dataset(
                 dataset=self.test_dataset,
