@@ -166,24 +166,20 @@ class BaseDataModule(LightningDataModule):
     def setup(self, stage: str) -> None:
         if stage == "fit":
             if self.cfg.dataset.name == "CEPC":
-                data_dir = self.get_CEPC_dataset_path(dataset_type="train")
-                full_train_dataset = RowGroupDataset(data_loc=data_dir)
-                train_dataset, val_dataset = io.train_val_split_shuffle(
-                    concat_dataset=full_train_dataset,
-                    val_split=self.cfg.training.data.fraction_valid,
-                    max_waveforms_for_training=-1,
-                    row_group_size=self.cfg.datasets.CEPC.row_group_size,
-                )
+                train_dir = self.get_dataset_paths(dataset_type="train")
+                val_dir = self.get_dataset_paths(dataset_type="val")
+                self.train_dataset = RowGroupDataset(data_loc=train_dir)
+                self.val_dataset = RowGroupDataset(data_loc=val_dir)
             elif self.cfg.dataset.name == "FCC":
                 train_dir = self.get_dataset_paths(dataset_type="train")
                 val_dir = self.get_dataset_paths(dataset_type="val")
                 self.train_dataset = RowGroupDataset(data_loc=train_dir)
                 self.val_dataset = RowGroupDataset(data_loc=val_dir)
             self.train_dataset = self.iter_dataset(
-                dataset=train_dataset,
+                dataset=self.train_dataset,
             )
             self.val_dataset = self.iter_dataset(
-                dataset=val_dataset,
+                dataset=self.val_dataset,
             )
             self.train_loader = DataLoader(
                 self.train_dataset,
@@ -198,8 +194,17 @@ class BaseDataModule(LightningDataModule):
                 prefetch_factor=self.cfg.training.prefetch_factor,
             )
         elif stage == "test":
-            # TODO: Add test dataloader - different for FCC energies and CEPC particles.
-            raise ValueError("Please do not use this datamodule for testing. Evaluate test dataset separatly.")
+            test_dir = self.get_dataset_paths(dataset_type="test")
+            self.test_dataset = RowGroupDataset(data_loc=test_dir)
+            self.test_dataset = self.iter_dataset(
+                dataset=self.test_dataset,
+            )
+            self.test_loader = DataLoader(
+                self.test_dataset,
+                batch_size=self.cfg.training.dataloader.batch_size,
+                num_workers=self.cfg.training.num_dataloader_workers,
+                prefetch_factor=self.cfg.training.prefetch_factor,
+            )
         else:
             raise ValueError(f"Unexpected stage: {stage}")
 
