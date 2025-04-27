@@ -1,15 +1,13 @@
 import os
-import glob
 import math
 import torch
 import numpy as np
 import awkward as ak
-from ml4cc.tools.data import io
-# from ml4cc.tools import general as g
 from omegaconf import DictConfig
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, IterableDataset
 from torch.utils.data import Dataset, DataLoader, IterableDataset, ConcatDataset
+from ml4cc.tools.data import io
 
 
 #####################################################################################
@@ -257,8 +255,11 @@ class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
         waveforms = ak.Array(data.waveform)
         wf_targets = ak.Array(data.target)
         wf_windows = ak.flatten(waveforms, axis=-2)
+        window_size_mask = ak.num(wf_windows) == 15
+        wf_windows = wf_windows[window_size_mask]
         wf_targets = ak.values_astype((wf_targets == 1) + (wf_targets == 2), int)
-        target_windows = ak.flatten(wf_targets, axis=-1)  # TODO: Check shape
+        target_windows = ak.flatten(wf_targets, axis=-1)
+        target_windows = target_windows[window_size_mask]
         wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
         return wf_windows, target_windows  # TODO: Unsqueeze?
@@ -307,8 +308,11 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
         waveforms = ak.Array(data.waveform)
         wf_targets = ak.Array(data.target)
         wf_windows = ak.flatten(waveforms, axis=-2)
+        window_size_mask = ak.num(wf_windows) == 15
+        wf_windows = wf_windows[window_size_mask]
         wf_targets = ak.values_astype((wf_targets == 1), int)
-        target_windows = ak.flatten(wf_targets, axis=-1)  # TODO: Check shape
+        target_windows = ak.flatten(wf_targets, axis=-1)
+        target_windows = target_windows[window_size_mask]
         wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
         return wf_windows, target_windows  # TODO: Unsqueeze?
