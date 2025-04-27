@@ -190,6 +190,7 @@ def process_twostep_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright
     if cfg.dataset.name == "FCC":
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
         save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step")
+    elif cfg.dataset.name == "CEPC":
         if "test" in path:
             save_processed_data(processed_array, path, data_type="two_step", cfg=cfg)
         elif "train" in path:
