@@ -3,7 +3,6 @@ import glob
 import hydra
 import shutil
 import torch
-# from ml4cc.tools.evaluation import peakFinding as pf
 import lightning as L
 from ml4cc.models import transformer
 from omegaconf import DictConfig

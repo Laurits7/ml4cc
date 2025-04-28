@@ -84,12 +84,15 @@ class BaseDataModule(LightningDataModule):
             cfg : DictConfig
                 The configuration file used to set up the data module.
             iter_dataset : IterableDataset
-                The iterable dataset to be used for training and validation. Need to define a separate class for each training type, e.g. one_step, two_step_peak_finding, two_step_clusterization, two_step_minimal etc.
+                The iterable dataset to be used for training and validation.
+                Need to define a separate class for each training type, e.g. one_step, two_step_peak_finding,
+                two_step_clusterization, two_step_minimal etc.
             data_type : str
-                The type of the data. In case of CEPC it can be "kaon" or "pion". In case of FCC it is the different energies.
+                The type of the data. In case of CEPC it can be "kaon" or "pion".
+                In case of FCC it is the different energies.
         """
         self.cfg = cfg
-        self.task = self.cfg.training.type
+        self.task = self.cfg.training.type  # TODO: maybe change to be an input of the class?
         self.data_type = data_type
         self.iter_dataset = iter_dataset
         self.train_loader = None
@@ -126,7 +129,8 @@ class BaseDataModule(LightningDataModule):
                 test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"*{self.data_type}*.parquet")
             return test_dir
         else:
-            raise ValueError(f"Unexpected train dataset type: {self.cfg.dataset.train_dataset}. Please use 'combined' or 'separate'.")
+            raise ValueError(f"Unexpected train dataset type: {self.cfg.dataset.train_dataset}.\
+                             Please use 'combined' or 'separate'.")
 
     def get_FCC_dataset_path(self, dataset_type: str) -> str:
         """Returns the directory of the dataset files for FCC
@@ -152,7 +156,8 @@ class BaseDataModule(LightningDataModule):
                 train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train", f"{self.data_type}_*.parquet")
                 val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val", f"{self.data_type}_*.parquet")
             else:
-                raise ValueError(f"Unexpected train dataset type: {self.cfg.dataset.train_dataset}. Please use 'combined' or 'separate'.")
+                raise ValueError(f"Unexpected train dataset type: {self.cfg.dataset.train_dataset}.\
+                                 Please use 'combined' or 'separate'.")
             return train_loc, val_loc
         elif dataset_type == "test":
             if self.cfg.dataset.train_dataset == "combined":
@@ -249,7 +254,10 @@ class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
         super().__init__(dataset)
 
     def build_tensors(self, data: ak.Array):
-        """ This iterable dataset is to be used for the first step (peak finding). For this, we have a target for each waveform window. When building the tensors, we flatten the waveforms, so we predict one value for each window. We target both primary and secondary peaks, setting a target of 1 for both of them, whereas background has a target of 0.
+        """ This iterable dataset is to be used for the first step (peak finding). For this, we have a target for each
+        waveform window. When building the tensors, we flatten the waveforms, so we predict one value for each window.
+        We target both primary and secondary peaks, setting a target of 1 for both of them, whereas background has a
+        target of 0.
 
         Parameters:
             data : ak.Array
@@ -278,7 +286,8 @@ class TwoStepClusterizationIterableDataset(BaseIterableDataset):
         super().__init__(dataset)
 
     def build_tensors(self, data: ak.Array):
-        """ This iterable dataset is to be used for the second step (clusterization). Here we use the predictions from the first step (peak finding) as input.
+        """ This iterable dataset is to be used for the second step (clusterization).
+        Here we use the predictions from the first step (peak finding) as input.
 
         Parameters:
             data : ak.Array
@@ -301,8 +310,11 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
         super().__init__(dataset)
 
     def build_tensors(self, data: ak.Array):
-        """ This iterable dataset is to be used for the minimal two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
-        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """ This iterable dataset is to be used for the minimal two-step approach,where we only target the primary
+        peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the
+        predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
+        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary"
+        peaks as targets.
 
         Parameters:
             data : ak.Array
@@ -328,8 +340,11 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
 
 class TwoStepMinimalDataModule(BaseDataModule):
     def __init__(self, cfg: DictConfig, data_type: str):
-        """ Data module for the minimal two-step approach. This is a simplified version of the two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
-        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """ Data module for the minimal two-step approach. This is a simplified version of the two-step approach,
+        where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization
+        step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds
+        on top of the peak finding. The difference with the vanilla peak-finding in the vanilla two-step approach is,
+        that we use only "primary" peaks as targets.
         """
         iter_dataset = TwoStepMinimalIterableDataset
         super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
@@ -337,8 +352,11 @@ class TwoStepMinimalDataModule(BaseDataModule):
 
 class TwoStepPeakFindingDataModule(BaseDataModule):
     def __init__(self, cfg: DictConfig, data_type: str):
-        """ Data module for the two-step approach. This is a simplified version of the two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
-        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """ Data module for the two-step approach. This is a simplified version of the two-step approach, where we only
+        target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we
+        can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the
+        peak finding. The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only
+        "primary" peaks as targets.
         """
         iter_dataset = TwoStepPeakFindingIterableDataset
         super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
@@ -346,8 +364,11 @@ class TwoStepPeakFindingDataModule(BaseDataModule):
 
 class TwoStepClusterizationDataModule(BaseDataModule):
     def __init__(self, cfg: DictConfig, data_type: str):
-        """ Data module for the two-step approach. This is a simplified version of the two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
-        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """ Data module for the two-step approach. This is a simplified version of the two-step approach, where we only
+        target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we
+        can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of
+        the peak finding. The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use
+        only "primary" peaks as targets.
         """
         iter_dataset = TwoStepClusterizationIterableDataset
         super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
@@ -355,8 +376,11 @@ class TwoStepClusterizationDataModule(BaseDataModule):
 
 class OneStepDataModule(BaseDataModule):
     def __init__(self, cfg: DictConfig, data_type: str):
-        """ Data module for the one-step approach. This is a simplified version of the two-step approach, where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
-        The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only "primary" peaks as targets.
+        """ Data module for the one-step approach. This is a simplified version of the two-step approach, where we only
+        target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we
+        can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the
+        peak finding. The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only
+        "primary" peaks as targets.
         """
         iter_dataset = OneStepIterableDataset
         super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
