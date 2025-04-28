@@ -1,5 +1,9 @@
-_target_: ml4cc.models.LSTM
+_target_: ml4cc.models.LSTM.LSTMModule
 name: LSTM
+hyperparameters:
+    input_dim: ${dataset.input_dim}
+    lstm_hidden_dim: 32
+    num_lstm_layers: 1
 
 defaults:
     - _self_
