@@ -182,14 +182,14 @@ class BaseDataModule(LightningDataModule):
             self.train_loader = DataLoader(
                 self.train_dataset,
                 batch_size=self.cfg.training.dataloader.batch_size,
-                num_workers=self.cfg.training.num_dataloader_workers,
-                prefetch_factor=self.cfg.training.prefetch_factor,
+                num_workers=self.cfg.training.dataloader.num_dataloader_workers,
+                prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
             self.val_loader = DataLoader(
                 self.val_dataset,
                 batch_size=self.cfg.training.dataloader.batch_size,
-                num_workers=self.cfg.training.num_dataloader_workers,
-                prefetch_factor=self.cfg.training.prefetch_factor,
+                num_workers=self.cfg.training.dataloader.num_dataloader_workers,
+                prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
         elif stage == "test":
             if self.cfg.dataset.name == "CEPC":
@@ -205,8 +205,8 @@ class BaseDataModule(LightningDataModule):
             self.test_loader = DataLoader(
                 self.test_dataset,
                 batch_size=self.cfg.training.dataloader.batch_size,
-                num_workers=self.cfg.training.num_dataloader_workers,
-                prefetch_factor=self.cfg.training.prefetch_factor,
+                num_workers=self.cfg.training.dataloader.num_dataloader_workers,
+                prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
         else:
             raise ValueError(f"Unexpected stage: {stage}")
