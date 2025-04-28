@@ -1,6 +1,6 @@
 name: Pylint
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -21,4 +21,28 @@ jobs:
         pip install -r requirements.txt
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py')
+        pylint $(git ls-files '*.py') --exit-zero --output-format=json > pylint_output.json
+        env:
+          PYLINTRC: path/to/your/.pylintrc
+    - name: Analyze Pylint results
+      run: |
+        echo "Analyzing Pylint output..."
+
+        ERRORS=$(jq '[.[] | select(.type == "error" or .type == "fatal")] | length' pylint_output.json)
+        WARNINGS=$(jq '[.[] | select(.type == "warning")] | length' pylint_output.json)
+
+        echo "Found $ERRORS errors and $WARNINGS warnings."
+
+        if [ "$ERRORS" -gt 0 ]; then
+          echo "::error ::Pylint found $ERRORS error(s). Failing the build."
+          exit 1
+        else
+          echo "No critical errors found. Passing!"
+        fi
+
+    - name: Show Pylint warnings
+      if: always()
+      run: |
+        echo "Warnings:"
+        jq -r a'.[] | select(.type == "warning") | "\(.path):\(.line): \(.message)"' pylint_output.json || true
+
