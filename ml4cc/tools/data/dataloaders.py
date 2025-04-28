@@ -166,13 +166,11 @@ class BaseDataModule(LightningDataModule):
     def setup(self, stage: str) -> None:
         if stage == "fit":
             if self.cfg.dataset.name == "CEPC":
-                train_dir = self.get_CEPC_dataset_path(dataset_type="train")
-                val_dir = self.get_CEPC_dataset_path(dataset_type="val")
+                train_dir, val_dir = self.get_CEPC_dataset_path(dataset_type="train")
                 self.train_dataset = RowGroupDataset(data_loc=train_dir)
                 self.val_dataset = RowGroupDataset(data_loc=val_dir)
             elif self.cfg.dataset.name == "FCC":
-                train_dir = self.get_FCC_dataset_path(dataset_type="train")
-                val_dir = self.get_FCC_dataset_path(dataset_type="val")
+                train_dir, val_dir = self.get_FCC_dataset_path(dataset_type="train")
                 self.train_dataset = RowGroupDataset(data_loc=train_dir)
                 self.val_dataset = RowGroupDataset(data_loc=val_dir)
             self.train_dataset = self.iter_dataset(
