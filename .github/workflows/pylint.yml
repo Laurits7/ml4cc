@@ -21,7 +21,7 @@ jobs:
         pip install -r requirements.txt
     - name: Analysing the code with pylint
       run: |
-        pylint --rcfile=config/.pylintrc $(git ls-files '*.py') --exit-zero --output-format=json > pylint_output.json
+        pylint --rcfile=.pylintrc $(git ls-files '*.py') --exit-zero --output-format=json > pylint_output.json
     - name: Analyze Pylint results
       run: |
         echo "Analyzing Pylint output..."
