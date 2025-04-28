@@ -1,6 +1,9 @@
 training:
     type: one_step  # Options: one_step, two_step, two_step_minimal
     output_dir: null
+    output_dir_: ${training.output_dir}/${training.type}
+    models_dir: ${training.output_dir_}/models
+    log_dir: ${training.output_dir_}/logs
     dataloader:
         batch_sizes:
             one_step: 128
