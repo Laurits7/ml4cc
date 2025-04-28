@@ -2,9 +2,6 @@ name: FCC
 input_dim: 1200
 branches: null
 tree_path: sim
-training_types:
-    - clusterization
-    - peakFinding
 particle_types:
     - muon
 particle_energies:

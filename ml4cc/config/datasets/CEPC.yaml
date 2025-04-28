@@ -2,12 +2,9 @@ name: CEPC
 input_dim: 3000
 branches: null
 tree_path: sim
-training_types:  # In principle not needed anymore
-    - clusterization
-    - peakFinding
 particle_types:
-    - kaon
-    - pion
+    - K  # kaon
+    - pi  # pion
 particle_energies:
     - 5.0
     - 7.5
