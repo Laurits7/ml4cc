@@ -1,5 +1,5 @@
 training:
-    type: one_step
+    type: one_step  # Options: one_step, two_step, two_step_minimal
     output_dir: null
     dataloader:
         batch_sizes:

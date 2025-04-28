@@ -92,7 +92,7 @@ class BaseDataModule(LightningDataModule):
                 In case of FCC it is the different energies.
         """
         self.cfg = cfg
-        self.task = self.cfg.training.type  # TODO: maybe change to be an input of the class?
+        self.task = "two_step" if self.cfg.training.type == "two_step_minimal" else self.cfg.training.type
         self.data_type = data_type
         self.iter_dataset = iter_dataset
         self.train_loader = None
