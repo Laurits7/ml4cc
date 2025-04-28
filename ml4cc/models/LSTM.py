@@ -6,9 +6,9 @@ import torch.nn.functional as F
 
 
 class LSTM(torch.nn.Module):  # TODO: Is this implemented like in their paper? In their paper they have multiple LSTMs.
-    def __init__(self, input_dim: int = 3000, lstm_hidden_dim: int = 32):
+    def __init__(self, input_dim: int = 3000, lstm_hidden_dim: int = 32, num_lstm_layers: int = 1):
         super().__init__()
-        self.lstm = torch.nn.LSTM(input_size=1, num_layers=1, hidden_size=lstm_hidden_dim, batch_first=True)
+        self.lstm = torch.nn.LSTM(input_size=1, num_layers=num_lstm_layers, hidden_size=lstm_hidden_dim, batch_first=True)
         self.fc3 = torch.nn.Linear(lstm_hidden_dim, 32)
         self.fc4 = torch.nn.Linear(32, 1)
 
@@ -21,9 +21,15 @@ class LSTM(torch.nn.Module):  # TODO: Is this implemented like in their paper? I
 
 
 class LSTMModule(L.LightningModule):
-    def __init__(self):
+    def __init__(self, name: str, hyperparameters: dict):
+        self.name = name
+        self.hyperparameters = hyperparameters
         super().__init__()
-        self.lstm = LSTM()
+        self.lstm = LSTM(
+            input_dim=self.hyperparameters["input_dim"],
+            lstm_hidden_dim=self.hyperparameters["lstm_hidden_dim"],
+            num_lstm_layers=self.hyperparameters["num_lstm_layers"]
+        )
 
     def training_step(self, batch, batch_idx):
         predicted_labels, target = self.forward(batch)

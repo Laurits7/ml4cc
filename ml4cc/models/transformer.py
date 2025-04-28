@@ -56,16 +56,19 @@ class WaveFormTransformer(nn.Module):
 
 
 class TransformerModule(L.LightningModule):
-    def __init__(self, input_dim):
+    def __init__(self, name: str, hyperparameters: dict, checkpoint: dict = None):
         super().__init__()
+        self.name = name
+        self.hyperparameters = hyperparameters
+        self.checkpoint = checkpoint
         self.transformer = WaveFormTransformer(
-            input_dim=input_dim,
-            d_model=512,
-            num_heads=8,
-            num_layers=3,
-            hidden_dim=4*512,
-            num_classes=1,
-            max_len=input_dim
+            input_dim=self.hyperparameters["input_dim"],
+            d_model=self.hyperparameters["d_model"],
+            num_heads=self.hyperparameters["num_heads"],
+            num_layers=self.hyperparameters["num_layers"],
+            hidden_dim=self.hyperparameters["hidden_dim"],
+            num_classes=self.hyperparameters["num_classes"],
+            max_len=self.hyperparameters["max_len"],
         )
 
     def training_step(self, batch, batch_idx):
