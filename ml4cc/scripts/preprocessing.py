@@ -64,7 +64,7 @@ def process_files(input_files: list, cfg: DictConfig) -> None:
 
 def run_job(cfg: DictConfig) -> None:
     input_paths = []
-    with open(cfg.preprocessing.slurm.input_path, 'rt') as inFile:
+    with open(cfg.preprocessing.slurm.input_path, 'rt', encoding="utf-8") as inFile:
         for line in inFile:
             input_paths.append(line.strip('\n'))
     total_start_time = time.time()

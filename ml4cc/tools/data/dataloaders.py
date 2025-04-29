@@ -32,11 +32,11 @@ class RowGroupDataset(Dataset):
 class BaseIterableDataset(IterableDataset):
     """ Base iterable dataset class to be used for different types of trainings."""
     def __init__(self, dataset: Dataset):
+        super().__init__()
         self.dataset = dataset
         self.row_groups = [row_group for row_group in self.dataset]
         self.num_rows = sum([rg.num_rows for rg in self.row_groups])
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the dataset.")
-        super().__init__()
 
     def build_tensors(self, data: ak.Array):
         """ Builds the input and target tensors from the data.
@@ -96,6 +96,7 @@ class BaseDataModule(LightningDataModule):
         self.iter_dataset = iter_dataset
         self.train_loader = None
         self.val_loader = None
+        self.test_dataset = None
         self.train_dataset = None
         self.val_dataset = None
         self.save_hyperparameters()

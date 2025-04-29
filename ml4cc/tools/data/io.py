@@ -4,7 +4,6 @@ import uproot
 import random
 import numpy as np
 import awkward as ak
-from ml4cc.tools.data import io
 from torch.utils.data import ConcatDataset, Subset
 
 
@@ -29,7 +28,7 @@ def load_root_file(path: str, tree_path: str = "sim", branches: list = None) -> 
     return arrays
 
 
-def get_all_paths(input_loc, n_files: int = None, columns: list = None) -> list:
+def get_all_paths(input_loc, n_files: int = None) -> list:
     """Loads all .parquet files specified by the input. The input can be a list of input_paths, a directory where the files
     are located or a wildcard path.
 
@@ -59,9 +58,9 @@ def get_all_paths(input_loc, n_files: int = None, columns: list = None) -> list:
         elif os.path.isfile(input_loc):
             input_paths = [input_loc]
         else:
-            raise ValueError(f"Unexpected input_loc")
+            raise ValueError(f"Unexpected input_loc: {input_loc}")
     else:
-        raise ValueError(f"Unexpected input_loc")
+        raise ValueError(f"Unexpected input_loc: {input_loc}")
     return input_paths
 
 
