@@ -2,11 +2,21 @@ name: CEPC
 input_dim: 3000
 branches: null
 tree_path: sim
-training_types:
-    - clusterization
-    - peakFinding
 particle_types:
-    - kaon
-    - pion
+    - K  # kaon
+    - pi  # pion
+particle_energies:
+    - 5.0
+    - 7.5
+    - 10.0
+    - 12.5
+    - 15.0
+    - 17.5
 raw_input_dir: ${host.data_dir}/CEPC/data/
-data_dir: ${host.data_dir}/CEPC/preprocessed_data/
+data_dir: ${host.data_dir}/CEPC/
+test_dataset: combined  # Options: combined, separate, both(?)
+    # peak_finding: combined  # Options: combined
+    # clusterization: combined  # Options: combined, separate
+train_dataset: combined # Options: combined, separate, both(?)
+    # peak_finding: combined  # Options: combined
+    # clusterization: combined

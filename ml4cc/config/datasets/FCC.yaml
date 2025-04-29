@@ -2,10 +2,22 @@ name: FCC
 input_dim: 1200
 branches: null
 tree_path: sim
-training_types:
-    - clusterization
-    - peakFinding
 particle_types:
     - muon
+particle_energies:
+    - 2
+    - 4
+    - 6
+    - 8
+    - 10
+    - 165
+    - 180
 raw_input_dir: ${host.data_dir}/FCC/data/
-data_dir: ${host.data_dir}/FCC/preprocessed_data/
+data_dir: ${host.data_dir}/FCC/
+test_dataset: combined  # Options: combined, separate, both(?)
+    # peak_finding: combined  # Options: combined, separate, both(?)
+    # clusterization: separate   # Options: combined, separate, both(?)
+train_dataset: combined  # Options: combined, separate, both(?)
+    # peak_finding: combined  # Options: combined, separate
+    # clusterization: combined   # Options: combined, separate
+

@@ -23,20 +23,14 @@ def prepare_fcc_inputs(cfg: DictConfig) -> list:
 
 def prepare_cepc_inputs(cfg: DictConfig) -> list:
     all_paths_to_process = []
-    for training_type in cfg.training_types:
-        for dataset in ["test", "train"]:
-            if (training_type == "clusterization") and (dataset == "test"):
-                sample_dir = os.path.join(dataset, "*")
-            else:
-                sample_dir = dataset
-            input_file_wcp = os.path.join(
-                cfg.raw_input_dir,
-                training_type,
-                sample_dir,
-                "*"
-            )
-            raw_data_input_paths = glob.glob(input_file_wcp)
-            all_paths_to_process.extend(raw_data_input_paths)
+    for dataset in ["test", "train"]:
+        input_file_wcp = os.path.join(
+            cfg.raw_input_dir,
+            dataset,
+            "*"
+        )
+        raw_data_input_paths = list(glob.glob(input_file_wcp))
+        all_paths_to_process.extend(raw_data_input_paths)
     return all_paths_to_process
 
 
@@ -58,9 +52,9 @@ def prepare_inputs(cfg: DictConfig) -> None:
 def process_files(input_files: list, cfg: DictConfig) -> None:
     for path in input_files:
         file_start_time = time.time()
-        if cfg.preprocessing.data_type == "two_step_data":
+        if cfg.preprocessing.data_type == "two_step":
             pp.process_twostep_root_file(path, cfg)
-        elif cfg.preprocessing.data_type == "one_step_data":
+        elif cfg.preprocessing.data_type == "one_step":
             pp.process_onestep_root_file(path, cfg)
         else:
             raise ValueError(f"Unknown data type: {cfg.preprocessing.data_type}")
@@ -95,4 +89,4 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == '__main__':
-    main()
+    main() # pylint: disable=E1120

@@ -1,8 +1,17 @@
+_target_: ml4cc.models.transformer.TransformerModule
 name: transformer
+hyperparameters:
+    input_dim: ${dataset.input_dim}
+    d_model: 512
+    num_heads: 8
+    num_layers: 3
+    hidden_dim: 2048
+    num_classes: 1
+    max_len: ${dataset.input_dim}
 checkpoint:
     model: null
     losses: null
-_target_: ml4cc.models.transformer
+
 
 # TODO: Maybe need to have name and target under "model" key to instantiate the class?
 
