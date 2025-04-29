@@ -277,10 +277,10 @@ class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
         wf_targets = ak.Array(data.target)
         wf_windows: ak.Array = ak.flatten(waveforms, axis=-2)
         window_size_mask = ak.num(wf_windows) == 15
-        wf_windows = wf_windows[window_size_mask]
+        wf_windows = wf_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
         wf_targets = ak.values_astype((wf_targets == 1) + (wf_targets == 2), int)
         target_windows: ak.Array = ak.flatten(wf_targets, axis=-1)
-        target_windows = target_windows[window_size_mask]
+        target_windows = target_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
         wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
         return wf_windows, target_windows  # TODO: Unsqueeze?
@@ -334,10 +334,10 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
         wf_targets = ak.Array(data.target)
         wf_windows: ak.Array = ak.flatten(waveforms, axis=-2)
         window_size_mask = ak.num(wf_windows) == 15
-        wf_windows = wf_windows[window_size_mask]
+        wf_windows = wf_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
         wf_targets = ak.values_astype((wf_targets == 1), int)
         target_windows: ak.Array = ak.flatten(wf_targets, axis=-1)
-        target_windows = target_windows[window_size_mask]
+        target_windows = target_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
         wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
         return wf_windows, target_windows  # TODO: Unsqueeze?

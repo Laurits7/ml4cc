@@ -239,7 +239,7 @@ def main(cfg: DictConfig):
         model.eval()
         evaluate_two_step_peak_finding(cfg, model, metrics_path)
 
-        model, best_model_path, metrics_path = train_two_step_clusterization(cfg)
+        model, best_model_path, metrics_path = train_two_step_clusterization(cfg, data_type="")
         evaluate_two_step_clusterization(cfg, model, metrics_path)
     elif training_type == "two_step_minimal":
         model, best_model_path, metrics_path = train_two_step_minimal(cfg, data_type="")

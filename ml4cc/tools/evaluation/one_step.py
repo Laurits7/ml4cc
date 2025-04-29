@@ -11,7 +11,7 @@ def evaluate_training(cfg, metrics_path):
     results_dir = cfg.training.results_dir
     predictions_dir = cfg.training.predictions_dir
     test_dir = os.path.join(predictions_dir, "test")
-    test_wcp = glob.glob(os.path.join(test_dir), "*")
+    test_wcp = glob.glob(os.path.join(test_dir, "*"))
     all_true = []
     all_preds = []
     for path in test_wcp:
