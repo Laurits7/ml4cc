@@ -37,10 +37,14 @@ jobs:
         else
           echo "No critical errors found. Passing!"
         fi
-
+    - name: Upload Pylint report
+      uses: actions/upload-artifact@v4
+      with:
+        name: pylint-report
+        path: pylint-report.json
     - name: Show Pylint warnings
       if: always()
       run: |
         echo "Warnings:"
-        jq -r a'.[] | select(.type == "warning") | "\(.path):\(.line): \(.message)"' pylint_output.json || true
+        jq -r '.[] | select(.type == "warning") | "\(.path):\(.line): \(.message)"' pylint_output.json || true
 
