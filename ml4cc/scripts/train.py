@@ -219,7 +219,7 @@ def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list
     create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
 
     # Evaluate training
-    tsme.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="clusterization")
+    tsme.evaluate_training(cfg=cfg, metrics_path=metrics_path)
 
 
 @hydra.main(config_path="../config", config_name="main.yaml", version_base=None)
@@ -237,10 +237,10 @@ def main(cfg: DictConfig):
         checkpoint = torch.load(best_model_path, weights_only=False)
         model.load_state_dict(checkpoint['state_dict'])
         model.eval()
-        evaluate_two_step_peak_finding(cfg, model, metrics_path, data_type="")
+        evaluate_two_step_peak_finding(cfg, model, metrics_path)
 
         model, best_model_path, metrics_path = train_two_step_clusterization(cfg)
-        evaluate_two_step_clusterization(cfg, model, best_model_path, metrics_path, data_type="")
+        evaluate_two_step_clusterization(cfg, model, metrics_path)
     elif training_type == "two_step_minimal":
         model, best_model_path, metrics_path = train_two_step_minimal(cfg, data_type="")
         checkpoint = torch.load(best_model_path, weights_only=False)

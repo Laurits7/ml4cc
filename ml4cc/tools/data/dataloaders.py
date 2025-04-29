@@ -122,10 +122,13 @@ class BaseDataModule(LightningDataModule):
             val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
             return train_loc, val_loc
         elif dataset_type == "test":
-            if self.cfg.dataset.train_dataset == "combined":
+            if self.cfg.dataset.test_dataset == "combined":
                 test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
-            elif self.cfg.dataset.train_dataset == "separate":
+            elif self.cfg.dataset.test_dataset == "separate":
                 test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"*{self.data_type}*.parquet")
+            else:
+                raise ValueError(f"Unexpected method for test dataset: {self.cfg.dataset.train_dataset}. Options:\
+                                 'combined', 'separate']")
             return test_dir
         else:
             raise ValueError(f"Unexpected train dataset type: {self.cfg.dataset.train_dataset}.\
@@ -159,10 +162,13 @@ class BaseDataModule(LightningDataModule):
                                  Please use 'combined' or 'separate'.")
             return train_loc, val_loc
         elif dataset_type == "test":
-            if self.cfg.dataset.train_dataset == "combined":
+            if self.cfg.dataset.test_dataset == "combined":
                 test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
-            elif self.cfg.dataset.train_dataset == "separate":
+            elif self.cfg.dataset.test_dataset == "separate":
                 test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"{self.data_type}_*.parquet")
+            else:
+                raise ValueError(f"Unexpected method for testing dataset: {self.cfg.dataset.train_dataset}. Options:\
+                                 'combined', 'separate']")
             return test_dir
         else:
             raise ValueError(f"Unexpected dataset type: {dataset_type}. Please use 'train' or 'test'.")
@@ -269,11 +275,11 @@ class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
         """
         waveforms = ak.Array(data.waveform)
         wf_targets = ak.Array(data.target)
-        wf_windows = ak.flatten(waveforms, axis=-2)
+        wf_windows: ak.Array = ak.flatten(waveforms, axis=-2)
         window_size_mask = ak.num(wf_windows) == 15
         wf_windows = wf_windows[window_size_mask]
         wf_targets = ak.values_astype((wf_targets == 1) + (wf_targets == 2), int)
-        target_windows = ak.flatten(wf_targets, axis=-1)
+        target_windows: ak.Array = ak.flatten(wf_targets, axis=-1)
         target_windows = target_windows[window_size_mask]
         wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
@@ -326,11 +332,11 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
         """
         waveforms = ak.Array(data.waveform)
         wf_targets = ak.Array(data.target)
-        wf_windows = ak.flatten(waveforms, axis=-2)
+        wf_windows: ak.Array = ak.flatten(waveforms, axis=-2)
         window_size_mask = ak.num(wf_windows) == 15
         wf_windows = wf_windows[window_size_mask]
         wf_targets = ak.values_astype((wf_targets == 1), int)
-        target_windows = ak.flatten(wf_targets, axis=-1)
+        target_windows: ak.Array = ak.flatten(wf_targets, axis=-1)
         target_windows = target_windows[window_size_mask]
         wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
