@@ -5,8 +5,7 @@ import numpy as np
 import awkward as ak
 from omegaconf import DictConfig
 from lightning import LightningDataModule
-from torch.utils.data import DataLoader, IterableDataset
-from torch.utils.data import Dataset, DataLoader, IterableDataset, ConcatDataset
+from torch.utils.data import Dataset, DataLoader, IterableDataset
 from ml4cc.tools.data import io
 
 
@@ -298,7 +297,7 @@ class TwoStepClusterizationIterableDataset(BaseIterableDataset):
             targets : torch.Tensor
                 The target values of the data
         """
-        peaks  = ak.Array(data.predicted_peaks)  # TODO: Add predicted_peaks as the branch name in postprocessing.
+        peaks  = ak.Array(data.pred)
         targets = ak.sum(data.target == 1, axis = -1)
         targets = torch.tensor(targets, dtype=torch.float32)
         peaks = torch.tensor(peaks, dtype=torch.float32)
@@ -384,3 +383,5 @@ class OneStepDataModule(BaseDataModule):
         """
         iter_dataset = OneStepIterableDataset
         super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
+
+

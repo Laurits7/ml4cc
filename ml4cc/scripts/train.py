@@ -1,13 +1,24 @@
 import os
+import glob
 import hydra
 from hydra.utils import instantiate
 import shutil
 import torch
 import lightning as L
+import awkward as ak
 from omegaconf import DictConfig
+from torch.utils.data import DataLoader, IterableDataset
 from lightning.pytorch.loggers import CSVLogger
 from lightning.pytorch.callbacks import TQDMProgressBar, ModelCheckpoint
 from ml4cc.tools.data import dataloaders as dl
+from ml4cc.tools.evaluation import one_step as ose
+from ml4cc.tools.evaluation import two_step as tse
+from ml4cc.tools.evaluation import two_step_minimal as tsme
+
+
+
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def base_train(cfg: DictConfig, training_type: str):
@@ -121,22 +132,94 @@ def get_FCC_evaluation_scenarios(cfg: DictConfig) -> list:
     return evaluation_scenarios
 
 
-def evaluate_one_step(cfg: DictConfig) -> list:
-    pass
+def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig):
+    predictions_dir = cfg.training.predictions_dir
+    os.makedirs(predictions_dir, exist_ok=True)
+    base_dir = cfg.dataset.data_dir
+    output_path = input_path.replace(base_dir, predictions_dir)
+    output_path = output_path.replace(".parquet", "_pred.parquet")
+
+    input_data = ak.from_parquet(input_path)
+    output_data = input_data.copy()
+    output_data["pred"] = all_predictions
+
+    ak.to_parquet(output_data, output_path, row_group_size=cfg.preprocessing.row_group_size)
 
 
-def evaluate_two_step_peak_finding(cfg: DictConfig):
-    pass
-    # TODO: Evaluate training
-    # TODO: Create prediction files for the clusterization step
+def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, model, cfg: DictConfig):
+    with torch.no_grad():
+        for path in file_list:
+            dataset = dl.RowGroupDataset(path)
+            iterable_dataset = iterable_dataset(dataset)
+            dataloader = DataLoader(
+                dataset=iterable_dataset,
+                batch_size=cfg.training.dataloader.batch_size,
+                num_workers=cfg.training.dataloader.num_dataloader_workers,
+                prefetch_factor=cfg.training.dataloader.prefetch_factor,
+            )
+            predictions = []
+            for batch in dataloader:
+                predictions = model(batch)
+                all_predictions.append(predictions)
+            all_predictions = ak.concatenate(all_predictions, axis=0)
+            save_predictions(input_path=path, all_predictions=all_predictions, cfg=cfg)
 
 
-def evaluate_two_step_clusterization(cfg: DictConfig):
-    pass
+
+def evaluate_one_step(cfg: DictConfig, model, metrics_path: str) -> list:
+    model.to(DEVICE)
+    model.eval()
+    wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", "*", "*")
+    file_list = glob.glob(wcp_path)
+    iterable_dataset = dl.OneStepIterableDataset
+
+    # Create prediction files
+    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
+
+    # Evaluate training
+    ose.evaluate_training(cfg=cfg, metrics_path=metrics_path)
 
 
-def evaluate_two_step_minimal(cfg: DictConfig):
-    pass
+def evaluate_two_step_peak_finding(cfg: DictConfig, model, metrics_path: str) -> list:
+    model.to(DEVICE)
+    model.eval()
+    wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", "*", "*")
+    file_list = glob.glob(wcp_path)
+    iterable_dataset = dl.TwoStepPeakFindingIterableDataset
+
+    # Create prediction files
+    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
+
+    # Evaluate training
+    tse.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="peak_finding")
+
+
+def evaluate_two_step_clusterization(cfg: DictConfig, model, metrics_path: str) -> list:
+    model.to(DEVICE)
+    model.eval()
+    wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", "*", "*")
+    file_list = glob.glob(wcp_path)
+    iterable_dataset = dl.TwoStepClusterizationIterableDataset
+
+    # Create prediction files
+    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
+
+    # Evaluate training
+    tse.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="clusterization")
+
+
+def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list:
+    model.to(DEVICE)
+    model.eval()
+    wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", "*", "*")
+    file_list = glob.glob(wcp_path)
+    iterable_dataset = dl.TwoStepMinimalIterableDataset
+
+    # Create prediction files
+    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
+
+    # Evaluate training
+    tsme.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="clusterization")
 
 
 @hydra.main(config_path="../config", config_name="main.yaml", version_base=None)
@@ -145,16 +228,25 @@ def main(cfg: DictConfig):
 
     if training_type == "one_step":
         model, best_model_path, metrics_path = train_one_step(cfg, data_type="")
-        evaluate_one_step(cfg, model, best_model_path, metrics_path)
+        checkpoint = torch.load(best_model_path, weights_only=False)
+        model.load_state_dict(checkpoint['state_dict'])
+        model.eval()
+        evaluate_one_step(cfg, model, metrics_path)
     elif training_type == "two_step":
         model, best_model_path, metrics_path = train_two_step_peak_finding(cfg, data_type="")
-        evaluate_two_step_peak_finding(cfg, model, best_model_path, metrics_path, data_type="")
+        checkpoint = torch.load(best_model_path, weights_only=False)
+        model.load_state_dict(checkpoint['state_dict'])
+        model.eval()
+        evaluate_two_step_peak_finding(cfg, model, metrics_path, data_type="")
 
         model, best_model_path, metrics_path = train_two_step_clusterization(cfg)
         evaluate_two_step_clusterization(cfg, model, best_model_path, metrics_path, data_type="")
     elif training_type == "two_step_minimal":
         model, best_model_path, metrics_path = train_two_step_minimal(cfg, data_type="")
-        evaluate_two_step_minimal(cfg, model, best_model_path, metrics_path)
+        checkpoint = torch.load(best_model_path, weights_only=False)
+        model.load_state_dict(checkpoint['state_dict'])
+        model.eval()
+        evaluate_two_step_minimal(cfg, model, metrics_path)
     else:
         raise ValueError(f"Unknown training type: {training_type}")
 
