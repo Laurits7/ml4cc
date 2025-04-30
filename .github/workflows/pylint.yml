@@ -3,7 +3,47 @@ name: Pylint
 on: [pull_request]
 
 jobs:
+
+  lint-autofix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # Needed for manual push
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint autopep8
+
+      - name: Run pylint
+        run: pylint your_module_or_script/
+
+      - name: Auto-fix with autopep8
+        run: autopep8 --in-place --aggressive --aggressive -r your_module_or_script/
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: auto-fix Python lint issues"
+            git push
+          fi
+        env:
+          # Required if using a token for push
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
+    needs: lint-autofix
     runs-on: ubuntu-latest
     strategy:
       matrix:

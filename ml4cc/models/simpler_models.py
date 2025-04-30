@@ -61,8 +61,10 @@ class CNNModel(nn.Module):
         )
         self.flatten = nn.Flatten()
         self.fc1 = nn.Linear(
-            input_features=16 * ((hyperparameters.num_features // 4) - 3), output_features=hyperparameters.linear_layer_1.out_features
-        )  # Compute flattened input size manually
+            # Compute flattened input size manually
+            in_features=16 * ((hyperparameters.num_features // 4) - 3),
+            out_features=hyperparameters.linear_layer_1.out_features
+        )
         self.output = nn.Linear(
             in_features=hyperparameters.linear_layer_1.out_features,
             out_features=hyperparameters.linear_layer_1.out_features
