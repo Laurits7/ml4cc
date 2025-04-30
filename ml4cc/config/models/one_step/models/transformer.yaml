@@ -12,9 +12,3 @@ hyperparameters:
 checkpoint:
     model: null
     losses: null
-
-
-# TODO: Maybe need to have name and target under "model" key to instantiate the class?
-
-defaults:
-    - _self_
