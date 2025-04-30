@@ -21,10 +21,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install autopep8
+          pip install black
 
-      - name: Auto-fix with autopep8
-        run: autopep8 --in-place --aggressive --aggressive -r $(git ls-files '*.py')
+      - name: Auto-fix with black
+        run: black --line-length 120 .
 
       - name: Commit and push changes
         run: |
