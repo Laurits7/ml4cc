@@ -30,14 +30,9 @@ def evaluate_training(cfg, metrics_path):
     resolution_output_path = os.path.join(results_dir, "resolution.pdf")
     r.evaluate_resolution(truth, preds, output_path=resolution_output_path)
 
-    distribution_output_path = os.path.join(
-        results_dir, "true_pred_distributions.pdf")
-    r.plot_true_pred_distributions(
-        truth, preds, output_path=distribution_output_path)
+    distribution_output_path = os.path.join(results_dir, "true_pred_distributions.pdf")
+    r.plot_true_pred_distributions(truth, preds, output_path=distribution_output_path)
 
     val_loss = g.filter_losses(metrics_path)
     losses_output_path = os.path.join(cfg.training.output_dir, "losses.png")
-    l.plot_loss_evolution(
-        val_loss=val_loss,
-        train_loss=None,
-        output_path=losses_output_path)
+    l.plot_loss_evolution(val_loss=val_loss, train_loss=None, output_path=losses_output_path)

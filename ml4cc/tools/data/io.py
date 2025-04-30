@@ -7,9 +7,8 @@ import awkward as ak
 from torch.utils.data import ConcatDataset, Subset
 
 
-def load_root_file(path: str, tree_path: str = "sim",
-                   branches: list = None) -> ak.Array:
-    """ Loads the CEPC dataset .root file.
+def load_root_file(path: str, tree_path: str = "sim", branches: list = None) -> ak.Array:
+    """Loads the CEPC dataset .root file.
 
     Parameters:
         path : str
@@ -53,8 +52,7 @@ def get_all_paths(input_loc, n_files: int = None) -> list:
     elif isinstance(input_loc, str):
         if os.path.isdir(input_loc):
             input_loc = os.path.expandvars(input_loc)
-            input_paths = glob.glob(os.path.join(
-                input_loc, "*.parquet"))[:n_files]
+            input_paths = glob.glob(os.path.join(input_loc, "*.parquet"))[:n_files]
         elif "*" in input_loc:
             input_paths = glob.glob(input_loc)[:n_files]
         elif os.path.isfile(input_loc):
@@ -82,8 +80,9 @@ def get_row_groups(input_paths: list) -> list:
         metadata = ak.metadata_from_parquet(data_path)
         num_row_groups = metadata["num_row_groups"]
         col_counts = metadata["col_counts"]
-        row_groups.extend([RowGroup(data_path, row_group, col_counts[row_group])
-                           for row_group in range(num_row_groups)])
+        row_groups.extend(
+            [RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
+        )
     return row_groups
 
 
@@ -127,10 +126,7 @@ def train_val_split_shuffle(
     if max_waveforms_for_training == -1:
         train_end_idx = None
     else:
-        num_train_rows = int(
-            np.ceil(
-                max_waveforms_for_training /
-                row_group_size))
+        num_train_rows = int(np.ceil(max_waveforms_for_training / row_group_size))
         train_end_idx = split + num_train_rows
     val_indices = indices[:split]
     train_indices = indices[split:train_end_idx]

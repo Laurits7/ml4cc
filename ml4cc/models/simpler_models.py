@@ -18,19 +18,19 @@ class DNNModel(nn.Module):
     def __init__(self, hyperparameters):
         super().__init__()
         self.fc1 = nn.Linear(
-            in_features=hyperparameters.n_features,
-            out_features=hyperparameters.linear_layer_1.out_features)
+            in_features=hyperparameters.n_features, out_features=hyperparameters.linear_layer_1.out_features
+        )
         self.fc2 = nn.Linear(
             in_features=hyperparameters.linear_layer_1.out_features,
-            out_features=hyperparameters.linear_layer_2.out_features
+            out_features=hyperparameters.linear_layer_2.out_features,
         )
         self.fc3 = nn.Linear(
             in_features=hyperparameters.linear_layer_2.out_features,
-            out_features=hyperparameters.linear_layer_3.out_features
+            out_features=hyperparameters.linear_layer_3.out_features,
         )
         self.output = nn.Linear(
             in_features=hyperparameters.linear_layer_3.out_features,
-            out_features=hyperparameters.output_layer.out_features
+            out_features=hyperparameters.output_layer.out_features,
         )
 
     def forward(self, x):
@@ -47,27 +47,24 @@ class CNNModel(nn.Module):
         self.conv1 = nn.Conv1d(
             in_channels=hyperparameters.conv_layer_1.in_channels,
             out_channels=hyperparameters.conv_layer_1.out_channels,
-            kernel_size=hyperparameters.conv_layer_1.kernel_size
+            kernel_size=hyperparameters.conv_layer_1.kernel_size,
         )
-        self.pool1 = nn.MaxPool1d(
-            kernel_size=hyperparameters.pool_layer_1.kernel_size
-        )
+        self.pool1 = nn.MaxPool1d(kernel_size=hyperparameters.pool_layer_1.kernel_size)
         self.conv2 = nn.Conv1d(
             in_channels=hyperparameters.conv_layer_1.out_channels,
             out_channels=hyperparameters.conv_layer_2.out_channels,
-            kernel_size=hyperparameters.conv_layer_2.kernel_size)
-        self.pool2 = nn.MaxPool1d(
-            kernel_size=hyperparameters.pool_layer_2.kernel_size
+            kernel_size=hyperparameters.conv_layer_2.kernel_size,
         )
+        self.pool2 = nn.MaxPool1d(kernel_size=hyperparameters.pool_layer_2.kernel_size)
         self.flatten = nn.Flatten()
         self.fc1 = nn.Linear(
             # Compute flattened input size manually
             in_features=16 * ((hyperparameters.num_features // 4) - 3),
-            out_features=hyperparameters.linear_layer_1.out_features
+            out_features=hyperparameters.linear_layer_1.out_features,
         )
         self.output = nn.Linear(
             in_features=hyperparameters.linear_layer_1.out_features,
-            out_features=hyperparameters.linear_layer_1.out_features
+            out_features=hyperparameters.linear_layer_1.out_features,
         )
 
     def forward(self, x):
@@ -92,15 +89,15 @@ class RNNModel(nn.Module):
             input_size=hyperparameters.LSTM_layers.input_size,
             hidden_size=hyperparameters.LSTM_layers.hidden_size,
             num_layers=hyperparameters.LSTM_layers.num_layers,
-            batch_first=hyperparameters.LSTM_layers.batch_first
+            batch_first=hyperparameters.LSTM_layers.batch_first,
         )
         self.fc1 = nn.Linear(
             in_features=hyperparameters.LSTM_layers.hidden_size,
-            out_features=hyperparameters.linear_layer_1.out_features
+            out_features=hyperparameters.linear_layer_1.out_features,
         )
         self.output = nn.Linear(
             in_features=hyperparameters.linear_layer_1.out_features,
-            out_features=hyperparameters.output_layer.out_features
+            out_features=hyperparameters.output_layer.out_features,
         )
 
     def forward(self, x):
@@ -135,8 +132,7 @@ class SimplerModelModule(L.LightningModule):
     def configure_optimizers(self):
         optimizer_class = resolve_target(self.optimizer_cfg["_target_"])
         # Remove '_target_' and pass the rest as kwargs
-        kwargs = {k: v for k, v in self.optimizer_cfg.items() if k !=
-                  "_target_"}
+        kwargs = {k: v for k, v in self.optimizer_cfg.items() if k != "_target_"}
         return optimizer_class(self.parameters(), **kwargs)
 
     def predict_step(self, batch, batch_idx):
@@ -154,12 +150,7 @@ class SimplerModelModule(L.LightningModule):
 
 
 class RNNModule(SimplerModelModule):
-    def __init__(
-            self,
-            name: str,
-            hyperparameters: dict,
-            optimizer: dict,
-            checkpoint: dict):
+    def __init__(self, name: str, hyperparameters: dict, optimizer: dict, checkpoint: dict):
         self.name = name
         self.checkpoint = checkpoint
         self.optimizer_cfg = optimizer
@@ -169,12 +160,7 @@ class RNNModule(SimplerModelModule):
 
 
 class DNNModule(SimplerModelModule):
-    def __init__(
-            self,
-            name: str,
-            hyperparameters: dict,
-            optimizer: dict,
-            checkpoint: dict):
+    def __init__(self, name: str, hyperparameters: dict, optimizer: dict, checkpoint: dict):
         self.name = name
         self.checkpoint = checkpoint
         self.optimizer_cfg = optimizer
@@ -184,12 +170,7 @@ class DNNModule(SimplerModelModule):
 
 
 class CNNModule(SimplerModelModule):
-    def __init__(
-            self,
-            name: str,
-            hyperparameters: dict,
-            optimizer: dict,
-            checkpoint: dict):
+    def __init__(self, name: str, hyperparameters: dict, optimizer: dict, checkpoint: dict):
         self.name = name
         self.checkpoint = checkpoint
         self.optimizer_cfg = optimizer

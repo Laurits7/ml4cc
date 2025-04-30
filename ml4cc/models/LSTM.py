@@ -10,10 +10,7 @@ class LSTM(torch.nn.Module):
     def __init__(self, lstm_hidden_dim: int = 32, num_lstm_layers: int = 1):
         super().__init__()
         self.lstm = torch.nn.LSTM(
-            input_size=1,
-            num_layers=num_lstm_layers,
-            hidden_size=lstm_hidden_dim,
-            batch_first=True
+            input_size=1, num_layers=num_lstm_layers, hidden_size=lstm_hidden_dim, batch_first=True
         )
         self.fc3 = torch.nn.Linear(lstm_hidden_dim, 32)
         self.fc4 = torch.nn.Linear(32, 1)
@@ -35,7 +32,7 @@ class LSTMModule(L.LightningModule):
         super().__init__()
         self.lstm = LSTM(
             lstm_hidden_dim=self.hyperparameters["lstm_hidden_dim"],
-            num_lstm_layers=self.hyperparameters["num_lstm_layers"]
+            num_lstm_layers=self.hyperparameters["num_lstm_layers"],
         )
 
     def training_step(self, batch, batch_idx):

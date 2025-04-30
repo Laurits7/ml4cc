@@ -10,6 +10,7 @@ from ml4cc.tools.data import io
 from omegaconf import DictConfig
 from ml4cc.tools.visualization import losses as l
 from ml4cc.tools.visualization import classification as cl
+
 hep.style.use(hep.styles.CMS)
 
 
@@ -18,7 +19,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 def filter_losses(metrics_path: str):
     metrics_data = pd.read_csv(metrics_path)
-    val_loss = np.array(metrics_data['val_loss'])
+    val_loss = np.array(metrics_data["val_loss"])
     # train_loss = np.array(metrics_data['train_loss'])
     val_loss = val_loss[~np.isnan(val_loss)]
     # train_loss = train_loss[~np.isnan(train_loss)]
@@ -57,21 +58,13 @@ def evaluate_training(model, dataloader, metrics_path, cfg, output_dir=""):
     waveform_save = []
     prediction_save = []
     print("Prediction progress for TEST dataset")
-    for batch_idx, batch in tqdm.tqdm(
-            enumerate(dataloader), total=len(dataloader)):
+    for batch_idx, batch in tqdm.tqdm(enumerate(dataloader), total=len(dataloader)):
         wfs, true, wf_idx = batch
-        batch = wfs.to(
-            device=DEVICE), true.to(
-            device=DEVICE), wf_idx.to(
-            device=DEVICE)
+        batch = wfs.to(device=DEVICE), true.to(device=DEVICE), wf_idx.to(device=DEVICE)
         pred = model(batch)[0]
-        prediction_save.append(
-            create_pred_values(
-                pred.detach().cpu().numpy(), cfg))
+        prediction_save.append(create_pred_values(pred.detach().cpu().numpy(), cfg))
         true_save.append(create_true_values(true.detach().cpu().numpy(), cfg))
-        waveform_save.append(
-            np.concatenate(
-                wfs.squeeze().detach().cpu().numpy()))
+        waveform_save.append(np.concatenate(wfs.squeeze().detach().cpu().numpy()))
         all_preds.extend(pred.detach().cpu().numpy())
         all_true.extend(true.detach().cpu().numpy())
     truth = np.array(all_true)
@@ -81,11 +74,13 @@ def evaluate_training(model, dataloader, metrics_path, cfg, output_dir=""):
     prediction_save = ak.Array(prediction_save)
     waveform_save = ak.Array(waveform_save)
     true_save = ak.Array(true_save)
-    pred_file_data = ak.Array({
-        "detected_peaks": prediction_save,
-        "waveform": waveform_save,
-        "target": true_save,
-    })
+    pred_file_data = ak.Array(
+        {
+            "detected_peaks": prediction_save,
+            "waveform": waveform_save,
+            "target": true_save,
+        }
+    )
     if output_dir == "":
         output_dir = cfg.training.output_dir
     pred_file_path = os.path.join(output_dir, "predictions.parquet")
@@ -100,10 +95,7 @@ def evaluate_training(model, dataloader, metrics_path, cfg, output_dir=""):
     # val_loss, train_loss = filter_losses(metrics_path)
     val_loss = filter_losses(metrics_path)
     losses_output_path = os.path.join(output_dir, "losses.png")
-    l.plot_loss_evolution(
-        val_loss=val_loss,
-        train_loss=None,
-        output_path=losses_output_path)
+    l.plot_loss_evolution(val_loss=val_loss, train_loss=None, output_path=losses_output_path)
 
 
 def plot_prediction_v_true(wfs, vals, window_size=15):
@@ -112,7 +104,7 @@ def plot_prediction_v_true(wfs, vals, window_size=15):
     for i, x in enumerate(vals):
         loc = (window_size / 2) + i * window_size
         if x > 0.5:
-            plt.axvline(loc, ymax=4, linestyle='--', color='red')
+            plt.axvline(loc, ymax=4, linestyle="--", color="red")
     plt.ylabel("Amplitude")
     plt.xlabel("Time")
     plt.grid()

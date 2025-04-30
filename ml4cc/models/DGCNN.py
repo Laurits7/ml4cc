@@ -10,20 +10,14 @@ from torch_geometric.nn import MLP, DynamicEdgeConv
 class DGCNN(nn.Module):
     def __init__(self, cfg: DictConfig):
         super().__init__()
-        self.conv1 = DynamicEdgeConv(
-            MLP([2 * 1, cfg.n_conv1, cfg.n_conv1]), cfg.k, cfg.aggr)
-        self.conv2 = DynamicEdgeConv(
-            MLP([2 * cfg.n_conv1, cfg.n_conv2, cfg.n_conv2]), cfg.k, cfg.aggr)
-        self.conv3 = DynamicEdgeConv(
-            MLP([2 * cfg.n_conv2, cfg.n_conv3, cfg.n_conv3]), cfg.k, cfg.aggr)
-        self.mlp = MLP([cfg.n_conv1 + cfg.n_conv2 + cfg.n_conv3,
-                        cfg.n_mlp1,
-                        cfg.n_mlp2,
-                        cfg.n_mlp3,
-                        cfg.out_channels],
-                       dropout=cfg.mlp_dropout,
-                       norm=None,
-                       )
+        self.conv1 = DynamicEdgeConv(MLP([2 * 1, cfg.n_conv1, cfg.n_conv1]), cfg.k, cfg.aggr)
+        self.conv2 = DynamicEdgeConv(MLP([2 * cfg.n_conv1, cfg.n_conv2, cfg.n_conv2]), cfg.k, cfg.aggr)
+        self.conv3 = DynamicEdgeConv(MLP([2 * cfg.n_conv2, cfg.n_conv3, cfg.n_conv3]), cfg.k, cfg.aggr)
+        self.mlp = MLP(
+            [cfg.n_conv1 + cfg.n_conv2 + cfg.n_conv3, cfg.n_mlp1, cfg.n_mlp2, cfg.n_mlp3, cfg.out_channels],
+            dropout=cfg.mlp_dropout,
+            norm=None,
+        )
 
     def forward(self, x, batch):
         x1 = self.conv1(x, batch)
