@@ -54,8 +54,8 @@ class CNNModel(nn.Module):
         )
         self.conv2 = nn.Conv1d(
             in_channels=hyperparameters.conv_layer_1.out_channels,
-            out_channels=hyperparameters.conv_layer_2.out_channels, kernel_size=hyperparameters.conv_layer_2.kernel_size
-        )
+            out_channels=hyperparameters.conv_layer_2.out_channels,
+            kernel_size=hyperparameters.conv_layer_2.kernel_size)
         self.pool2 = nn.MaxPool1d(
             kernel_size=hyperparameters.pool_layer_2.kernel_size
         )
@@ -71,7 +71,9 @@ class CNNModel(nn.Module):
         )
 
     def forward(self, x):
-        x = x.unsqueeze(1)  # To have a shape of (batch_size, in_channels, sequence_length) ; sequence length is the len of time series
+        # To have a shape of (batch_size, in_channels, sequence_length) ;
+        # sequence length is the len of time series
+        x = x.unsqueeze(1)
         x = torch.relu(self.conv1(x))
         x = self.pool1(x)
         x = torch.relu(self.conv2(x))
@@ -133,9 +135,9 @@ class SimplerModelModule(L.LightningModule):
     def configure_optimizers(self):
         optimizer_class = resolve_target(self.optimizer_cfg["_target_"])
         # Remove '_target_' and pass the rest as kwargs
-        kwargs = {k: v for k, v in self.optimizer_cfg.items() if k != "_target_"}
+        kwargs = {k: v for k, v in self.optimizer_cfg.items() if k !=
+                  "_target_"}
         return optimizer_class(self.parameters(), **kwargs)
-
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, target = self.forward(batch)
@@ -152,7 +154,12 @@ class SimplerModelModule(L.LightningModule):
 
 
 class RNNModule(SimplerModelModule):
-    def __init__(self, name: str, hyperparameters: dict, optimizer: dict, checkpoint: dict):
+    def __init__(
+            self,
+            name: str,
+            hyperparameters: dict,
+            optimizer: dict,
+            checkpoint: dict):
         self.name = name
         self.checkpoint = checkpoint
         self.optimizer_cfg = optimizer
@@ -162,7 +169,12 @@ class RNNModule(SimplerModelModule):
 
 
 class DNNModule(SimplerModelModule):
-    def __init__(self, name: str, hyperparameters: dict, optimizer: dict, checkpoint: dict):
+    def __init__(
+            self,
+            name: str,
+            hyperparameters: dict,
+            optimizer: dict,
+            checkpoint: dict):
         self.name = name
         self.checkpoint = checkpoint
         self.optimizer_cfg = optimizer
@@ -172,7 +184,12 @@ class DNNModule(SimplerModelModule):
 
 
 class CNNModule(SimplerModelModule):
-    def __init__(self, name: str, hyperparameters: dict, optimizer: dict, checkpoint: dict):
+    def __init__(
+            self,
+            name: str,
+            hyperparameters: dict,
+            optimizer: dict,
+            checkpoint: dict):
         self.name = name
         self.checkpoint = checkpoint
         self.optimizer_cfg = optimizer

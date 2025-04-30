@@ -22,7 +22,7 @@ def filter_losses(metrics_path: str):
     # train_loss = np.array(metrics_data['train_loss'])
     val_loss = val_loss[~np.isnan(val_loss)]
     # train_loss = train_loss[~np.isnan(train_loss)]
-    return val_loss#, train_loss
+    return val_loss  # , train_loss
 
 
 def create_pred_values(preds: np.array, cfg: DictConfig):
@@ -31,9 +31,10 @@ def create_pred_values(preds: np.array, cfg: DictConfig):
     zero_count = int((window_size - 1) / 2)
     for pred in preds:
         if pred > 0.5:  # If detected peak
-            pred_vector.extend([0]*zero_count + [1] + [0]*zero_count)  # So the middle of the window is the location of the peak
+            # So the middle of the window is the location of the peak
+            pred_vector.extend([0] * zero_count + [1] + [0] * zero_count)
         else:
-            pred_vector.extend([0]*window_size)
+            pred_vector.extend([0] * window_size)
     return np.array(pred_vector)
 
 
@@ -43,9 +44,9 @@ def create_true_values(true: np.array, cfg: DictConfig):
     true_vector = []
     for t in true:
         if t > 0.5:
-            true_vector.extend([0]*zero_count + [1] + [0]*zero_count)
+            true_vector.extend([0] * zero_count + [1] + [0] * zero_count)
         else:
-            true_vector.extend([0]*window_size)
+            true_vector.extend([0] * window_size)
     return np.array(true_vector)
 
 
@@ -56,13 +57,21 @@ def evaluate_training(model, dataloader, metrics_path, cfg, output_dir=""):
     waveform_save = []
     prediction_save = []
     print("Prediction progress for TEST dataset")
-    for batch_idx, batch in tqdm.tqdm(enumerate(dataloader), total=len(dataloader)):
+    for batch_idx, batch in tqdm.tqdm(
+            enumerate(dataloader), total=len(dataloader)):
         wfs, true, wf_idx = batch
-        batch = wfs.to(device=DEVICE), true.to(device=DEVICE), wf_idx.to(device=DEVICE)
+        batch = wfs.to(
+            device=DEVICE), true.to(
+            device=DEVICE), wf_idx.to(
+            device=DEVICE)
         pred = model(batch)[0]
-        prediction_save.append(create_pred_values(pred.detach().cpu().numpy(), cfg))
+        prediction_save.append(
+            create_pred_values(
+                pred.detach().cpu().numpy(), cfg))
         true_save.append(create_true_values(true.detach().cpu().numpy(), cfg))
-        waveform_save.append(np.concatenate(wfs.squeeze().detach().cpu().numpy()))
+        waveform_save.append(
+            np.concatenate(
+                wfs.squeeze().detach().cpu().numpy()))
         all_preds.extend(pred.detach().cpu().numpy())
         all_true.extend(true.detach().cpu().numpy())
     truth = np.array(all_true)
@@ -91,14 +100,17 @@ def evaluate_training(model, dataloader, metrics_path, cfg, output_dir=""):
     # val_loss, train_loss = filter_losses(metrics_path)
     val_loss = filter_losses(metrics_path)
     losses_output_path = os.path.join(output_dir, "losses.png")
-    l.plot_loss_evolution(val_loss=val_loss, train_loss=None, output_path=losses_output_path)
+    l.plot_loss_evolution(
+        val_loss=val_loss,
+        train_loss=None,
+        output_path=losses_output_path)
 
 
 def plot_prediction_v_true(wfs, vals, window_size=15):
     wf = np.concatenate(wfs.squeeze().numpy())
     plt.plot(np.arange(len(wf)), wf)
     for i, x in enumerate(vals):
-        loc = (window_size/2) + i * window_size
+        loc = (window_size / 2) + i * window_size
         if x > 0.5:
             plt.axvline(loc, ymax=4, linestyle='--', color='red')
     plt.ylabel("Amplitude")

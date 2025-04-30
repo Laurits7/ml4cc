@@ -42,15 +42,18 @@ def base_train(cfg: DictConfig, training_type: str):
 
 
 def train_one_step(cfg: DictConfig, data_type: str):
-    print(f"Training {cfg.models.one_step.model.name} for the one-step training.")
+    print(
+        f"Training {cfg.models.one_step.model.name} for the one-step training.")
     model = instantiate(cfg.models.one_step.model)
     datamodule = dl.OneStepDataModule(cfg=cfg, data_type=data_type)
     if not cfg.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="one_step")
+        trainer, checkpoint_callback = base_train(
+            cfg, training_type="one_step")
         trainer.fit(model=model, datamodule=datamodule)
 
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "best_model.ckpt")
+        new_best_model_path = os.path.join(
+            cfg.training.models_dir, "best_model.ckpt")
         shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
@@ -60,15 +63,18 @@ def train_one_step(cfg: DictConfig, data_type: str):
 
 
 def train_two_step_peak_finding(cfg: DictConfig, data_type: str):
-    print(f"Training {cfg.models.two_step.peak_finding.model.name} for the two-step peak-finding training.")
+    print(
+        f"Training {cfg.models.two_step.peak_finding.model.name} for the two-step peak-finding training.")
     model = instantiate(cfg.models.two_step.peak_finding.model)
     datamodule = dl.TwoStepPeakFindingDataModule(cfg=cfg, data_type=data_type)
     if not cfg.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_peak_finding")
+        trainer, checkpoint_callback = base_train(
+            cfg, training_type="two_step_peak_finding")
         trainer.fit(model=model, datamodule=datamodule)
 
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "best_model.ckpt")
+        new_best_model_path = os.path.join(
+            cfg.training.models_dir, "best_model.ckpt")
         shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
@@ -78,15 +84,19 @@ def train_two_step_peak_finding(cfg: DictConfig, data_type: str):
 
 
 def train_two_step_clusterization(cfg: DictConfig, data_type: str):
-    print(f"Training {cfg.models.two_step.clusterization.model.name} for the two-step clusterization training.")
+    print(
+        f"Training {cfg.models.two_step.clusterization.model.name} for the two-step clusterization training.")
     model = instantiate(cfg.models.two_step.clusterization.model)
-    datamodule = dl.TwoStepClusterizationDataModule(cfg=cfg, data_type=data_type)
+    datamodule = dl.TwoStepClusterizationDataModule(
+        cfg=cfg, data_type=data_type)
     if not cfg.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_clusterization")
+        trainer, checkpoint_callback = base_train(
+            cfg, training_type="two_step_clusterization")
         trainer.fit(model=model, datamodule=datamodule)
 
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "best_model.ckpt")
+        new_best_model_path = os.path.join(
+            cfg.training.models_dir, "best_model.ckpt")
         shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
@@ -96,15 +106,18 @@ def train_two_step_clusterization(cfg: DictConfig, data_type: str):
 
 
 def train_two_step_minimal(cfg: DictConfig, data_type: str):
-    print(f"Training {cfg.models.two_step_minimal.model.name} for the two-step minimal training.")
+    print(
+        f"Training {cfg.models.two_step_minimal.model.name} for the two-step minimal training.")
     model = instantiate(cfg.models.two_step_minimal.model)
     datamodule = dl.TwoStepMinimalDataModule(cfg=cfg, data_type=data_type)
     if not cfg.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_minimal")
+        trainer, checkpoint_callback = base_train(
+            cfg, training_type="two_step_minimal")
         trainer.fit(model=model, datamodule=datamodule)
 
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "best_model.ckpt")
+        new_best_model_path = os.path.join(
+            cfg.training.models_dir, "best_model.ckpt")
         shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
@@ -130,7 +143,10 @@ def get_FCC_evaluation_scenarios(cfg: DictConfig) -> list:
     return evaluation_scenarios
 
 
-def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig):
+def save_predictions(
+        input_path: str,
+        all_predictions: ak.Array,
+        cfg: DictConfig):
     predictions_dir = cfg.training.predictions_dir
     os.makedirs(predictions_dir, exist_ok=True)
     base_dir = cfg.dataset.data_dir
@@ -141,10 +157,17 @@ def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig
     output_data = input_data.copy()
     output_data["pred"] = all_predictions
 
-    ak.to_parquet(output_data, output_path, row_group_size=cfg.preprocessing.row_group_size)
+    ak.to_parquet(
+        output_data,
+        output_path,
+        row_group_size=cfg.preprocessing.row_group_size)
 
 
-def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, model, cfg: DictConfig):
+def create_prediction_files(
+        file_list: list,
+        iterable_dataset: IterableDataset,
+        model,
+        cfg: DictConfig):
     with torch.no_grad():
         for path in file_list:
             dataset = dl.RowGroupDataset(path)
@@ -160,8 +183,10 @@ def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, 
                 predictions = model(batch)
                 all_predictions.append(predictions)
             all_predictions = ak.concatenate(all_predictions, axis=0)
-            save_predictions(input_path=path, all_predictions=all_predictions, cfg=cfg)
-
+            save_predictions(
+                input_path=path,
+                all_predictions=all_predictions,
+                cfg=cfg)
 
 
 def evaluate_one_step(cfg: DictConfig, model, metrics_path: str) -> list:
@@ -172,13 +197,20 @@ def evaluate_one_step(cfg: DictConfig, model, metrics_path: str) -> list:
     iterable_dataset = dl.OneStepIterableDataset
 
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
+    create_prediction_files(
+        file_list,
+        iterable_dataset=iterable_dataset,
+        model=model,
+        cfg=cfg)
 
     # Evaluate training
     ose.evaluate_training(cfg=cfg, metrics_path=metrics_path)
 
 
-def evaluate_two_step_peak_finding(cfg: DictConfig, model, metrics_path: str) -> list:
+def evaluate_two_step_peak_finding(
+        cfg: DictConfig,
+        model,
+        metrics_path: str) -> list:
     model.to(DEVICE)
     model.eval()
     wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", "*", "*")
@@ -186,13 +218,23 @@ def evaluate_two_step_peak_finding(cfg: DictConfig, model, metrics_path: str) ->
     iterable_dataset = dl.TwoStepPeakFindingIterableDataset
 
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
+    create_prediction_files(
+        file_list,
+        iterable_dataset=iterable_dataset,
+        model=model,
+        cfg=cfg)
 
     # Evaluate training
-    tse.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="peak_finding")
+    tse.evaluate_training(
+        cfg=cfg,
+        metrics_path=metrics_path,
+        stage="peak_finding")
 
 
-def evaluate_two_step_clusterization(cfg: DictConfig, model, metrics_path: str) -> list:
+def evaluate_two_step_clusterization(
+        cfg: DictConfig,
+        model,
+        metrics_path: str) -> list:
     model.to(DEVICE)
     model.eval()
     wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", "*", "*")
@@ -200,13 +242,23 @@ def evaluate_two_step_clusterization(cfg: DictConfig, model, metrics_path: str) 
     iterable_dataset = dl.TwoStepClusterizationIterableDataset
 
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
+    create_prediction_files(
+        file_list,
+        iterable_dataset=iterable_dataset,
+        model=model,
+        cfg=cfg)
 
     # Evaluate training
-    tse.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="clusterization")
+    tse.evaluate_training(
+        cfg=cfg,
+        metrics_path=metrics_path,
+        stage="clusterization")
 
 
-def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list:
+def evaluate_two_step_minimal(
+        cfg: DictConfig,
+        model,
+        metrics_path: str) -> list:
     model.to(DEVICE)
     model.eval()
     wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", "*", "*")
@@ -214,40 +266,49 @@ def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list
     iterable_dataset = dl.TwoStepMinimalIterableDataset
 
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg)
+    create_prediction_files(
+        file_list,
+        iterable_dataset=iterable_dataset,
+        model=model,
+        cfg=cfg)
 
     # Evaluate training
     tsme.evaluate_training(cfg=cfg, metrics_path=metrics_path)
 
 
-@hydra.main(config_path="../config", config_name="main.yaml", version_base=None)
+@hydra.main(config_path="../config",
+            config_name="main.yaml",
+            version_base=None)
 def main(cfg: DictConfig):
     training_type = cfg.training.type
 
     if training_type == "one_step":
-        model, best_model_path, metrics_path = train_one_step(cfg, data_type="")
+        model, best_model_path, metrics_path = train_one_step(
+            cfg, data_type="")
         checkpoint = torch.load(best_model_path, weights_only=False)
         model.load_state_dict(checkpoint['state_dict'])
         model.eval()
         evaluate_one_step(cfg, model, metrics_path)
     elif training_type == "two_step":
-        model, best_model_path, metrics_path = train_two_step_peak_finding(cfg, data_type="")
+        model, best_model_path, metrics_path = train_two_step_peak_finding(
+            cfg, data_type="")
         checkpoint = torch.load(best_model_path, weights_only=False)
         model.load_state_dict(checkpoint['state_dict'])
         model.eval()
         evaluate_two_step_peak_finding(cfg, model, metrics_path)
 
-        model, best_model_path, metrics_path = train_two_step_clusterization(cfg, data_type="")
+        model, best_model_path, metrics_path = train_two_step_clusterization(
+            cfg, data_type="")
         evaluate_two_step_clusterization(cfg, model, metrics_path)
     elif training_type == "two_step_minimal":
-        model, best_model_path, metrics_path = train_two_step_minimal(cfg, data_type="")
+        model, best_model_path, metrics_path = train_two_step_minimal(
+            cfg, data_type="")
         checkpoint = torch.load(best_model_path, weights_only=False)
         model.load_state_dict(checkpoint['state_dict'])
         model.eval()
         evaluate_two_step_minimal(cfg, model, metrics_path)
     else:
         raise ValueError(f"Unknown training type: {training_type}")
-
 
 
 if __name__ == "__main__":

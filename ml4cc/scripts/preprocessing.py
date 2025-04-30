@@ -10,9 +10,17 @@ from ml4cc.tools.data import preprocessing as pp
 
 
 def prepare_slurm_inputs(input_files: list, cfg: DictConfig) -> None:
-    input_path_chunks = list(np.array_split(input_files, len(input_files) // cfg.preprocessing.slurm.files_per_job))
-    print(f"From {len(input_files)} input files created {len(input_path_chunks)} chunks")
-    st.multipath_slurm_processor(input_path_chunks=input_path_chunks, job_script=__file__, cfg=cfg.host)
+    input_path_chunks = list(
+        np.array_split(
+            input_files,
+            len(input_files) //
+            cfg.preprocessing.slurm.files_per_job))
+    print(
+        f"From {len(input_files)} input files created {len(input_path_chunks)} chunks")
+    st.multipath_slurm_processor(
+        input_path_chunks=input_path_chunks,
+        job_script=__file__,
+        cfg=cfg.host)
 
 
 def prepare_fcc_inputs(cfg: DictConfig) -> list:
@@ -57,9 +65,11 @@ def process_files(input_files: list, cfg: DictConfig) -> None:
         elif cfg.preprocessing.data_type == "one_step":
             pp.process_onestep_root_file(path, cfg)
         else:
-            raise ValueError(f"Unknown data type: {cfg.preprocessing.data_type}")
+            raise ValueError(
+                f"Unknown data type: {cfg.preprocessing.data_type}")
         file_end_time = time.time()
-        print(f"Processing {path} took {file_end_time - file_start_time:.2f} seconds")
+        print(
+            f"Processing {path} took {file_end_time - file_start_time:.2f} seconds")
 
 
 def run_job(cfg: DictConfig) -> None:
@@ -70,7 +80,8 @@ def run_job(cfg: DictConfig) -> None:
     total_start_time = time.time()
     process_files(input_files=input_paths, cfg=cfg)
     total_end_time = time.time()
-    print(f"Processing {len(input_paths)} took {total_end_time - total_start_time:.2f} seconds")
+    print(
+        f"Processing {len(input_paths)} took {total_end_time - total_start_time:.2f} seconds")
 
 
 @hydra.main(config_path="../config", config_name="main", version_base=None)
@@ -89,4 +100,4 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == '__main__':
-    main() # pylint: disable=E1120
+    main()  # pylint: disable=E1120

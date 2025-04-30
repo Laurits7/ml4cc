@@ -5,16 +5,18 @@ import lightning as L
 import torch.optim as optim
 import torch.nn.functional as F
 
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model: int, max_len: int):
         super().__init__()
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        div_term = torch.exp(torch.arange(
+            0, d_model, 2).float() * (-math.log(10000.0) / d_model))
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.pe = pe.unsqueeze(0)
-    
+
     def forward(self, x):
         return x + self.pe[:, :x.size(1), :].to(x.device)
 
@@ -22,21 +24,26 @@ class PositionalEncoding(nn.Module):
 class WaveFormTransformer(nn.Module):
     def __init__(
             self,
-            input_dim: int, # 1024 or 3000
-            d_model: int, # 512
-            num_heads: int, # 16
-            num_layers: int, # 3
-            hidden_dim: int, # 4*d_model
-            num_classes: int, # 1, either bkg or signal
-            max_len: int, # As we have fixed nr, then it max_len=input_dim
-            dropout: float=0.1
+            input_dim: int,  # 1024 or 3000
+            d_model: int,  # 512
+            num_heads: int,  # 16
+            num_layers: int,  # 3
+            hidden_dim: int,  # 4*d_model
+            num_classes: int,  # 1, either bkg or signal
+            max_len: int,  # As we have fixed nr, then it max_len=input_dim
+            dropout: float = 0.1
     ):
         super().__init__()
         self.input_projection = nn.Linear(1, d_model)
         self.positional_encoding = PositionalEncoding(d_model, max_len)
 
-        encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=num_heads,
+            dim_feedforward=hidden_dim,
+            dropout=dropout)
+        self.transformer_encoder = nn.TransformerEncoder(
+            encoder_layer, num_layers=num_layers)
 
         self.peak_finding_classifier = nn.Linear(d_model, num_classes)
         # self.clusterizer = nn.Linear(d_model, 1)
@@ -48,7 +55,8 @@ class WaveFormTransformer(nn.Module):
         x = self.positional_encoding(x)
         x = self.transformer_encoder(x)
         x = self.layernorm(x)
-        x = self.peak_finding_classifier(x)  # Shape: [batch_size, seq_length, num_classes]
+        # Shape: [batch_size, seq_length, num_classes]
+        x = self.peak_finding_classifier(x)
         # x = F.relu(x)
         x = x.sum(dim=1)  # Shape: [batch_size, num_classes]
         # x = self.clusterizer(x)
@@ -56,7 +64,11 @@ class WaveFormTransformer(nn.Module):
 
 
 class TransformerModule(L.LightningModule):
-    def __init__(self, name: str, hyperparameters: dict, checkpoint: dict = None):
+    def __init__(
+            self,
+            name: str,
+            hyperparameters: dict,
+            checkpoint: dict = None):
         super().__init__()
         self.name = name
         self.hyperparameters = hyperparameters

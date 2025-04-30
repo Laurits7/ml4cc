@@ -4,8 +4,9 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 
-
-class LSTM(torch.nn.Module):  # TODO: Is this implemented like in their paper? In their paper they have multiple LSTMs.
+# TODO: Is this implemented like in their paper? In their paper they have
+# multiple LSTMs.
+class LSTM(torch.nn.Module):
     def __init__(self, lstm_hidden_dim: int = 32, num_lstm_layers: int = 1):
         super().__init__()
         self.lstm = torch.nn.LSTM(
@@ -20,7 +21,9 @@ class LSTM(torch.nn.Module):  # TODO: Is this implemented like in their paper? I
     def forward(self, x):
         ula, (h, _) = self.lstm(x)
         out = h[-1]
-        out = F.relu(self.fc3(out))  # If we would like to have a prediction for each point in wf, then we would use ula instead of out here
+        # If we would like to have a prediction for each point in wf, then we
+        # would use ula instead of out here
+        out = F.relu(self.fc3(out))
         clf = F.sigmoid(self.fc4(out)).squeeze()
         return clf
 

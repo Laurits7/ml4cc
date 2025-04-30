@@ -6,7 +6,10 @@ from sklearn.metrics import roc_curve, roc_auc_score
 hep.style.use(hep.styles.CMS)
 
 
-def plot_roc_curve(truth: np.array, preds: np.array, output_path: str='') -> None:
+def plot_roc_curve(
+        truth: np.array,
+        preds: np.array,
+        output_path: str = '') -> None:
     """ Plots the ROC curve based on the true and predicted values
 
     Parameters:
@@ -33,7 +36,10 @@ def plot_roc_curve(truth: np.array, preds: np.array, output_path: str='') -> Non
     plt.close("all")
 
 
-def plot_classifier_scores_distribution(truth: np.array, preds: np.array, output_path: str='') -> None:
+def plot_classifier_scores_distribution(
+        truth: np.array,
+        preds: np.array,
+        output_path: str = '') -> None:
     """ Plots the distribution of classifier scores based on the true and predicted values
 
     Parameters:
@@ -50,8 +56,20 @@ def plot_classifier_scores_distribution(truth: np.array, preds: np.array, output
     bkg_idx = truth == 0
     sig_idx = truth == 1
     bins = np.linspace(0, 1, num=25)
-    plt.hist(preds[bkg_idx], color='r', label='BKG', histtype='step', density=True, bins=bins)
-    plt.hist(preds[sig_idx], color='b', label='SIG', histtype='step', density=True, bins=bins)
+    plt.hist(
+        preds[bkg_idx],
+        color='r',
+        label='BKG',
+        histtype='step',
+        density=True,
+        bins=bins)
+    plt.hist(
+        preds[sig_idx],
+        color='b',
+        label='SIG',
+        histtype='step',
+        density=True,
+        bins=bins)
     plt.legend()
     plt.xlabel(r"$\mathcal{D}_p$")
     plt.ylabel("Count [a.u.]")
@@ -60,7 +78,10 @@ def plot_classifier_scores_distribution(truth: np.array, preds: np.array, output
     plt.close("all")
 
 
-def plot_classification(truth: np.array, preds: np.array, output_dir: str='') -> None:
+def plot_classification(
+        truth: np.array,
+        preds: np.array,
+        output_dir: str = '') -> None:
     """ Plots the distribution of classifier scores based on the true and predicted values
 
     Parameters:
@@ -77,4 +98,5 @@ def plot_classification(truth: np.array, preds: np.array, output_dir: str='') ->
     roc_output_path = os.path.join(output_dir, "roc.png")
     plot_roc_curve(truth=truth, preds=preds, output_path=roc_output_path)
     classifier_score_path = os.path.join(output_dir, "cls_scores.png")
-    plot_classifier_scores_distribution(truth=truth, preds=preds, output_path=classifier_score_path)
+    plot_classifier_scores_distribution(
+        truth=truth, preds=preds, output_path=classifier_score_path)

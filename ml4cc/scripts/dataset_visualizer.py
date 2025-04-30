@@ -15,7 +15,11 @@ def analyze_cluster_counts(cluster_counts: ak.Array) -> dict:
 
 
 def analyze_FCC_case_data(cfg: DictConfig, particle: str, energy: str) -> dict:
-    path = os.path.join(cfg.data_dir, "one_step", "test", f"{energy}_1.parquet")
+    path = os.path.join(
+        cfg.data_dir,
+        "one_step",
+        "test",
+        f"{energy}_1.parquet")
     data = ak.from_parquet(path)
     num_primary = ak.sum(data.target == 1, axis=-1)
     num_secondary = ak.sum(data.target == 2, axis=-1)
@@ -30,8 +34,12 @@ def analyze_FCC_case_data(cfg: DictConfig, particle: str, energy: str) -> dict:
     return info
 
 
-def analyze_CEPC_case_data(cfg: DictConfig, particle: str, energy: str) -> dict:
-    path = os.path.join(cfg.data_dir, "one_step", "test", f"signal_{particle}_{energy}_0.parquet")
+def analyze_CEPC_case_data(
+        cfg: DictConfig,
+        particle: str,
+        energy: str) -> dict:
+    path = os.path.join(cfg.data_dir, "one_step", "test",
+                        f"signal_{particle}_{energy}_0.parquet")
     data = ak.from_parquet(path)
     num_primary = ak.sum(data.target == 1, axis=-1)
     num_secondary = ak.sum(data.target == 2, axis=-1)
@@ -50,7 +58,9 @@ def compile_num_cluster_v_energy_info():
     pass
 
 
-@hydra.main(config_path="../config", config_name="main.yaml", version_base=None)
+@hydra.main(config_path="../config",
+            config_name="main.yaml",
+            version_base=None)
 def main(cfg: DictConfig):
     full_info = {}
     for dataset_name, dataset_values in cfg.datasets.items():
@@ -65,18 +75,8 @@ def main(cfg: DictConfig):
                 elif dataset_name == "FCC":
                     info = analyze_FCC_case_data(cfg, particle_type, energy)
                 full_info[dataset_name][particle_type][energy] = info
-    
 
-
-
-
-    # TODO: Load X number of CEPC files: 
+    # TODO: Load X number of CEPC files:
     #       - Plot number of primary clusters mean+std for each Particle type and energy
-
-
-
-
-
-
 if __name__ == "__main__":
     main()  # pylint: disable=E1120

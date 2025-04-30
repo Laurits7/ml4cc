@@ -8,4 +8,4 @@ def filter_losses(metrics_path: str):
     # train_loss = np.array(metrics_data['train_loss'])
     val_loss = val_loss[~np.isnan(val_loss)]
     # train_loss = train_loss[~np.isnan(train_loss)]
-    return val_loss#, train_loss
+    return val_loss  # , train_loss

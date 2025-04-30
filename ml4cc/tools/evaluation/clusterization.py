@@ -20,7 +20,8 @@ def filter_losses(metrics_path: str):
     # train_loss = np.array(metrics_data['train_loss'])
     val_loss = val_loss[~np.isnan(val_loss)]
     # train_loss = train_loss[~np.isnan(train_loss)]
-    return val_loss#, train_loss
+    return val_loss  # , train_loss
+
 
 def evaluate_training(model, dataloader, metrics_path, cfg):
     all_true = []
@@ -29,10 +30,13 @@ def evaluate_training(model, dataloader, metrics_path, cfg):
     waveform_save = []
     prediction_save = []
     print("Prediction progress for TEST dataset")
-    for batch_idx, batch in tqdm.tqdm(enumerate(dataloader), total=len(dataloader)):
+    for batch_idx, batch in tqdm.tqdm(
+            enumerate(dataloader), total=len(dataloader)):
         wfs, true = batch
         pred, _ = model(batch)
-        waveform_save.append(np.concatenate(wfs.squeeze().detach().cpu().numpy()))
+        waveform_save.append(
+            np.concatenate(
+                wfs.squeeze().detach().cpu().numpy()))
         prediction_save.append(pred.detach().cpu().numpy())
         true_save.append(true.detach().cpu().cpu().numpy())
         all_preds.extend(pred.detach().cpu().numpy())
@@ -49,7 +53,9 @@ def evaluate_training(model, dataloader, metrics_path, cfg):
         "waveform": waveform_save,
         "target": true_save,
     })
-    pred_file_path = os.path.join(cfg.training.output_dir, "predictions.parquet")
+    pred_file_path = os.path.join(
+        cfg.training.output_dir,
+        "predictions.parquet")
     io.save_array_to_file(data=pred_file_data, output_path=pred_file_path)
 
     # Save training results / metrics
@@ -58,10 +64,15 @@ def evaluate_training(model, dataloader, metrics_path, cfg):
 
     val_loss = filter_losses(metrics_path)
     losses_output_path = os.path.join(results_dir, "losses.pdf")
-    l.plot_loss_evolution(val_loss=val_loss, train_loss=None, output_path=losses_output_path)
+    l.plot_loss_evolution(
+        val_loss=val_loss,
+        train_loss=None,
+        output_path=losses_output_path)
 
     resolution_output_path = os.path.join(results_dir, "resolution.pdf")
     r.evaluate_resolution(truth, preds, output_path=resolution_output_path)
 
-    distribution_output_path = os.path.join(results_dir, "true_pred_distributions.pdf")
-    r.plot_true_pred_distributions(truth, preds, output_path=distribution_output_path)
+    distribution_output_path = os.path.join(
+        results_dir, "true_pred_distributions.pdf")
+    r.plot_true_pred_distributions(
+        truth, preds, output_path=distribution_output_path)

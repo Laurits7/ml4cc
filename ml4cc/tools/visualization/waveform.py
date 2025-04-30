@@ -20,7 +20,8 @@ def plot_waveform(
     elif (height is not None) and (time is not None):
         ax.plot(time, height, label='waveform')
     else:
-        raise ValueError("Please provide either the waveform or height and time.")
+        raise ValueError(
+            "Please provide either the waveform or height and time.")
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.legend(loc="upper right")

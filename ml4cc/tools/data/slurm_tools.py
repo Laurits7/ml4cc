@@ -15,7 +15,11 @@ def generate_run_id(run_id_len=10):
         random_string : str
             The randomly generated alphanumeric string
     """
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=run_id_len))
+    return ''.join(
+        random.choices(
+            string.ascii_uppercase +
+            string.digits,
+            k=run_id_len))
 
 
 def create_tmp_run_dir(cfg):
@@ -94,9 +98,15 @@ def multipath_slurm_processor(input_path_chunks, job_script, cfg):
     output_dir = create_tmp_run_dir(cfg=cfg)
     input_file_paths = create_job_input_list(input_path_chunks, output_dir)
     for job_idx, input_file_path in enumerate(input_file_paths):
-        prepare_job_file(input_file=input_file_path, job_idx=job_idx, output_dir=output_dir, run_script=job_script, cfg=cfg)
+        prepare_job_file(
+            input_file=input_file_path,
+            job_idx=job_idx,
+            output_dir=output_dir,
+            run_script=job_script,
+            cfg=cfg)
     print(f"Temporary directory created to {output_dir}")
-    print(f"Run `bash ml4cc/scripts/submit_batchJobs.sh {output_dir}/executables/`")
+    print(
+        f"Run `bash ml4cc/scripts/submit_batchJobs.sh {output_dir}/executables/`")
 
 
 def create_job_input_list(input_path_chunks: list, output_dir: str):
