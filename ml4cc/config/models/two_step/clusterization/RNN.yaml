@@ -1,8 +1,20 @@
 _target_: ml4cc.models.simpler_models.RNNModule
 name: RNN
+hyperparamerers:
+    LSTM_layers:
+        input_size: 1
+        hidden_size: 16
+        num_layers: 1
+        batch_first: true
+    linear_layer_1:
+        out_features: 16
+    output_layer:
+        out_features: 1
+optimizer:
+    _target_: torch.optim.AdamW
+    lr: 0.001
+    params: ???
+
 checkpoint:
     model: null
     losses: null
-
-defaults:
-    - _self_

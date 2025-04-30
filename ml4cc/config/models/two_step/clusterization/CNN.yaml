@@ -2,25 +2,26 @@ _target_: ml4cc.models.simpler_models.DNNModule
 name: CNN
 hyperparameters:
     conv_layer_1:
-        hidden_dim: 32
+        in_channels: 1
+        out_channels: 32
         kernel_size: 4
     pool_layer_1:
         kernel_size: 2
     conv_layer_2:
-        hidden_dim: 16
+        out_channels: 16
         kernel_size: 4
     linear_layer_1:
-    num_features: null  # TODO: Find out
+        # in_features: ???
+        out_features: 32
+    output_layer:
+        in_features: 32
+        out_features: 1
+    num_features: 3000  # TODO: Fix - should this be the one-step style?
 optimizer:
-    # _target_: torch.optim.RMSprop  # Guang uses this
     _target_: torch.optim.AdamW
     lr: 0.001
-    params: ???
-
+    params: ??? 
 
 checkpoint:
     model: null
     losses: null
-
-defaults:
-    - _self_
