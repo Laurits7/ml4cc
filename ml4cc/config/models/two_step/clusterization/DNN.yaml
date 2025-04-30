@@ -1,5 +1,6 @@
-_target_: ml4cc.models.simpler_models
+_target_: ml4cc.models.simpler_models.DNNModule
 name: DNN
+hyperparameters
 checkpoint:
     model: null
     losses: null

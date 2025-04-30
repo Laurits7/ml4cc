@@ -81,7 +81,7 @@ def get_row_groups(input_paths: list) -> list:
         num_row_groups = metadata["num_row_groups"]
         col_counts = metadata["col_counts"]
         row_groups.extend(
-            [io.RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
+            [RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
         )
     return row_groups
 

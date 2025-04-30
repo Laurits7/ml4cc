@@ -52,4 +52,7 @@ jobs:
       run: |
         echo "Errors:"
         jq -r '.[] | select(.type == "error" or .type == "fatal") | "\(.path):\(.line): \(.message)"' pylint_output.json || true
+    - name: Run Pylint for logs (with score)
+      run: pylint --rcfile=config/.pylintrc $(git ls-files '*.py') --exit-zero
+
 

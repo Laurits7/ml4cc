@@ -1,14 +1,14 @@
 import torch
 import lightning as L
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
+from hydra.utils import instantiate
 
 
 class DNNModel(nn.Module):
-    def __init__(self, nfeature):
-        super(DNNModel, self).__init__()
-        self.fc1 = nn.Linear(nfeature, 32)
+    def __init__(self, n_features):
+        super().__init__()
+        self.fc1 = nn.Linear(n_features, 32)
         self.fc2 = nn.Linear(32, 32)
         self.fc3 = nn.Linear(32, 32)
         self.output = nn.Linear(32, 1)
@@ -46,7 +46,7 @@ class CNNModel(nn.Module):
 
 
 class RNNModel(nn.Module):
-    def __init__(self, nfeature):
+    def __init__(self):
         super().__init__()
         self.lstm = nn.LSTM(input_size=1, hidden_size=16, num_layers=1, batch_first=True)
         self.fc1 = nn.Linear(16, 16)
@@ -64,10 +64,11 @@ class RNNModel(nn.Module):
 
 
 class SimplerModelModule(L.LightningModule):
-    def __init__(self, lr, model_, n_features):
+    def __init__(self, cfg, model):
         super().__init__()
-        self.lr = lr
-        self.model = model_(n_features)
+        self.cfg = cfg
+        self.optimizer_cfg = self.cfg.models.two_step.model.optimizer
+        self.model = model
 
     def training_step(self, batch, batch_idx):
         predicted_labels, target = self.forward(batch)
@@ -82,8 +83,8 @@ class SimplerModelModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        # return optim.RMSprop(self.parameters(), lr=0.001)  # They use this
-        return optim.AdamW(self.parameters(), lr=0.001)
+        optimizer = instantiate(self.optimizer_cfg, params=self.parameters())
+        return optimizer
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, target = self.forward(batch)
@@ -97,3 +98,21 @@ class SimplerModelModule(L.LightningModule):
         peaks, target = batch
         predicted_labels = self.model(peaks).squeeze()
         return predicted_labels, target
+
+
+class RNNModule(SimplerModelModule):
+    def __init__(cfg):
+        model = RNNModel()
+        super().__init__(cfg, model=model)
+
+
+class DNNModule(SimplerModelModule):
+    def __init__(cfg):
+        model = DNNModel(cfg=cfg)
+        super().__init__(lr=cfg, model=model)
+
+
+class CNNModule(SimplerModelModule):
+    def __init__(cfg):
+        model = CNNModel(cfg=cfg)
+        super().__init__(lr=cfg, model=model)

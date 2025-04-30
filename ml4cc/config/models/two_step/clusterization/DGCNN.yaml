@@ -1,4 +1,4 @@
-_target_: ml4cc.models.DGCNN
+_target_: ml4cc.models.DGCNN.DGCNN
 name: DGCNN
 checkpoint:
     model: null

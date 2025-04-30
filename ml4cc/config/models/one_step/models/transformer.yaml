@@ -8,6 +8,7 @@ hyperparameters:
     hidden_dim: 2048
     num_classes: 1
     max_len: ${dataset.input_dim}
+    lr: 0.001
 checkpoint:
     model: null
     losses: null

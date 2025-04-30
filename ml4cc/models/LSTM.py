@@ -31,7 +31,6 @@ class LSTMModule(L.LightningModule):
         self.hyperparameters = hyperparameters
         super().__init__()
         self.lstm = LSTM(
-            input_dim=self.hyperparameters["input_dim"],
             lstm_hidden_dim=self.hyperparameters["lstm_hidden_dim"],
             num_lstm_layers=self.hyperparameters["num_lstm_layers"]
         )

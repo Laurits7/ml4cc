@@ -70,6 +70,7 @@ class TransformerModule(L.LightningModule):
             num_classes=self.hyperparameters["num_classes"],
             max_len=self.hyperparameters["max_len"],
         )
+        self.lr = self.hyperparameters['lr']
 
     def training_step(self, batch, batch_idx):
         predicted_labels, target = self.forward(batch)
@@ -84,7 +85,7 @@ class TransformerModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.AdamW(self.parameters(), lr=0.001)
+        return optim.AdamW(self.parameters(), lr=self.lr)
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, _ = self.forward(batch)

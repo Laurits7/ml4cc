@@ -16,8 +16,6 @@ from ml4cc.tools.evaluation import two_step as tse
 from ml4cc.tools.evaluation import two_step_minimal as tsme
 
 
-
-
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 

@@ -3,3 +3,4 @@ disable=C0114, C0116
 
 [REPORTS]
 output-format=colorized
+score = yes

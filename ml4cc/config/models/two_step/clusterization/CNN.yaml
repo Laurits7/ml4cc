@@ -1,5 +1,23 @@
-_target_: ml4cc.models.simpler_models
+_target_: ml4cc.models.simpler_models.DNNModule
 name: CNN
+hyperparameters:
+    conv_layer_1:
+        hidden_dim: 32
+        kernel_size: 4
+    pool_layer_1:
+        kernel_size: 2
+    conv_layer_2:
+        hidden_dim: 16
+        kernel_size: 4
+    linear_layer_1:
+    num_features: null  # TODO: Find out
+optimizer:
+    # _target_: torch.optim.RMSprop  # Guang uses this
+    _target_: torch.optim.AdamW
+    lr: 0.001
+    params: ???
+
+
 checkpoint:
     model: null
     losses: null
