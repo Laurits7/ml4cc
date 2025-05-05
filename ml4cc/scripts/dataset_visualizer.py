@@ -70,7 +70,7 @@ def collect_energy_wise_info(particle_type_info, peak_type):
 
 
 
-def visualize_num_peaks(full_info, peak_type="primary", errorband=True):
+def visualize_num_peaks(full_info, output_path: str, peak_type="primary", errorband=True):
     fig, ax = plt.subplots(figsize=(10, 10))
     p_name_mapping = {"muon": r"$\mu^{\pm}$", "K": r"$K^{\pm}$", "pi": r"$\pi^{\pm}$"}
     marker_mapping = {"CEPC": "v", "FCC": "^"}
@@ -96,7 +96,7 @@ def visualize_num_peaks(full_info, peak_type="primary", errorband=True):
     plt.legend()
     plt.yscale('log')
     plt.xscale('log')
-
+    fig.savefig(output_path)
 
 def visualize_primary_v_secondary_peaks_2d_histogram(
     full_info: dict,
