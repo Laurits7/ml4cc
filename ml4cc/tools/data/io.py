@@ -29,8 +29,8 @@ def load_root_file(path: str, tree_path: str = "sim", branches: list = None) -> 
 
 
 def get_all_paths(input_loc, n_files: int = None) -> list:
-    """Loads all .parquet files specified by the input. The input can be a list of input_paths, a directory where the files
-    are located or a wildcard path.
+    """Loads all .parquet files specified by the input. The input can be a list of input_paths, a directory where the
+    files are located or a wildcard path.
 
     Parameters:
         input_loc : str
@@ -38,8 +38,8 @@ def get_all_paths(input_loc, n_files: int = None) -> list:
         n_files : int
             [default: None] Maximum number of input files to be loaded. By default all will be loaded.
         columns : list
-            [default: None] Names of the columns/branches to be loaded from the .parquet file. By default all columns will
-            be loaded
+            [default: None] Names of the columns/branches to be loaded from the .parquet file. By default all columns
+            will be loaded
 
     Returns:
         input_paths : list
@@ -65,7 +65,8 @@ def get_all_paths(input_loc, n_files: int = None) -> list:
 
 
 def get_row_groups(input_paths: list) -> list:
-    """Get the row groups of the input files. The row groups are used to split the data into smaller chunks for processing.
+    """Get the row groups of the input files. The row groups are used to split the data into smaller chunks for
+    processing.
 
     Parameters:
         input_paths : list
@@ -92,8 +93,8 @@ def save_array_to_file(data: ak.Array, output_path: str) -> None:
 
 
 class RowGroup:
-    """Class to represent a row group in a .parquet file. The row group is used to split the data into smaller chunks for
-    processing."""
+    """Class to represent a row group in a .parquet file. The row group is used to split the data into smaller chunks
+    for processing."""
 
     def __init__(self, filename, row_group, num_rows):
         """Initializes the row group.

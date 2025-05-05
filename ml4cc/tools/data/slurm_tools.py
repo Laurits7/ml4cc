@@ -79,7 +79,7 @@ def prepare_job_file(
                 #SBATCH --job-name=ntupelizer
                 #SBATCH --ntasks={cfg.slurm.queue.preprocessing.cpus}
                 #SBATCH --partition={cfg.slurm.queue.preprocessing.partition}
-                #SBATCH --time=02:00:00
+                #SBATCH --time={cfg.slurm.queue.preprocessing.time}
                 #SBATCH --cpus-per-task=1
                 #SBATCH --mem-per-cpu={cfg.slurm.queue.preprocessing.mem}
                 #SBATCH -e {error_file}

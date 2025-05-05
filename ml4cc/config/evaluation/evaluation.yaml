@@ -1,2 +1,3 @@
-evaluation:
+dataset:
   num_evaluation_waveforms: 1000
+  results_output_dir: ${training.results_dir}/data
