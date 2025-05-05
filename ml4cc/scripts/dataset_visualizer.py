@@ -89,8 +89,8 @@ def visualize_num_peaks(full_info, output_path: str, peak_type="primary", errorb
                     alpha=0.3,
                 )
     plt.legend()
-    plt.yscale('log')
-    plt.xscale('log')
+    plt.yscale("log")
+    plt.xscale("log")
     fig.savefig(output_path)
 
 
