@@ -1,4 +1,5 @@
 training:
+    debug_run: true
     type: one_step  # Options: one_step, two_step, two_step_minimal
     output_dir: null
     output_dir_: ${training.output_dir}/${training.type}

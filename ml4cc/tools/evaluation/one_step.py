@@ -16,17 +16,14 @@ def evaluate_training(cfg, metrics_path):
     all_preds = []
     for path in test_wcp:
         data = ak.from_parquet(path)
-        all_true.append(data.target)
+        all_true.append(ak.sum(data.target, axis=-1))
         all_preds.append(data.pred)
 
-    truth = ak.flatten(all_true, axis=None)  # TODO: Conc?
+    truth = ak.flatten(all_true, axis=None)
     preds = ak.flatten(all_preds, axis=None)
-    # cl.plot_classification(
-    #     truth=ak.flatten(all_true, axis=None),
-    #     preds=ak.flatten(all_preds, axis=None),
-    #     output_dir=results_dir
-    # )
 
+    print("truth"   , truth)
+    print("preds", preds)
     resolution_output_path = os.path.join(results_dir, "resolution.pdf")
     r.evaluate_resolution(truth, preds, output_path=resolution_output_path)
 

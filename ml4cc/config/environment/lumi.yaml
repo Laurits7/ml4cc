@@ -1,6 +1,6 @@
 name: lumi
 project_dir: /scratch/project_465001293/ML4CC/ml4cc
-data_dir: /scratch/project_465001293/ML4CC/data
+data_dir: /scratch/project_465001293/ML4CC/
 tmp_dir: /scratch/project_465001293/ML4CC/tmp
 slurm:
     queue:

@@ -53,8 +53,8 @@ class WaveFormTransformer(nn.Module):
         x = self.layernorm(x)
         # Shape: [batch_size, seq_length, num_classes]
         x = self.peak_finding_classifier(x)
-        # x = F.relu(x)
         x = x.sum(dim=1)  # Shape: [batch_size, num_classes]
+        x = F.relu(x)
         # x = self.clusterizer(x)
         return x
 

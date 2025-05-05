@@ -32,11 +32,12 @@ class RowGroupDataset(Dataset):
 class BaseIterableDataset(IterableDataset):
     """Base iterable dataset class to be used for different types of trainings."""
 
-    def __init__(self, dataset: Dataset):
+    def __init__(self, dataset: Dataset, device: str):
         super().__init__()
         self.dataset = dataset
         self.row_groups = [row_group for row_group in self.dataset]
         self.num_rows = sum([rg.num_rows for rg in self.row_groups])
+        self.device = device
         print(f"There are {'{:,}'.format(self.num_rows)} waveforms in the dataset.")
 
     def build_tensors(self, data: ak.Array):
@@ -55,6 +56,11 @@ class BaseIterableDataset(IterableDataset):
 
     def __len__(self):
         return self.num_rows
+
+    def _move_to_device(self, batch):
+        if isinstance(batch, (tuple, list)):
+            return [self._move_to_device(x) for x in batch]
+        return batch.to(self.device)
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
@@ -75,11 +81,18 @@ class BaseIterableDataset(IterableDataset):
             # return individual jets from the dataset
             for idx_wf in range(len(data)):
                 # features, targets
-                yield tensors[0][idx_wf], tensors[1][idx_wf]
+                yield self._move_to_device(tensors[0][idx_wf]), self._move_to_device(tensors[1][idx_wf])
 
 
 class BaseDataModule(LightningDataModule):
-    def __init__(self, cfg: DictConfig, iter_dataset: IterableDataset, data_type: str):
+    def __init__(
+            self,
+            cfg: DictConfig,
+            iter_dataset: IterableDataset,
+            data_type: str,
+            debug_run: bool = False,
+            device: str = "cpu"
+    ):
         """Base data module class to be used for different types of trainings.
         Parameters:
             cfg : DictConfig
@@ -96,11 +109,13 @@ class BaseDataModule(LightningDataModule):
         self.task = "two_step" if self.cfg.training.type == "two_step_minimal" else self.cfg.training.type
         self.data_type = data_type
         self.iter_dataset = iter_dataset
+        self.device = device
         self.train_loader = None
         self.val_loader = None
         self.test_dataset = None
         self.train_dataset = None
         self.val_dataset = None
+        self.num_row_groups = 2 if debug_run else None
         self.save_hyperparameters()
         super().__init__()
 
@@ -188,17 +203,19 @@ class BaseDataModule(LightningDataModule):
         if stage == "fit":
             if self.cfg.dataset.name == "CEPC":
                 train_dir, val_dir = self.get_CEPC_dataset_path(dataset_type="train")
-                self.train_dataset = RowGroupDataset(data_loc=train_dir)
-                self.val_dataset = RowGroupDataset(data_loc=val_dir)
+                self.train_dataset = RowGroupDataset(data_loc=train_dir)[:self.num_row_groups]
+                self.val_dataset = RowGroupDataset(data_loc=val_dir)[:self.num_row_groups]
             elif self.cfg.dataset.name == "FCC":
                 train_dir, val_dir = self.get_FCC_dataset_path(dataset_type="train")
-                self.train_dataset = RowGroupDataset(data_loc=train_dir)
-                self.val_dataset = RowGroupDataset(data_loc=val_dir)
+                self.train_dataset = RowGroupDataset(data_loc=train_dir)[:self.num_row_groups]
+                self.val_dataset = RowGroupDataset(data_loc=val_dir)[:self.num_row_groups]
             self.train_dataset = self.iter_dataset(
                 dataset=self.train_dataset,
+                device=self.device,
             )
             self.val_dataset = self.iter_dataset(
                 dataset=self.val_dataset,
+                device=self.device,
             )
             self.train_loader = DataLoader(
                 self.train_dataset,
@@ -219,9 +236,10 @@ class BaseDataModule(LightningDataModule):
                 test_dir = self.get_FCC_dataset_path(dataset_type="test")
             else:
                 raise ValueError(f"Unexpected dataset type: {self.cfg.dataset.name}. Please use 'CEPC' or 'FCC'.")
-            self.test_dataset = RowGroupDataset(data_loc=test_dir)
+            self.test_dataset = RowGroupDataset(data_loc=test_dir)[:self.num_row_groups]
             self.test_dataset = self.iter_dataset(
                 dataset=self.test_dataset,
+                device=self.device,
             )
             self.test_loader = DataLoader(
                 self.test_dataset,
@@ -243,8 +261,8 @@ class BaseDataModule(LightningDataModule):
 
 
 class OneStepIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset):
-        super().__init__(dataset)
+    def __init__(self, dataset: Dataset, device: str):
+        super().__init__(dataset, device=device)
 
     def build_tensors(self, data: ak.Array):
         """Builds the input and target tensors from the data.
@@ -266,8 +284,8 @@ class OneStepIterableDataset(BaseIterableDataset):
 
 
 class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset):
-        super().__init__(dataset)
+    def __init__(self, dataset: Dataset, device: str):
+        super().__init__(dataset, device=device)
 
     def build_tensors(self, data: ak.Array):
         """This iterable dataset is to be used for the first step (peak finding). For this, we have a target for each
@@ -298,8 +316,8 @@ class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
 
 
 class TwoStepClusterizationIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset):
-        super().__init__(dataset)
+    def __init__(self, dataset: Dataset, device: str):
+        super().__init__(dataset, device=device)
 
     def build_tensors(self, data: ak.Array):
         """This iterable dataset is to be used for the second step (clusterization).
@@ -322,8 +340,8 @@ class TwoStepClusterizationIterableDataset(BaseIterableDataset):
 
 
 class TwoStepMinimalIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset):
-        super().__init__(dataset)
+    def __init__(self, dataset: Dataset, device: str):
+        super().__init__(dataset, device=device)
 
     def build_tensors(self, data: ak.Array):
         """This iterable dataset is to be used for the minimal two-step approach,where we only target the primary
@@ -355,7 +373,7 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
 
 
 class TwoStepMinimalDataModule(BaseDataModule):
-    def __init__(self, cfg: DictConfig, data_type: str):
+    def __init__(self, cfg: DictConfig, data_type: str, debug_run: bool = False, device: str = "cpu"):
         """Data module for the minimal two-step approach. This is a simplified version of the two-step approach,
         where we only target the primary peaks with the peak finding. In principle this allows us to skip clusterization
         step, as we can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds
@@ -363,11 +381,11 @@ class TwoStepMinimalDataModule(BaseDataModule):
         that we use only "primary" peaks as targets.
         """
         iter_dataset = TwoStepMinimalIterableDataset
-        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)
 
 
 class TwoStepPeakFindingDataModule(BaseDataModule):
-    def __init__(self, cfg: DictConfig, data_type: str):
+    def __init__(self, cfg: DictConfig, data_type: str, debug_run: bool = False, device: str = "cpu"):
         """Data module for the two-step approach. This is a simplified version of the two-step approach, where we only
         target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we
         can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the
@@ -375,11 +393,11 @@ class TwoStepPeakFindingDataModule(BaseDataModule):
         "primary" peaks as targets.
         """
         iter_dataset = TwoStepPeakFindingIterableDataset
-        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)
 
 
 class TwoStepClusterizationDataModule(BaseDataModule):
-    def __init__(self, cfg: DictConfig, data_type: str):
+    def __init__(self, cfg: DictConfig, data_type: str, debug_run: bool = False, device: str = "cpu"):
         """Data module for the two-step approach. This is a simplified version of the two-step approach, where we only
         target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we
         can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of
@@ -387,11 +405,11 @@ class TwoStepClusterizationDataModule(BaseDataModule):
         only "primary" peaks as targets.
         """
         iter_dataset = TwoStepClusterizationIterableDataset
-        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)
 
 
 class OneStepDataModule(BaseDataModule):
-    def __init__(self, cfg: DictConfig, data_type: str):
+    def __init__(self, cfg: DictConfig, data_type: str, debug_run: bool = False, device: str = "cpu"):
         """Data module for the one-step approach. This is a simplified version of the two-step approach, where we only
         target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we
         can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the
@@ -399,4 +417,4 @@ class OneStepDataModule(BaseDataModule):
         "primary" peaks as targets.
         """
         iter_dataset = OneStepIterableDataset
-        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type)
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)
