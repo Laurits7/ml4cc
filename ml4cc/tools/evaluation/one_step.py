@@ -22,7 +22,7 @@ def evaluate_training(cfg, metrics_path):
     truth = ak.flatten(all_true, axis=None)
     preds = ak.flatten(all_preds, axis=None)
 
-    print("truth"   , truth)
+    print("truth", truth)
     print("preds", preds)
     resolution_output_path = os.path.join(results_dir, "resolution.pdf")
     r.evaluate_resolution(truth, preds, output_path=resolution_output_path)

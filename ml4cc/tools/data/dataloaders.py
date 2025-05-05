@@ -86,12 +86,12 @@ class BaseIterableDataset(IterableDataset):
 
 class BaseDataModule(LightningDataModule):
     def __init__(
-            self,
-            cfg: DictConfig,
-            iter_dataset: IterableDataset,
-            data_type: str,
-            debug_run: bool = False,
-            device: str = "cpu"
+        self,
+        cfg: DictConfig,
+        iter_dataset: IterableDataset,
+        data_type: str,
+        debug_run: bool = False,
+        device: str = "cpu",
     ):
         """Base data module class to be used for different types of trainings.
         Parameters:
@@ -203,12 +203,12 @@ class BaseDataModule(LightningDataModule):
         if stage == "fit":
             if self.cfg.dataset.name == "CEPC":
                 train_dir, val_dir = self.get_CEPC_dataset_path(dataset_type="train")
-                self.train_dataset = RowGroupDataset(data_loc=train_dir)[:self.num_row_groups]
-                self.val_dataset = RowGroupDataset(data_loc=val_dir)[:self.num_row_groups]
+                self.train_dataset = RowGroupDataset(data_loc=train_dir)[: self.num_row_groups]
+                self.val_dataset = RowGroupDataset(data_loc=val_dir)[: self.num_row_groups]
             elif self.cfg.dataset.name == "FCC":
                 train_dir, val_dir = self.get_FCC_dataset_path(dataset_type="train")
-                self.train_dataset = RowGroupDataset(data_loc=train_dir)[:self.num_row_groups]
-                self.val_dataset = RowGroupDataset(data_loc=val_dir)[:self.num_row_groups]
+                self.train_dataset = RowGroupDataset(data_loc=train_dir)[: self.num_row_groups]
+                self.val_dataset = RowGroupDataset(data_loc=val_dir)[: self.num_row_groups]
             self.train_dataset = self.iter_dataset(
                 dataset=self.train_dataset,
                 device=self.device,
@@ -236,7 +236,7 @@ class BaseDataModule(LightningDataModule):
                 test_dir = self.get_FCC_dataset_path(dataset_type="test")
             else:
                 raise ValueError(f"Unexpected dataset type: {self.cfg.dataset.name}. Please use 'CEPC' or 'FCC'.")
-            self.test_dataset = RowGroupDataset(data_loc=test_dir)[:self.num_row_groups]
+            self.test_dataset = RowGroupDataset(data_loc=test_dir)[: self.num_row_groups]
             self.test_dataset = self.iter_dataset(
                 dataset=self.test_dataset,
                 device=self.device,
