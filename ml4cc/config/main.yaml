@@ -3,5 +3,8 @@ defaults:
     - environment@host: manivald  # Options: lumi, manivald
     - datasets@dataset: CEPC  # Options: FCC, CEPC
     - models: models
+    - datasets@datasets.CEPC: CEPC
+    - datasets@datasets.FCC: FCC
+    - evaluation: evaluation
     - preprocessing
     - training

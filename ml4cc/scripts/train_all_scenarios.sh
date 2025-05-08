@@ -1,7 +1,6 @@
 #!/bin/bash
 # This script trains all scenarios for the ML4CC project.
 
-
 PROGNAME=$0
 
 # Parse user options.
@@ -18,8 +17,6 @@ EOF
 }
 
 
-TRAINING_SCENARIO=one_step
-TRAINING_DATASET=FCC
 RUN_ON_LUMI=true
 TRAIN_TWO_STEP=false
 TRAIN_TWO_STEP_MINIMAL=false
@@ -42,8 +39,13 @@ done
 shift "$((OPTIND - 1))"
 
 
-declare -a DATASETS=("FCC" "CEPC")
-declare -a 
+# declare -a DATASETS=("FCC" "CEPC")
+# declare -a SCENARIOS=("one_step" "two_step" "two_step_minimal")
+
+echo Output will be saved into: $BASE_DIR
+echo Training scenario: $TRAINING_SCENARIO
+echo Training dataset: $TRAINING_DATASET
+echo Running on: $HOST
 
 if  [ "$RUN_ON_LUMI" = true ] ; then
     TRAINING_SCRIPT=ml4cc/scripts/submit-gpu-lumi.sh
@@ -62,4 +64,4 @@ if [ "$TRAINING_SCENARIO" = "all" ] ; then
 fi
 
 
-sbatch $TRAINING_SCRIPT python3 ml4cc/scripts/train.py training.ouput_dir=$BASE_DIR dataset=$TRAINING_DATASET host=$HOST training.type=$TRAINING_SCENARIO
+sbatch $TRAINING_SCRIPT python3 ml4cc/scripts/train.py training.output_dir=$BASE_DIR datasets@dataset=$TRAINING_DATASET environment@host=$HOST training.type=$TRAINING_SCENARIO
