@@ -261,5 +261,5 @@ def main(cfg: DictConfig):
 
 
 if __name__ == "__main__":
-    mp.set_start_method('spawn', force=True)
+    multiprocessing.set_start_method('spawn')
     main()  # pylint: disable=E1120
