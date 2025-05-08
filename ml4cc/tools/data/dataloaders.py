@@ -260,6 +260,7 @@ class BaseDataModule(LightningDataModule):
                         "test",
                         f"{self.data_type}_*.parquet",
                     )
+                else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"{self.data_type}_*.parquet")
             else:
                 raise ValueError(
