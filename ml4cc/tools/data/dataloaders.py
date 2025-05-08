@@ -86,13 +86,13 @@ class BaseIterableDataset(IterableDataset):
 
 class BaseDataModule(LightningDataModule):
     def __init__(
-            self,
-            cfg: DictConfig,
-            iter_dataset: IterableDataset,
-            data_type: str,
-            debug_run: bool = False,
-            device: str = "cpu",
-            clusterization: bool = False
+        self,
+        cfg: DictConfig,
+        iter_dataset: IterableDataset,
+        data_type: str,
+        debug_run: bool = False,
+        device: str = "cpu",
+        clusterization: bool = False,
     ):
         """Base data module class to be used for different types of trainings.
         Parameters:
@@ -141,12 +141,20 @@ class BaseDataModule(LightningDataModule):
             if self.clusterization:
                 train_loc = os.path.join(
                     self.cfg.dataset.data_dir,
-                    "two_step", "predictions", "two_step_pf", "train",
-                    f"{self.data_type}_*.parquet"
+                    "two_step",
+                    "predictions",
+                    "two_step_pf",
+                    "train",
+                    f"{self.data_type}_*.parquet",
                 )
                 val_loc = os.path.join(
-                    self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "val",
-                    f"{self.data_type}_*.parquet")
+                    self.cfg.dataset.data_dir,
+                    "two_step",
+                    "predictions",
+                    "two_step_pf",
+                    "val",
+                    f"{self.data_type}_*.parquet",
+                )
             else:
                 train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
                 val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
@@ -154,18 +162,18 @@ class BaseDataModule(LightningDataModule):
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
                 if self.clusterization:
-                    test_dir = os.path.join(
-                        self.cfg.dataset.data_dir,
-                        "two_step", "predictions", "two_step_pf", "test"
-                    )
+                    test_dir = os.path.join(self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "test")
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
                 if self.clusterization:
                     test_dir = os.path.join(
                         self.cfg.dataset.data_dir,
-                        "two_step", "predictions", "two_step_pf", "test",
-                        f"{self.data_type}_*.parquet"
+                        "two_step",
+                        "predictions",
+                        "two_step_pf",
+                        "test",
+                        f"{self.data_type}_*.parquet",
                     )
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"*{self.data_type}*.parquet")
@@ -201,12 +209,9 @@ class BaseDataModule(LightningDataModule):
             if self.cfg.dataset.train_dataset == "combined":
                 if self.clusterization:
                     train_loc = os.path.join(
-                        self.cfg.dataset.data_dir,
-                        "two_step", "predictions", "two_step_pf", "train"
+                        self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "train"
                     )
-                    val_loc = os.path.join(
-                        self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "val"
-                    )
+                    val_loc = os.path.join(self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "val")
                 else:
                     train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
                     val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
@@ -214,15 +219,24 @@ class BaseDataModule(LightningDataModule):
                 if self.clusterization:
                     train_loc = os.path.join(
                         self.cfg.dataset.data_dir,
-                        "two_step", "predictions", "two_step_pf", "train",
-                        f"{self.data_type}_*.parquet"
+                        "two_step",
+                        "predictions",
+                        "two_step_pf",
+                        "train",
+                        f"{self.data_type}_*.parquet",
                     )
                     val_loc = os.path.join(
-                        self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "val",
-                        f"{self.data_type}_*.parquet"
+                        self.cfg.dataset.data_dir,
+                        "two_step",
+                        "predictions",
+                        "two_step_pf",
+                        "val",
+                        f"{self.data_type}_*.parquet",
                     )
                 else:
-                    train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train", f"{self.data_type}_*.parquet")
+                    train_loc = os.path.join(
+                        self.cfg.dataset.data_dir, self.task, "train", f"{self.data_type}_*.parquet"
+                    )
                     val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val", f"{self.data_type}_*.parquet")
             else:
                 raise ValueError(
@@ -233,18 +247,18 @@ class BaseDataModule(LightningDataModule):
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
                 if self.clusterization:
-                    test_dir = os.path.join(
-                        self.cfg.dataset.data_dir,
-                        "two_step", "predictions", "two_step_pf", "test"
-                    )
+                    test_dir = os.path.join(self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "test")
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
                 if self.clusterization:
                     test_dir = os.path.join(
                         self.cfg.dataset.data_dir,
-                        "two_step", "predictions", "two_step_pf", "test",
-                        f"{self.data_type}_*.parquet"
+                        "two_step",
+                        "predictions",
+                        "two_step_pf",
+                        "test",
+                        f"{self.data_type}_*.parquet",
                     )
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"{self.data_type}_*.parquet")
             else:
@@ -469,7 +483,7 @@ class TwoStepClusterizationDataModule(BaseDataModule):
             data_type=data_type,
             debug_run=debug_run,
             device=device,
-            clusterization=True
+            clusterization=True,
         )
 
 
