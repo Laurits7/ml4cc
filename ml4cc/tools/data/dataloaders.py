@@ -54,8 +54,8 @@ class BaseIterableDataset(IterableDataset):
         """
         raise NotImplementedError("Please implement the build_tensors method in your subclass")
 
-    def __len__(self):
-        return self.num_rows
+    # def __len__(self):
+    #     return self.num_rows
 
     def _move_to_device(self, batch):
         if isinstance(batch, (tuple, list)):
@@ -91,7 +91,8 @@ class BaseDataModule(LightningDataModule):
             iter_dataset: IterableDataset,
             data_type: str,
             debug_run: bool = False,
-            device: str = "cpu"
+            device: str = "cpu",
+            clusterization: bool = False
     ):
         """Base data module class to be used for different types of trainings.
         Parameters:
@@ -115,6 +116,7 @@ class BaseDataModule(LightningDataModule):
         self.test_dataset = None
         self.train_dataset = None
         self.val_dataset = None
+        self.clusterization = clusterization
         self.num_row_groups = 2 if debug_run else None
         self.save_hyperparameters()
         super().__init__()
@@ -136,14 +138,37 @@ class BaseDataModule(LightningDataModule):
                     The directory of the test dataset files
         """
         if dataset_type == "train":
-            train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
-            val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
+            if self.clusterization:
+                train_loc = os.path.join(
+                    self.cfg.dataset.data_dir,
+                    "two_step", "predictions", "two_step_pf", "train",
+                    f"{self.data_type}_*.parquet"
+                )
+                val_loc = os.path.join(
+                    self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "val",
+                    f"{self.data_type}_*.parquet")
+            else:
+                train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
+                val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
             return train_loc, val_loc
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
-                test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
+                if self.clusterization:
+                    test_dir = os.path.join(
+                        self.cfg.dataset.data_dir,
+                        "two_step", "predictions", "two_step_pf", "test"
+                    )
+                else:
+                    test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
-                test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"*{self.data_type}*.parquet")
+                if self.clusterization:
+                    test_dir = os.path.join(
+                        self.cfg.dataset.data_dir,
+                        "two_step", "predictions", "two_step_pf", "test",
+                        f"{self.data_type}_*.parquet"
+                    )
+                else:
+                    test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"*{self.data_type}*.parquet")
             else:
                 raise ValueError(
                     f"Unexpected method for test dataset: {self.cfg.dataset.train_dataset}. Options:\
@@ -174,11 +199,31 @@ class BaseDataModule(LightningDataModule):
         """
         if dataset_type == "train":
             if self.cfg.dataset.train_dataset == "combined":
-                train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
-                val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
+                if self.clusterization:
+                    train_loc = os.path.join(
+                        self.cfg.dataset.data_dir,
+                        "two_step", "predictions", "two_step_pf", "train"
+                    )
+                    val_loc = os.path.join(
+                        self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "val"
+                    )
+                else:
+                    train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
+                    val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
             elif self.cfg.dataset.train_dataset == "separate":
-                train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train", f"{self.data_type}_*.parquet")
-                val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val", f"{self.data_type}_*.parquet")
+                if self.clusterization:
+                    train_loc = os.path.join(
+                        self.cfg.dataset.data_dir,
+                        "two_step", "predictions", "two_step_pf", "train",
+                        f"{self.data_type}_*.parquet"
+                    )
+                    val_loc = os.path.join(
+                        self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "val",
+                        f"{self.data_type}_*.parquet"
+                    )
+                else:
+                    train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train", f"{self.data_type}_*.parquet")
+                    val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val", f"{self.data_type}_*.parquet")
             else:
                 raise ValueError(
                     f"Unexpected train dataset type: {self.cfg.dataset.train_dataset}.\
@@ -187,9 +232,21 @@ class BaseDataModule(LightningDataModule):
             return train_loc, val_loc
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
-                test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
+                if self.clusterization:
+                    test_dir = os.path.join(
+                        self.cfg.dataset.data_dir,
+                        "two_step", "predictions", "two_step_pf", "test"
+                    )
+                else:
+                    test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
-                test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"{self.data_type}_*.parquet")
+                if self.clusterization:
+                    test_dir = os.path.join(
+                        self.cfg.dataset.data_dir,
+                        "two_step", "predictions", "two_step_pf", "test",
+                        f"{self.data_type}_*.parquet"
+                    )
+                    test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test", f"{self.data_type}_*.parquet")
             else:
                 raise ValueError(
                     f"Unexpected method for testing dataset: {self.cfg.dataset.train_dataset}. Options:\
@@ -226,6 +283,7 @@ class BaseDataModule(LightningDataModule):
             self.val_loader = DataLoader(
                 self.val_dataset,
                 batch_size=self.cfg.training.dataloader.batch_size,
+                persistent_workers=True,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
                 prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
@@ -312,7 +370,7 @@ class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
         target_windows = target_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
         wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
-        return wf_windows, target_windows  # TODO: Unsqueeze?
+        return wf_windows.unsqueeze(-1), target_windows
 
 
 class TwoStepClusterizationIterableDataset(BaseIterableDataset):
@@ -369,7 +427,7 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
         target_windows = target_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
         wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
         target_windows = torch.tensor(target_windows, dtype=torch.float32)
-        return wf_windows, target_windows  # TODO: Unsqueeze?
+        return wf_windows.unsqueeze(-1), target_windows
 
 
 class TwoStepMinimalDataModule(BaseDataModule):
@@ -405,7 +463,14 @@ class TwoStepClusterizationDataModule(BaseDataModule):
         only "primary" peaks as targets.
         """
         iter_dataset = TwoStepClusterizationIterableDataset
-        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)
+        super().__init__(
+            cfg=cfg,
+            iter_dataset=iter_dataset,
+            data_type=data_type,
+            debug_run=debug_run,
+            device=device,
+            clusterization=True
+        )
 
 
 class OneStepDataModule(BaseDataModule):

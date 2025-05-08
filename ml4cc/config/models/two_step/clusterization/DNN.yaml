@@ -11,12 +11,8 @@ hyperparameters:
     output_layer:
         out_features: 1
 optimizer:
-    _target_: torch.optim.AdamW
+    target: torch.optim.AdamW
     lr: 0.001
-    params: ??? 
 checkpoint:
     model: null
     losses: null
-
-defaults:
-    - _self_

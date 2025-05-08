@@ -9,6 +9,7 @@ from ml4cc.tools.evaluation import general as g
 
 def evaluate_training(cfg, metrics_path):
     results_dir = cfg.training.results_dir
+    os.makedirs(results_dir, exist_ok=True)
     predictions_dir = cfg.training.predictions_dir
     test_dir = os.path.join(predictions_dir, "test")
     test_wcp = glob.glob(os.path.join(test_dir, "*"))
@@ -22,8 +23,6 @@ def evaluate_training(cfg, metrics_path):
     truth = ak.flatten(all_true, axis=None)
     preds = ak.flatten(all_preds, axis=None)
 
-    print("truth"   , truth)
-    print("preds", preds)
     resolution_output_path = os.path.join(results_dir, "resolution.pdf")
     r.evaluate_resolution(truth, preds, output_path=resolution_output_path)
 

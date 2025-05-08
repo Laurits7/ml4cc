@@ -3,7 +3,7 @@ name: DGCNN
 optimizer:
     _target_: torch.optim.AdamW
     lr: 0.001
-    params: ???
+    params: null
 hyperparameters:
     n_conv1: 32
     n_conv2: 32

@@ -2,9 +2,10 @@ import torch
 import lightning as L
 import torch.nn as nn
 import torch.nn.functional as F
-from hydra.utils import instantiate
+# from hydra.utils import instantiate
 import importlib
 from omegaconf import OmegaConf
+import torch.optim as optim
 
 
 def resolve_target(target_str):
@@ -130,10 +131,11 @@ class SimplerModelModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer_class = resolve_target(self.optimizer_cfg["_target_"])
-        # Remove '_target_' and pass the rest as kwargs
-        kwargs = {k: v for k, v in self.optimizer_cfg.items() if k != "_target_"}
-        return optimizer_class(self.parameters(), **kwargs)
+        optimizer_class = resolve_target(self.optimizer_cfg["target"])
+        kwargs = OmegaConf.to_container(self.optimizer_cfg, resolve=True)
+        kwargs.pop("target")
+        return optimizer_class(params=self.model.parameters(), **kwargs)
+        # return optim.Adam(self.model.parameters(), lr=0.001)
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, target = self.forward(batch)
