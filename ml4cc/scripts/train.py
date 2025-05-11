@@ -22,9 +22,10 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 def base_train(cfg: DictConfig, training_type: str):
     os.makedirs(cfg.training.log_dir, exist_ok=True)
-    os.makedirs(cfg.training.models_dir, exist_ok=True)
+    models_dir = os.path.join(cfg.training.models_dir, training_type) if training_type != "one_step" else cfg.training.models_dir
+    os.makedirs(models_dir, exist_ok=True)
     checkpoint_callback = ModelCheckpoint(
-        dirpath=cfg.training.models_dir,
+        dirpath=models_dir,
         monitor="val_loss",
         mode="min",
         save_top_k=-1,
@@ -66,11 +67,11 @@ def train_two_step_peak_finding(cfg: DictConfig, data_type: str):
     model = instantiate(cfg.models.two_step.peak_finding.model)
     datamodule = dl.TwoStepPeakFindingDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
     if not cfg.training.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_peak_finding")
+        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_pf")
         trainer.fit(model=model, datamodule=datamodule)
 
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "best_model.ckpt")
+        new_best_model_path = os.path.join(cfg.training.models_dir, "two_step_pf", "best_model.ckpt")
         shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
@@ -84,11 +85,11 @@ def train_two_step_clusterization(cfg: DictConfig, data_type: str):
     model = instantiate(cfg.models.two_step.clusterization.model)
     datamodule = dl.TwoStepClusterizationDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
     if not cfg.training.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_clusterization")
+        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_cl")
         trainer.fit(model=model, datamodule=datamodule)
 
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "best_model.ckpt")
+        new_best_model_path = os.path.join(cfg.training.models_dir, "two_step_cl", "best_model.ckpt")
         shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
@@ -133,15 +134,18 @@ def get_FCC_evaluation_scenarios(cfg: DictConfig) -> list:
 
 
 def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig, scenario: str):
-    predictions_dir = cfg.training.predictions_dir
-    base_scenario = "two_step" if "two_step" in scenario else scenario
-    additional_dir_level = scenario if base_scenario == "two_step" else ""
-    base_dir = cfg.dataset.data_dir
-    original_dir = os.path.join(base_dir, base_scenario)
-    predictions_dir = os.path.join(predictions_dir, additional_dir_level)
-    os.makedirs(predictions_dir, exist_ok=True)
-    output_path = input_path.replace(original_dir, predictions_dir)
-    output_path = output_path.replace(".parquet", "_pred.parquet")
+    if not scenario == "two_step_cl":
+        predictions_dir = cfg.training.predictions_dir
+        base_scenario = "two_step" if "two_step" in scenario else scenario
+        additional_dir_level = scenario if base_scenario == "two_step" else ""
+        base_dir = cfg.dataset.data_dir
+        original_dir = os.path.join(base_dir, base_scenario)
+        predictions_dir = os.path.join(predictions_dir, additional_dir_level)
+        os.makedirs(predictions_dir, exist_ok=True)
+        output_path = input_path.replace(original_dir, predictions_dir)
+        output_path = output_path.replace(".parquet", "_pred.parquet")
+    else:
+        output_path = input_path.replace("two_step_pf", "two_step_cl")
 
     input_data = ak.from_parquet(input_path)
     output_data = ak.copy(input_data)
@@ -206,7 +210,7 @@ def evaluate_two_step_clusterization(cfg: DictConfig, model, metrics_path: str) 
     model.to(DEVICE)
     model.eval()
     dir_ = "*" if cfg.evaluation.training.eval_all_always else "test"
-    wcp_path = os.path.join(cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", dir_, "*")
+    wcp_path = os.path.join(cfg.training.output_dir, "two_step", "predictions", "two_step_pf", dir_, "*")
     file_list = glob.glob(wcp_path)
     iterable_dataset = dl.TwoStepClusterizationIterableDataset
 

@@ -209,16 +209,16 @@ class BaseDataModule(LightningDataModule):
             if self.cfg.dataset.train_dataset == "combined":
                 if self.clusterization:
                     train_loc = os.path.join(
-                        self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "train"
+                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "train"
                     )
-                    val_loc = os.path.join(self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "val")
+                    val_loc = os.path.join(self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "val")
                 else:
                     train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
                     val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
             elif self.cfg.dataset.train_dataset == "separate":
                 if self.clusterization:
                     train_loc = os.path.join(
-                        self.cfg.dataset.data_dir,
+                        self.cfg.training.output_dir,
                         "two_step",
                         "predictions",
                         "two_step_pf",
@@ -226,7 +226,7 @@ class BaseDataModule(LightningDataModule):
                         f"{self.data_type}_*.parquet",
                     )
                     val_loc = os.path.join(
-                        self.cfg.dataset.data_dir,
+                        self.cfg.training.output_dir,
                         "two_step",
                         "predictions",
                         "two_step_pf",
@@ -243,17 +243,18 @@ class BaseDataModule(LightningDataModule):
                     f"Unexpected train dataset type: {self.cfg.dataset.train_dataset}.\
                                  Please use 'combined' or 'separate'."
                 )
+            print(train_loc, val_loc)
             return train_loc, val_loc
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
                 if self.clusterization:
-                    test_dir = os.path.join(self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "test")
+                    test_dir = os.path.join(self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "test")
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
                 if self.clusterization:
                     test_dir = os.path.join(
-                        self.cfg.dataset.data_dir,
+                        self.cfg.training.output_dir,
                         "two_step",
                         "predictions",
                         "two_step_pf",
@@ -409,7 +410,7 @@ class TwoStepClusterizationIterableDataset(BaseIterableDataset):
         targets = ak.sum(data.target == 1, axis=-1)
         targets = torch.tensor(targets, dtype=torch.float32)
         peaks = torch.tensor(peaks, dtype=torch.float32)
-        return peaks, targets
+        return peaks.unsqueeze(-1), targets
 
 
 class TwoStepMinimalIterableDataset(BaseIterableDataset):
