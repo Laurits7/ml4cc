@@ -22,7 +22,9 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 def base_train(cfg: DictConfig, training_type: str):
     os.makedirs(cfg.training.log_dir, exist_ok=True)
-    models_dir = os.path.join(cfg.training.models_dir, training_type) if training_type != "one_step" else cfg.training.models_dir
+    models_dir = (
+        os.path.join(cfg.training.models_dir, training_type) if training_type != "one_step" else cfg.training.models_dir
+    )
     os.makedirs(models_dir, exist_ok=True)
     checkpoint_callback = ModelCheckpoint(
         dirpath=models_dir,

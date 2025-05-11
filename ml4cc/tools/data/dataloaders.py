@@ -211,7 +211,9 @@ class BaseDataModule(LightningDataModule):
                     train_loc = os.path.join(
                         self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "train"
                     )
-                    val_loc = os.path.join(self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "val")
+                    val_loc = os.path.join(
+                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "val"
+                    )
                 else:
                     train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
                     val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
@@ -248,7 +250,9 @@ class BaseDataModule(LightningDataModule):
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
                 if self.clusterization:
-                    test_dir = os.path.join(self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "test")
+                    test_dir = os.path.join(
+                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "test"
+                    )
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
