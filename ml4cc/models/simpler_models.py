@@ -136,14 +136,13 @@ class SimplerModelModule(L.LightningModule):
         kwargs = OmegaConf.to_container(self.optimizer_cfg, resolve=True)
         kwargs.pop("target")
         return optimizer_class(params=self.model.parameters(), **kwargs)
-        # return optim.Adam(self.model.parameters(), lr=0.001)
 
     def predict_step(self, batch, batch_idx):
-        predicted_labels, target = self.forward(batch)
+        predicted_labels, _ = self.forward(batch)
         return predicted_labels
 
     def test_step(self, batch, batch_idx):
-        predicted_labels, target = self.forward(batch)
+        predicted_labels, _ = self.forward(batch)
         return predicted_labels
 
     def forward(self, batch):

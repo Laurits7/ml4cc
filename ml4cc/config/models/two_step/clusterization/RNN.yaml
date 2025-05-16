@@ -1,6 +1,6 @@
 _target_: ml4cc.models.simpler_models.RNNModule
 name: RNN
-hyperparamerers:
+hyperparameters:
     LSTM_layers:
         input_size: 1
         hidden_size: 16
@@ -11,7 +11,7 @@ hyperparamerers:
     output_layer:
         out_features: 1
 optimizer:
-    _target_: torch.optim.AdamW
+    target: torch.optim.AdamW
     lr: 0.001
 
 checkpoint:

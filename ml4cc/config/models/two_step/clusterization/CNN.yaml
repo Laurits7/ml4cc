@@ -18,7 +18,7 @@ hyperparameters:
         out_features: 1
     num_features: 3000  # TODO: Fix - should this be the one-step style?
 optimizer:
-    _target_: torch.optim.AdamW
+    target: torch.optim.AdamW
     lr: 0.001
 
 checkpoint:

@@ -21,7 +21,7 @@ RUN_ON_LUMI=true
 TRAIN_TWO_STEP=false
 TRAIN_TWO_STEP_MINIMAL=false
 TRAIN_ONE_STEP=false
-CLUSTERIZATION_MODEL=all
+CLUSTERIZATION_MODEL=DNN
 HOST=lumi
 while getopts 'o:s:d:mc:' OPTION; do
   case $OPTION in
@@ -64,4 +64,4 @@ if [ "$TRAINING_SCENARIO" = "all" ] ; then
 fi
 
 
-sbatch $TRAINING_SCRIPT python3 ml4cc/scripts/train.py training.output_dir=$BASE_DIR datasets@dataset=$TRAINING_DATASET environment@host=$HOST training.type=$TRAINING_SCENARIO
+sbatch $TRAINING_SCRIPT python3 ml4cc/scripts/train.py training.output_dir=$BASE_DIR datasets@dataset=$TRAINING_DATASET environment@host=$HOST training.type=$TRAINING_SCENARIO # models.two_step.clusterization@clusterization.model=$CLUSTERIZATION_MODEL
