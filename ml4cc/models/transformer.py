@@ -5,6 +5,7 @@ import lightning as L
 import torch.optim as optim
 import torch.nn.functional as F
 
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model: int, max_len: int):
         super().__init__()
@@ -14,28 +15,30 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.pe = pe.unsqueeze(0)
-    
+
     def forward(self, x):
-        return x + self.pe[:, :x.size(1), :].to(x.device)
+        return x + self.pe[:, : x.size(1), :].to(x.device)
 
 
 class WaveFormTransformer(nn.Module):
     def __init__(
-            self,
-            input_dim: int, # 1024 or 3000
-            d_model: int, # 512
-            num_heads: int, # 16
-            num_layers: int, # 3
-            hidden_dim: int, # 4*d_model
-            num_classes: int, # 1, either bkg or signal
-            max_len: int, # As we have fixed nr, then it max_len=input_dim
-            dropout: float=0.1
+        self,
+        input_dim: int,  # 1024 or 3000
+        d_model: int,  # 512
+        num_heads: int,  # 16
+        num_layers: int,  # 3
+        hidden_dim: int,  # 4*d_model
+        num_classes: int,  # 1, either bkg or signal
+        max_len: int,  # As we have fixed nr, then it max_len=input_dim
+        dropout: float = 0.1,
     ):
         super().__init__()
         self.input_projection = nn.Linear(1, d_model)
         self.positional_encoding = PositionalEncoding(d_model, max_len)
 
-        encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout
+        )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
         self.peak_finding_classifier = nn.Linear(d_model, num_classes)
@@ -48,9 +51,10 @@ class WaveFormTransformer(nn.Module):
         x = self.positional_encoding(x)
         x = self.transformer_encoder(x)
         x = self.layernorm(x)
-        x = self.peak_finding_classifier(x)  # Shape: [batch_size, seq_length, num_classes]
-        # x = F.relu(x)
+        # Shape: [batch_size, seq_length, num_classes]
+        x = self.peak_finding_classifier(x)
         x = x.sum(dim=1)  # Shape: [batch_size, num_classes]
+        x = F.relu(x)
         # x = self.clusterizer(x)
         return x
 
@@ -70,6 +74,7 @@ class TransformerModule(L.LightningModule):
             num_classes=self.hyperparameters["num_classes"],
             max_len=self.hyperparameters["max_len"],
         )
+        self.lr = self.hyperparameters["lr"]
 
     def training_step(self, batch, batch_idx):
         predicted_labels, target = self.forward(batch)
@@ -84,7 +89,7 @@ class TransformerModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.AdamW(self.parameters(), lr=0.001)
+        return optim.AdamW(self.parameters(), lr=self.lr)
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, _ = self.forward(batch)

@@ -1,8 +1,18 @@
-_target_: ml4cc.models.simpler_models
+_target_: ml4cc.models.simpler_models.DNNModule
 name: DNN
+hyperparameters:
+    n_features: 1 # ${dataset.input_dim} # TODO: Fix
+    linear_layer_1:
+        out_features: 32
+    linear_layer_2:
+        out_features: 32
+    linear_layer_3:
+        out_features: 32
+    output_layer:
+        out_features: 1
+optimizer:
+    target: torch.optim.AdamW
+    lr: 0.001
 checkpoint:
     model: null
     losses: null
-
-defaults:
-    - _self_
