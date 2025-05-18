@@ -6,7 +6,9 @@ from ml4cc.tools.data import io
 from omegaconf import DictConfig
 
 
-def save_processed_data(arrays: ak.Array, path: str, cfg: DictConfig, data_type: str = "one_step", dataset: str = "") -> None:
+def save_processed_data(
+    arrays: ak.Array, path: str, cfg: DictConfig, data_type: str = "one_step", dataset: str = ""
+) -> None:
     """
     Parameters:
         arrays: ak.Array
@@ -33,7 +35,7 @@ def save_processed_data(arrays: ak.Array, path: str, cfg: DictConfig, data_type:
 
 
 def indices_to_booleans(indices: ak.Array, array_to_slice: ak.Array) -> ak.Array:
-    """ Creates boolean array from indices for masking 'array_to_slice'
+    """Creates boolean array from indices for masking 'array_to_slice'
 
     Parameters:
         indices : ak.Array
@@ -50,8 +52,8 @@ def indices_to_booleans(indices: ak.Array, array_to_slice: ak.Array) -> ak.Array
 
 
 def train_val_test_split(arrays: ak.Array, cfg: DictConfig, test_also: bool = True) -> tuple:
-    """ Splits the data into train, val and test sets.
-    
+    """Splits the data into train, val and test sets.
+
     Parameters:
         arrays : ak.Array
             The array to be split into train, val and test sets
@@ -70,24 +72,26 @@ def train_val_test_split(arrays: ak.Array, cfg: DictConfig, test_also: bool = Tr
     random.seed(42)
     random.shuffle(indices)
     if test_also:
-        num_train_rows = int(np.ceil(total_len*cfg.train_val_test_split[0]))
-        num_val_rows =  int(np.ceil(total_len*cfg.train_val_test_split[1]))
+        num_train_rows = int(np.ceil(total_len * cfg.train_val_test_split[0]))
+        num_val_rows = int(np.ceil(total_len * cfg.train_val_test_split[1]))
         train_indices = indices[:num_train_rows]
-        val_indices = indices[num_train_rows: num_train_rows + num_val_rows]
-        test_indices = indices[num_train_rows + num_val_rows:]
+        val_indices = indices[num_train_rows : num_train_rows + num_val_rows]
+        test_indices = indices[num_train_rows + num_val_rows :]
     else:
         frac_train_raw = cfg.train_val_test_split[0]
         frac_val_raw = cfg.train_val_test_split[1]
         frac_train = frac_train_raw / (frac_train_raw + frac_val_raw)
         frac_val = frac_val_raw / (frac_train_raw + frac_val_raw)
-        train_indices = indices[:int(np.ceil(total_len*frac_train))]
-        val_indices = indices[int(np.ceil(total_len*frac_train)):int(np.ceil(total_len*(frac_train + frac_val)))]
+        train_indices = indices[: int(np.ceil(total_len * frac_train))]
+        val_indices = indices[int(np.ceil(total_len * frac_train)) : int(np.ceil(total_len * (frac_train + frac_val)))]
         test_indices = None
     return train_indices, test_indices, val_indices
 
 
-def save_train_val_test_data(arrays, path, train_indices, val_indices, test_indices, cfg: DictConfig, data_type: str = "one_step") -> None:
-    """ Saves the split data into train, val and test sets.
+def save_train_val_test_data(
+    arrays, path, train_indices, val_indices, test_indices, cfg: DictConfig, data_type: str = "one_step"
+) -> None:
+    """Saves the split data into train, val and test sets.
 
     Parameters:
         arrays : ak.Array
@@ -116,7 +120,7 @@ def save_train_val_test_data(arrays, path, train_indices, val_indices, test_indi
 
 
 def process_onestep_root_file(path: str, cfg: DictConfig) -> None:
-    """ Processes the .root file into a more ML friendly format for one-step training.
+    """Processes the .root file into a more ML friendly format for one-step training.
 
     Parameters:
         path : str
@@ -128,23 +132,24 @@ def process_onestep_root_file(path: str, cfg: DictConfig) -> None:
         None
     """
     arrays = io.load_root_file(path=path, tree_path=cfg.dataset.tree_path, branches=cfg.dataset.branches)
-    primary_ionization_mask = indices_to_booleans(arrays['time'][arrays['tag'] == 1], arrays['wf_i'])
-    secondary_ionization_mask = indices_to_booleans(arrays['time'][arrays['tag'] == 2], arrays['wf_i'])
+    primary_ionization_mask = indices_to_booleans(arrays["time"][arrays["tag"] == 1], arrays["wf_i"])
+    secondary_ionization_mask = indices_to_booleans(arrays["time"][arrays["tag"] == 2], arrays["wf_i"])
     target = (primary_ionization_mask * 1) + (secondary_ionization_mask * 2)
-    processed_array = ak.Array({
-        "waveform": arrays['wf_i'],
-        "target": target
-    })
+    processed_array = ak.Array({"waveform": arrays["wf_i"], "target": target})
 
     if cfg.dataset.name == "FCC":
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
-        save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
+        save_train_val_test_data(
+            processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step"
+        )
     elif cfg.dataset.name == "CEPC":
         if "test" in path:
             save_processed_data(processed_array, path, data_type="one_step", cfg=cfg)
         elif "train" in path:
             train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing, test_also=False)
-            save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step")
+            save_train_val_test_data(
+                processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="one_step"
+            )
         else:
             raise ValueError(f"Unknown dataset in path: {path}")
     else:
@@ -152,7 +157,7 @@ def process_onestep_root_file(path: str, cfg: DictConfig) -> None:
 
 
 def process_twostep_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright: int = 9) -> None:
-    """ Processes the peakfinding .root file into the format Guang used for 2-step training.
+    """Processes the peakfinding .root file into the format Guang used for 2-step training.
 
     Parameters:
         path : str
@@ -175,27 +180,34 @@ def process_twostep_root_file(path: str, cfg: DictConfig, nleft: int = 5, nright
         target_window = []
         peak_indices = np.array(arrays.time[event_idx], dtype=int)
         for peak_idx, peak_loc in enumerate(peak_indices):
-            if peak_loc < nleft: continue
-            wf_window = arrays.wf_i[event_idx][peak_loc - nleft: peak_loc + nright + 1]
+            if peak_loc < nleft:
+                continue
+            wf_window = arrays.wf_i[event_idx][peak_loc - nleft : peak_loc + nright + 1]
             target = arrays.tag[event_idx][peak_idx]
             wf_windows.append(wf_window)
             target_window.append(target)
         all_targets.append(target_window)
         all_windows.append(wf_windows)
-    processed_array = ak.Array({
-        "target": all_targets,
-        "waveform": all_windows,
-        "wf_i": arrays.wf_i,
-    })
+    processed_array = ak.Array(
+        {
+            "target": all_targets,
+            "waveform": all_windows,
+            "wf_i": arrays.wf_i,
+        }
+    )
     if cfg.dataset.name == "FCC":
         train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing)
-        save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step")
+        save_train_val_test_data(
+            processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step"
+        )
     elif cfg.dataset.name == "CEPC":
         if "test" in path:
             save_processed_data(processed_array, path, data_type="two_step", cfg=cfg)
         elif "train" in path:
             train_indices, test_indices, val_indices = train_val_test_split(arrays, cfg.preprocessing, test_also=False)
-            save_train_val_test_data(processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step")
+            save_train_val_test_data(
+                processed_array, path, train_indices, val_indices, test_indices, cfg=cfg, data_type="two_step"
+            )
         else:
             raise ValueError(f"Unknown dataset in path: {path}")
     else:

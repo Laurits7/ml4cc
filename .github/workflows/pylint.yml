@@ -3,7 +3,47 @@ name: Pylint
 on: [pull_request]
 
 jobs:
+
+  lint-autofix:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # Needed for manual push
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black
+
+      - name: Auto-fix with black
+        run: black --line-length 120 .
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin ${{ github.head_ref }}
+          git checkout ${{ github.head_ref }}
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: auto-fix Python lint issues"
+            git rebase origin/${{ github.head_ref }}
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:refs/heads/${{ github.head_ref }}
+          fi
+        env:
+          # Required if using a token for push
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
+    needs: lint-autofix
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -19,6 +59,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
         pip install -r requirements.txt
+    - name: Checkout updated code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+    - name: Run Pylint for logs (with score)
+      if: always()
+      run: pylint --rcfile=config/.pylintrc $(git ls-files '*.py') --exit-zero
     - name: Analysing the code with pylint
       run: |
         pylint --rcfile=config/.pylintrc $(git ls-files '*.py') --exit-zero --output-format=json > pylint_output.json
@@ -41,7 +88,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: pylint-report
-        path: pylint-report.json
+        path: pylint_output.json
     - name: Show Pylint warnings
       if: always()
       run: |
@@ -52,4 +99,5 @@ jobs:
       run: |
         echo "Errors:"
         jq -r '.[] | select(.type == "error" or .type == "fatal") | "\(.path):\(.line): \(.message)"' pylint_output.json || true
+
 

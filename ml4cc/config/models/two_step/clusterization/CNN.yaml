@@ -1,8 +1,25 @@
-_target_: ml4cc.models.simpler_models
+_target_: ml4cc.models.simpler_models.DNNModule
 name: CNN
+hyperparameters:
+    conv_layer_1:
+        in_channels: 1
+        out_channels: 32
+        kernel_size: 4
+    pool_layer_1:
+        kernel_size: 2
+    conv_layer_2:
+        out_channels: 16
+        kernel_size: 4
+    linear_layer_1:
+        out_features: 32
+    output_layer:
+        in_features: 32
+        out_features: 1
+    num_features: ${dataset.input_dim} # TODO: Check if this is as done by Guang
+optimizer:
+    target: torch.optim.AdamW
+    lr: 0.001
+
 checkpoint:
     model: null
     losses: null
-
-defaults:
-    - _self_

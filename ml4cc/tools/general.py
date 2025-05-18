@@ -3,7 +3,7 @@ from omegaconf import DictConfig, OmegaConf
 
 
 def print_config(cfg: DictConfig) -> None:
-    """ Prints the configuration used for the processing
+    """Prints the configuration used for the processing
 
     Parameters:
         cfg : DictConfig

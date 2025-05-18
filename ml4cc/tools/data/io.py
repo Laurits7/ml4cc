@@ -4,12 +4,11 @@ import uproot
 import random
 import numpy as np
 import awkward as ak
-from ml4cc.tools.data import io
 from torch.utils.data import ConcatDataset, Subset
 
 
 def load_root_file(path: str, tree_path: str = "sim", branches: list = None) -> ak.Array:
-    """ Loads the CEPC dataset .root file.
+    """Loads the CEPC dataset .root file.
 
     Parameters:
         path : str
@@ -29,9 +28,9 @@ def load_root_file(path: str, tree_path: str = "sim", branches: list = None) -> 
     return arrays
 
 
-def get_all_paths(input_loc, n_files: int = None, columns: list = None) -> list:
-    """Loads all .parquet files specified by the input. The input can be a list of input_paths, a directory where the files
-    are located or a wildcard path.
+def get_all_paths(input_loc, n_files: int = None) -> list:
+    """Loads all .parquet files specified by the input. The input can be a list of input_paths, a directory where the
+    files are located or a wildcard path.
 
     Parameters:
         input_loc : str
@@ -39,8 +38,8 @@ def get_all_paths(input_loc, n_files: int = None, columns: list = None) -> list:
         n_files : int
             [default: None] Maximum number of input files to be loaded. By default all will be loaded.
         columns : list
-            [default: None] Names of the columns/branches to be loaded from the .parquet file. By default all columns will
-            be loaded
+            [default: None] Names of the columns/branches to be loaded from the .parquet file. By default all columns
+            will be loaded
 
     Returns:
         input_paths : list
@@ -59,14 +58,15 @@ def get_all_paths(input_loc, n_files: int = None, columns: list = None) -> list:
         elif os.path.isfile(input_loc):
             input_paths = [input_loc]
         else:
-            raise ValueError(f"Unexpected input_loc")
+            raise ValueError(f"Unexpected input_loc: {input_loc}")
     else:
-        raise ValueError(f"Unexpected input_loc")
+        raise ValueError(f"Unexpected input_loc: {input_loc}")
     return input_paths
 
 
 def get_row_groups(input_paths: list) -> list:
-    """Get the row groups of the input files. The row groups are used to split the data into smaller chunks for processing.
+    """Get the row groups of the input files. The row groups are used to split the data into smaller chunks for
+    processing.
 
     Parameters:
         input_paths : list
@@ -82,7 +82,7 @@ def get_row_groups(input_paths: list) -> list:
         num_row_groups = metadata["num_row_groups"]
         col_counts = metadata["col_counts"]
         row_groups.extend(
-            [io.RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
+            [RowGroup(data_path, row_group, col_counts[row_group]) for row_group in range(num_row_groups)]
         )
     return row_groups
 
@@ -93,8 +93,9 @@ def save_array_to_file(data: ak.Array, output_path: str) -> None:
 
 
 class RowGroup:
-    """Class to represent a row group in a .parquet file. The row group is used to split the data into smaller chunks for
-    processing."""
+    """Class to represent a row group in a .parquet file. The row group is used to split the data into smaller chunks
+    for processing."""
+
     def __init__(self, filename, row_group, num_rows):
         """Initializes the row group.
         Parameters:
@@ -108,7 +109,6 @@ class RowGroup:
         self.filename = filename
         self.row_group = row_group
         self.num_rows = num_rows
-
 
 
 def train_val_split_shuffle(

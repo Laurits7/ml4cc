@@ -24,11 +24,7 @@ def prepare_fcc_inputs(cfg: DictConfig) -> list:
 def prepare_cepc_inputs(cfg: DictConfig) -> list:
     all_paths_to_process = []
     for dataset in ["test", "train"]:
-        input_file_wcp = os.path.join(
-            cfg.raw_input_dir,
-            dataset,
-            "*"
-        )
+        input_file_wcp = os.path.join(cfg.raw_input_dir, dataset, "*")
         raw_data_input_paths = list(glob.glob(input_file_wcp))
         all_paths_to_process.extend(raw_data_input_paths)
     return all_paths_to_process
@@ -64,9 +60,9 @@ def process_files(input_files: list, cfg: DictConfig) -> None:
 
 def run_job(cfg: DictConfig) -> None:
     input_paths = []
-    with open(cfg.preprocessing.slurm.input_path, 'rt') as inFile:
+    with open(cfg.preprocessing.slurm.input_path, "rt", encoding="utf-8") as inFile:
         for line in inFile:
-            input_paths.append(line.strip('\n'))
+            input_paths.append(line.strip("\n"))
     total_start_time = time.time()
     process_files(input_files=input_paths, cfg=cfg)
     total_end_time = time.time()
@@ -88,5 +84,5 @@ def main(cfg: DictConfig) -> None:
         prepare_inputs(cfg)
 
 
-if __name__ == '__main__':
-    main() # pylint: disable=E1120
+if __name__ == "__main__":
+    main()  # pylint: disable=E1120
