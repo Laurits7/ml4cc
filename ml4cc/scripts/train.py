@@ -1,3 +1,12 @@
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    message=r".*onnxscript\.values\.OnnxFunction\.param_schemas.*",
+    category=FutureWarning,
+    module=r"onnxscript\.converter"
+)
+
 import os
 import glob
 import hydra
@@ -15,6 +24,9 @@ from ml4cc.tools.data import dataloaders as dl
 from ml4cc.tools.evaluation import one_step as ose
 from ml4cc.tools.evaluation import two_step as tse
 from ml4cc.tools.evaluation import two_step_minimal as tsme
+
+torch.set_float32_matmul_precision('medium')  # or 'high'
+
 
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -161,14 +173,13 @@ def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, 
     num_files = 2 if cfg.training.debug_run else None
     with torch.no_grad():
         for path in file_list[:num_files]:
-            print(f"Processing {path}")
             dataset = dl.RowGroupDataset(path)
             iterable_dataset_ = iterable_dataset(dataset, device=DEVICE)
             dataloader = DataLoader(
                 dataset=iterable_dataset_,
                 batch_size=cfg.training.dataloader.batch_size,
-                num_workers=cfg.training.dataloader.num_dataloader_workers,
-                prefetch_factor=cfg.training.dataloader.prefetch_factor,
+                # num_workers=cfg.training.dataloader.num_dataloader_workers,
+                # prefetch_factor=cfg.training.dataloader.prefetch_factor,
             )
             all_predictions = []
             for i, batch in enumerate(dataloader):
@@ -200,7 +211,6 @@ def evaluate_two_step_peak_finding(cfg: DictConfig, model, metrics_path: str) ->
     wcp_path = os.path.join(cfg.dataset.data_dir, "two_step", "*", "*")
     file_list = glob.glob(wcp_path)
     iterable_dataset = dl.TwoStepPeakFindingIterableDataset
-    print("file_list", file_list)
     # Create prediction files
     create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_pf")
 
@@ -226,7 +236,7 @@ def evaluate_two_step_clusterization(cfg: DictConfig, model, metrics_path: str) 
 def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list:
     model.to(DEVICE)
     model.eval()
-    wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", "*", "*")
+    wcp_path = os.path.join(cfg.dataset.data_dir, "two_step", "*", "*")
     file_list = glob.glob(wcp_path)
     iterable_dataset = dl.TwoStepMinimalIterableDataset
 
@@ -248,11 +258,11 @@ def main(cfg: DictConfig):
         model.eval()
         evaluate_one_step(cfg, model, metrics_path)
     elif training_type == "two_step":
-        # model, best_model_path, metrics_path = train_two_step_peak_finding(cfg, data_type="")
-        # checkpoint = torch.load(best_model_path, weights_only=False)
-        # model.load_state_dict(checkpoint["state_dict"])
-        # model.eval()
-        # evaluate_two_step_peak_finding(cfg, model, metrics_path)
+        model, best_model_path, metrics_path = train_two_step_peak_finding(cfg, data_type="")
+        checkpoint = torch.load(best_model_path, weights_only=False)
+        model.load_state_dict(checkpoint["state_dict"])
+        model.eval()
+        evaluate_two_step_peak_finding(cfg, model, metrics_path)
 
         model, best_model_path, metrics_path = train_two_step_clusterization(cfg, data_type="")
         evaluate_two_step_clusterization(cfg, model, metrics_path)

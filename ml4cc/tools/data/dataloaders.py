@@ -54,8 +54,8 @@ class BaseIterableDataset(IterableDataset):
         """
         raise NotImplementedError("Please implement the build_tensors method in your subclass")
 
-    # def __len__(self):
-    #     return self.num_rows
+    def __len__(self):
+        return self.num_rows
 
     def _move_to_device(self, batch):
         if isinstance(batch, (tuple, list)):
@@ -72,12 +72,10 @@ class BaseIterableDataset(IterableDataset):
             row_groups_start = worker_id * per_worker
             row_groups_end = row_groups_start + per_worker
             row_groups_to_process = self.row_groups[row_groups_start:row_groups_end]
-
         for row_group in row_groups_to_process:
             # load one chunk from one file
             data = ak.from_parquet(row_group.filename, row_groups=[row_group.row_group])
             tensors = self.build_tensors(data)
-
             # return individual jets from the dataset
             for idx_wf in range(len(data)):
                 # features, targets
@@ -245,7 +243,6 @@ class BaseDataModule(LightningDataModule):
                     f"Unexpected train dataset type: {self.cfg.dataset.train_dataset}.\
                                  Please use 'combined' or 'separate'."
                 )
-            print(train_loc, val_loc)
             return train_loc, val_loc
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
@@ -298,14 +295,14 @@ class BaseDataModule(LightningDataModule):
                 self.train_dataset,
                 batch_size=self.cfg.training.dataloader.batch_size,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
-                prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
+                # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
             self.val_loader = DataLoader(
                 self.val_dataset,
                 batch_size=self.cfg.training.dataloader.batch_size,
                 persistent_workers=True,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
-                prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
+                # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
         elif stage == "test":
             if self.cfg.dataset.name == "CEPC":
@@ -323,7 +320,7 @@ class BaseDataModule(LightningDataModule):
                 self.test_dataset,
                 batch_size=self.cfg.training.dataloader.batch_size,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
-                prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
+                # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
         else:
             raise ValueError(f"Unexpected stage: {stage}")

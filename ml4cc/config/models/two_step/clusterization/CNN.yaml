@@ -11,12 +11,11 @@ hyperparameters:
         out_channels: 16
         kernel_size: 4
     linear_layer_1:
-        # in_features: ???
         out_features: 32
     output_layer:
         in_features: 32
         out_features: 1
-    num_features: 3000  # TODO: Fix - should this be the one-step style?
+    num_features: ${dataset.input_dim} # TODO: Check if this is as done by Guang
 optimizer:
     target: torch.optim.AdamW
     lr: 0.001

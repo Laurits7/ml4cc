@@ -1,5 +1,5 @@
 training:
-    debug_run: true
+    debug_run: false
     type: one_step  # Options: one_step, two_step, two_step_minimal
     output_dir: null
     output_dir_: ${training.output_dir}/${training.type}
@@ -11,11 +11,12 @@ training:
         batch_sizes:
             one_step: 128
             two_step: 512
+            two_step_minimal: 512
         batch_size: ${training.dataloader.batch_sizes[${training.type}]}
-        num_dataloader_workers: 2
+        num_dataloader_workers: 1
         prefetch_factor: 100
     trainer:
-        max_epochs: 5 # 50 epochs in Guang paper
+        max_epochs: 50 # 50 epochs in Guang paper
     model_evaluation_only: False
 
 hydra:
