@@ -4,7 +4,7 @@ warnings.filterwarnings(
     "ignore",
     message=r".*onnxscript\.values\.OnnxFunction\.param_schemas.*",
     category=FutureWarning,
-    module=r"onnxscript\.converter"
+    module=r"onnxscript\.converter",
 )
 
 import os
@@ -25,8 +25,7 @@ from ml4cc.tools.evaluation import one_step as ose
 from ml4cc.tools.evaluation import two_step as tse
 from ml4cc.tools.evaluation import two_step_minimal as tsme
 
-torch.set_float32_matmul_precision('medium')  # or 'high'
-
+torch.set_float32_matmul_precision("medium")  # or 'high'
 
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
