@@ -105,7 +105,9 @@ class BaseDataModule(LightningDataModule):
                 In case of FCC it is the different energies.
         """
         self.cfg = cfg
-        self.task = "two_step" if self.cfg.training.type == "two_step_minimal" else self.cfg.training.type
+        # self.task = "two_step" if self.cfg.training.type == "two_step_minimal" else self.cfg.training.type
+        self.task = "two_step"
+        self.debug_run = debug_run
         self.data_type = data_type
         self.iter_dataset = iter_dataset
         self.device = device
@@ -274,6 +276,7 @@ class BaseDataModule(LightningDataModule):
             raise ValueError(f"Unexpected dataset type: {dataset_type}. Please use 'train' or 'test'.")
 
     def setup(self, stage: str) -> None:
+        batch_size = self.cfg.training.dataloader.batch_size if not self.debug_run else 1
         if stage == "fit":
             if self.cfg.dataset.name == "CEPC":
                 train_dir, val_dir = self.get_CEPC_dataset_path(dataset_type="train")
@@ -293,13 +296,15 @@ class BaseDataModule(LightningDataModule):
             )
             self.train_loader = DataLoader(
                 self.train_dataset,
-                batch_size=self.cfg.training.dataloader.batch_size,
+                batch_size=batch_size,
+                persistent_workers=True,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
                 # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
+                
             )
             self.val_loader = DataLoader(
                 self.val_dataset,
-                batch_size=self.cfg.training.dataloader.batch_size,
+                batch_size=batch_size,
                 persistent_workers=True,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
                 # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
@@ -318,7 +323,8 @@ class BaseDataModule(LightningDataModule):
             )
             self.test_loader = DataLoader(
                 self.test_dataset,
-                batch_size=self.cfg.training.dataloader.batch_size,
+                batch_size=batch_size,
+                persistent_workers=True,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
                 # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
@@ -355,6 +361,34 @@ class OneStepIterableDataset(BaseIterableDataset):
         targets = np.sum(targets, axis=-1)
         targets = torch.tensor(targets, dtype=torch.float32)
         waveform = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
+        return waveform, targets
+
+
+class OneStepWindowedIterableDataset(BaseIterableDataset):
+    def __init__(self, dataset: Dataset, device: str):
+        super().__init__(dataset, device=device)
+
+    def build_tensors(self, data: ak.Array):
+        """Builds the input and target tensors from the data.
+
+        Parameters:
+            data : ak.Array
+                The data used to build the tensors. The data is a chunk of the dataset loaded from a .parquet file.
+        Returns:
+            features : torch.Tensor
+                The input features of the data
+            targets : torch.Tensor
+                The target values of the data
+        """
+        waveforms = ak.Array(data.waveform)
+        padded_windows = ak.fill_none(ak.pad_none(waveforms, 15, axis=-1), 0) # All windows are padded to 15 size
+        zero_window = [0]*15
+        none_padded_waveforms = ak.pad_none(padded_windows, 650, axis=-2)  # Maximum number of peaks zero padded to 650
+        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)
+
+        targets = np.sum(data.target == 1, axis=-1)
+        targets = torch.tensor(targets, dtype=torch.float32)
+        waveform = torch.tensor(ak.Array(padded_waveforms), dtype=torch.float32)
         return waveform, targets
 
 
@@ -499,4 +533,16 @@ class OneStepDataModule(BaseDataModule):
         "primary" peaks as targets.
         """
         iter_dataset = OneStepIterableDataset
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)
+
+
+class OneStepWindowedDataModule(BaseDataModule):
+    def __init__(self, cfg: DictConfig, data_type: str, debug_run: bool = False, device: str = "cpu"):
+        """Data module for the one-step approach. This is a simplified version of the two-step approach, where we only
+        target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we
+        can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the
+        peak finding. The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only
+        "primary" peaks as targets.
+        """
+        iter_dataset = OneStepWindowedIterableDataset
         super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)

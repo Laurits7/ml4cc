@@ -53,6 +53,7 @@ def base_train(cfg: DictConfig, training_type: str):
             checkpoint_callback,
         ],
         logger=CSVLogger(cfg.training.log_dir, name=training_type),
+        overfit_batches=1 if cfg.training.debug_run else 0,
     )
     return trainer, checkpoint_callback
 
@@ -60,7 +61,8 @@ def base_train(cfg: DictConfig, training_type: str):
 def train_one_step(cfg: DictConfig, data_type: str):
     print(f"Training {cfg.models.one_step.model.name} for the one-step training.")
     model = instantiate(cfg.models.one_step.model)
-    datamodule = dl.OneStepDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
+    # datamodule = dl.OneStepDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
+    datamodule = dl.OneStepWindowedDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
     if not cfg.training.model_evaluation_only:
         trainer, checkpoint_callback = base_train(cfg, training_type="one_step")
         trainer.fit(model=model, datamodule=datamodule)
@@ -195,7 +197,8 @@ def evaluate_one_step(cfg: DictConfig, model, metrics_path: str) -> list:
     dir_ = "*" if cfg.evaluation.training.eval_all_always else "test"
     wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", dir_, "*")
     file_list = glob.glob(wcp_path)
-    iterable_dataset = dl.OneStepIterableDataset
+    # iterable_dataset = dl.OneStepIterableDataset
+    iterable_dataset = dl.OneStepWindowedIterableDataset
 
     # Create prediction files
     create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="one_step")

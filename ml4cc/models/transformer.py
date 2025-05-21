@@ -33,7 +33,7 @@ class WaveFormTransformer(nn.Module):
         dropout: float = 0.1,
     ):
         super().__init__()
-        self.input_projection = nn.Linear(1, d_model)
+        self.input_projection = nn.Linear(input_dim, d_model)
         self.positional_encoding = PositionalEncoding(d_model, max_len)
 
         encoder_layer = nn.TransformerEncoderLayer(
@@ -42,20 +42,20 @@ class WaveFormTransformer(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
         self.peak_finding_classifier = nn.Linear(d_model, num_classes)
-        # self.clusterizer = nn.Linear(d_model, 1)
         self.layernorm = nn.LayerNorm(d_model)
 
     def forward(self, x):
-        x = x.unsqueeze(-1)
+        mean = x.mean(dim=1, keepdim=True)
+        std = x.std(dim=1, keepdim=True)
+        x = (x - mean) / (std + 1e-6)
         x = self.input_projection(x)
         x = self.positional_encoding(x)
         x = self.transformer_encoder(x)
-        x = self.layernorm(x)
+        # x = self.layernorm(x)
         # Shape: [batch_size, seq_length, num_classes]
         x = self.peak_finding_classifier(x)
         x = x.sum(dim=1)  # Shape: [batch_size, num_classes]
-        x = F.relu(x)
-        # x = self.clusterizer(x)
+        x = F.softplus(x)
         return x
 
 
@@ -66,7 +66,7 @@ class TransformerModule(L.LightningModule):
         self.hyperparameters = hyperparameters
         self.checkpoint = checkpoint
         self.transformer = WaveFormTransformer(
-            input_dim=self.hyperparameters["input_dim"],
+            input_dim=15, # self.hyperparameters["input_dim"], If windowed, then 15, otherwise 1
             d_model=self.hyperparameters["d_model"],
             num_heads=self.hyperparameters["num_heads"],
             num_layers=self.hyperparameters["num_layers"],
@@ -102,4 +102,15 @@ class TransformerModule(L.LightningModule):
     def forward(self, batch):
         waveform, target = batch
         predicted_labels = self.transformer(waveform).squeeze()
+        print("PREDICTED:", predicted_labels)
+        print("TARGET:", target)
         return predicted_labels, target
+
+    def on_after_backward(self):
+        total_norm = 0
+        for name, p in self.named_parameters():
+            if p.grad is not None:
+                param_norm = p.grad.data.norm(2)
+                total_norm += param_norm.item() ** 2
+        total_norm = total_norm ** 0.5
+        print(f"Gradient norm: {total_norm:.6f}")

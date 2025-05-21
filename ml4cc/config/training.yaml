@@ -16,7 +16,7 @@ training:
         num_dataloader_workers: 1
         prefetch_factor: 100
     trainer:
-        max_epochs: 50 # 50 epochs in Guang paper
+        max_epochs: 250 # 50 epochs in Guang paper
     model_evaluation_only: False
 
 hydra:
