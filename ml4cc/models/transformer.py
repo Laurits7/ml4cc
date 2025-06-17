@@ -89,7 +89,15 @@ class TransformerModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.AdamW(self.parameters(), lr=self.lr)
+        optimizer = optim.AdamW(self.parameters(), lr=self.lr)
+        scheduler = {
+            "scheduler": optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=20, factor=0.5),
+            "monitor": "val_loss",
+            "interval": "epoch",
+            "frequency": 1,
+        }
+        return {"optimizer": optimizer, "lr_scheduler": scheduler}
+    
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, _ = self.forward(batch)

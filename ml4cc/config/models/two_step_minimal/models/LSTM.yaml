@@ -2,5 +2,7 @@ _target_: ml4cc.models.LSTM.LSTMModule
 name: LSTM
 hyperparameters:
     input_dim: ${dataset.input_dim}
+    num_features: 15
     lstm_hidden_dim: 32
     num_lstm_layers: 1
+    regression: true
