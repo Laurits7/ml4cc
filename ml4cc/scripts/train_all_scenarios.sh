@@ -64,4 +64,4 @@ if [ "$TRAINING_SCENARIO" = "all" ] ; then
 fi
 
 
-sbatch $TRAINING_SCRIPT python3 ml4cc/scripts/train.py training.output_dir=$BASE_DIR datasets@dataset=$TRAINING_DATASET environment@host=$HOST training.type=$TRAINING_SCENARIO # models.two_step.clusterization@clusterization.model=$CLUSTERIZATION_MODEL
+sbatch $TRAINING_SCRIPT python3 ml4cc/scripts/train.py training.output_dir=$BASE_DIR datasets@dataset=$TRAINING_DATASET environment@host=$HOST training.type=two_step_pf training.model_evaluation=False # models.two_step.clusterization@clusterization.model=$CLUSTERIZATION_MODEL

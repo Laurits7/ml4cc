@@ -2,7 +2,7 @@ import torch
 import lightning as L
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 # from hydra.utils import instantiate
 import importlib
 from omegaconf import OmegaConf
@@ -132,10 +132,14 @@ class SimplerModelModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer_class = resolve_target(self.optimizer_cfg["target"])
-        kwargs = OmegaConf.to_container(self.optimizer_cfg, resolve=True)
-        kwargs.pop("target")
-        return optimizer_class(params=self.model.parameters(), **kwargs)
+        optimizer = optim.AdamW(self.parameters(), lr=0.001)
+        scheduler = {
+            'scheduler': ReduceLROnPlateau(optimizer, mode='min', patience=3, factor=0.5),
+            'monitor': 'val_loss',
+            'interval': 'epoch',
+            'frequency': 1
+        }
+        return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, _ = self.forward(batch)
@@ -177,5 +181,5 @@ class CNNModule(SimplerModelModule):
         self.checkpoint = checkpoint
         self.optimizer_cfg = optimizer
         self.hyperparameters = OmegaConf.create(hyperparameters)
-        model = CNNModel(hyperparameters)
+        model = CNNModel(hyperparameters=self.hyperparameters)
         super().__init__(optimizer_cfg=self.optimizer_cfg, model=model)

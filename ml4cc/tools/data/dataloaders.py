@@ -141,17 +141,15 @@ class BaseDataModule(LightningDataModule):
             if self.clusterization:
                 train_loc = os.path.join(
                     self.cfg.dataset.data_dir,
-                    "two_step",
-                    "predictions",
                     "two_step_pf",
+                    "predictions",
                     "train",
                     f"{self.data_type}_*.parquet",
                 )
                 val_loc = os.path.join(
                     self.cfg.dataset.data_dir,
-                    "two_step",
-                    "predictions",
                     "two_step_pf",
+                    "predictions",
                     "val",
                     f"{self.data_type}_*.parquet",
                 )
@@ -162,16 +160,15 @@ class BaseDataModule(LightningDataModule):
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
                 if self.clusterization:
-                    test_dir = os.path.join(self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "test")
+                    test_dir = os.path.join(self.cfg.dataset.data_dir, "two_step_pf", "predictions", "test")
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
                 if self.clusterization:
                     test_dir = os.path.join(
                         self.cfg.dataset.data_dir,
-                        "two_step",
-                        "predictions",
                         "two_step_pf",
+                        "predictions",
                         "test",
                         f"{self.data_type}_*.parquet",
                     )
@@ -209,10 +206,10 @@ class BaseDataModule(LightningDataModule):
             if self.cfg.dataset.train_dataset == "combined":
                 if self.clusterization:
                     train_loc = os.path.join(
-                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "train"
+                        self.cfg.training.output_dir, "two_step_pf", "predictions", "train"
                     )
                     val_loc = os.path.join(
-                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "val"
+                        self.cfg.training.output_dir, "two_step_pf", "predictions", "val"
                     )
                 else:
                     train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
@@ -221,17 +218,15 @@ class BaseDataModule(LightningDataModule):
                 if self.clusterization:
                     train_loc = os.path.join(
                         self.cfg.training.output_dir,
-                        "two_step",
-                        "predictions",
                         "two_step_pf",
+                        "predictions",
                         "train",
                         f"{self.data_type}_*.parquet",
                     )
                     val_loc = os.path.join(
                         self.cfg.training.output_dir,
-                        "two_step",
-                        "predictions",
                         "two_step_pf",
+                        "predictions",
                         "val",
                         f"{self.data_type}_*.parquet",
                     )
@@ -250,7 +245,7 @@ class BaseDataModule(LightningDataModule):
             if self.cfg.dataset.test_dataset == "combined":
                 if self.clusterization:
                     test_dir = os.path.join(
-                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "test"
+                        self.cfg.training.output_dir, "two_step_pf", "predictions", "test"
                     )
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
@@ -258,9 +253,8 @@ class BaseDataModule(LightningDataModule):
                 if self.clusterization:
                     test_dir = os.path.join(
                         self.cfg.training.output_dir,
-                        "two_step",
-                        "predictions",
                         "two_step_pf",
+                        "predictions",
                         "test",
                         f"{self.data_type}_*.parquet",
                     )
@@ -449,7 +443,7 @@ class TwoStepClusterizationIterableDataset(BaseIterableDataset):
         targets = ak.sum(data.target == 1, axis=-1)
         targets = torch.tensor(targets, dtype=torch.float32)
         peaks = torch.tensor(peaks, dtype=torch.float32)
-        return peaks.unsqueeze(-1), targets
+        return peaks, targets
 
 
 class TwoStepMinimalIterableDataset(BaseIterableDataset):

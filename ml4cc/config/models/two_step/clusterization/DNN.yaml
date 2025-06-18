@@ -1,7 +1,7 @@
 _target_: ml4cc.models.simpler_models.DNNModule
 name: DNN
 hyperparameters:
-    n_features: 1 # ${dataset.input_dim} # TODO: Fix
+    n_features: 1650
     linear_layer_1:
         out_features: 32
     linear_layer_2:

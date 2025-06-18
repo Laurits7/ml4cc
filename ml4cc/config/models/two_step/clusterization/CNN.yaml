@@ -1,4 +1,4 @@
-_target_: ml4cc.models.simpler_models.DNNModule
+_target_: ml4cc.models.simpler_models.CNNModule
 name: CNN
 hyperparameters:
     conv_layer_1:
@@ -10,6 +10,8 @@ hyperparameters:
     conv_layer_2:
         out_channels: 16
         kernel_size: 4
+    pool_layer_2:
+        kernel_size: 2
     linear_layer_1:
         out_features: 32
     output_layer:

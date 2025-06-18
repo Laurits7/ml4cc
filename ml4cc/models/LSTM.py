@@ -2,7 +2,7 @@ import torch
 import lightning as L
 import torch.optim as optim
 import torch.nn.functional as F
-
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 # TODO: Is this implemented like in their paper? In their paper they have
 # multiple LSTMs.
@@ -28,7 +28,7 @@ class LSTM(torch.nn.Module):
 
 
 class LSTMModule(L.LightningModule):
-    def __init__(self, name: str, hyperparameters: dict):
+    def __init__(self, name: str, hyperparameters: dict, checkpoint: dict = None):
         self.name = name
         self.hyperparameters = hyperparameters
         super().__init__()
@@ -57,7 +57,14 @@ class LSTMModule(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.AdamW(self.parameters(), lr=0.001)
+        optimizer = optim.AdamW(self.parameters(), lr=0.001)
+        scheduler = {
+            'scheduler': ReduceLROnPlateau(optimizer, mode='min', patience=3, factor=0.5),
+            'monitor': 'val_loss',
+            'interval': 'epoch',
+            'frequency': 1
+        }
+        return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, _ = self.forward(batch)

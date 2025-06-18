@@ -28,7 +28,7 @@ class LossesMultiPlot:
                 ls="--",
                 color=self.color_mapping.get(algorithm, None)
             ) # Train loss always with dashed line
-        self.plt.plot(
+        self.ax.plot(
             results['val_loss'],
             label=self.name_mapping.get(algorithm, algorithm),
             ls="-",
@@ -38,7 +38,7 @@ class LossesMultiPlot:
 
     def plot_algorithms(self, results: dict, output_path: str = ""):
         for idx, (algorithm, result) in enumerate(results.items()):
-            self._add_line(result, algorithm=algorithm, y=idx)
+            self._add_line(result, algorithm=algorithm)
         self.ax.set_yscale("log")
         self.ax.set_ylabel(f"{self.loss_name} loss [a.u.]")
         self.ax.set_xlabel("epoch")

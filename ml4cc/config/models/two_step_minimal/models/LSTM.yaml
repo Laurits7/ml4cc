@@ -6,3 +6,7 @@ hyperparameters:
     lstm_hidden_dim: 32
     num_lstm_layers: 1
     regression: true
+
+checkpoint:
+    model: null
+    losses: null
