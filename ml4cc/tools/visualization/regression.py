@@ -108,11 +108,12 @@ class MultiComparisonPlot:
 class RegressionStackPlot:
     # TODO: This is only for a single energy, should maybe also do for multiple energies?
     # This is for comparing different algorithms, not needed for a training run
-    def __init__(self,
-                 normalize_by_median: bool = True,
-                 color_mapping: dict = {},
-                 name_mapping: dict = {},
-                 marker_mapping: dict = {},
+    def __init__(
+        self,
+        normalize_by_median: bool = True,
+        color_mapping: dict = {},
+        name_mapping: dict = {},
+        marker_mapping: dict = {},
     ):
         self.normalize_by_median = normalize_by_median
         self.color_mapping = color_mapping

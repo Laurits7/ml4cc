@@ -12,16 +12,11 @@ def calculate_resolution(truth: np.array, preds: np.array) -> np.array:
 
 
 def collect_resolution_results(results: dict) -> dict:
-    """ Collects the resolution results from different energies """
+    """Collects the resolution results from different energies"""
     true = ak.sum(results["true"] == 1, axis=-1)
     pred = results["pred"]
     resolution, ratios = calculate_resolution(true, pred)
-    resolution_results = {
-        "resolution": resolution,
-        "ratios": ratios,
-        "true": true,
-        "pred": pred
-    }
+    resolution_results = {"resolution": resolution, "ratios": ratios, "true": true, "pred": pred}
     return resolution_results
 
 

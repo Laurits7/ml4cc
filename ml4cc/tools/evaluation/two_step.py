@@ -79,7 +79,7 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
 
     global_roc_output_path = os.path.join(results_dir, "global_roc.png")
     grp = vc.GlobalROCPlot()
-    grp.plot_all_curves(results['global'], output_path=global_roc_output_path)
+    grp.plot_all_curves(results["global"], output_path=global_roc_output_path)
 
 
 def evaluate_classification(cfg: DictConfig, metrics_path: str, results_dir: str):
@@ -101,7 +101,6 @@ def evaluate_classification(cfg: DictConfig, metrics_path: str, results_dir: str
         multi_resolution_output_path = os.path.join(results_dir, f"{pid}_multi_resolution.png")
         mrp = vr.MultiResolutionPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
         mrp.plot_all_resolutions(pid_results, output_path=multi_resolution_output_path)
-
 
     for pid in cfg.dataset.particle_types:
         pid_results = results[pid]
