@@ -1,6 +1,7 @@
 import boost_histogram as bh
 import numpy as np
 
+
 def to_bh(data, bins, cumulative=False):
     h1 = bh.Histogram(bh.axis.Variable(bins))
     h1.fill(data)

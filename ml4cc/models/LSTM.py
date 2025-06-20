@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
+
 # TODO: Is this implemented like in their paper? In their paper they have
 # multiple LSTMs.
 class LSTM(torch.nn.Module):
@@ -11,7 +12,7 @@ class LSTM(torch.nn.Module):
         super().__init__()
         self.regression = regression
         self.lstm = torch.nn.LSTM(
-            input_size=num_features, num_layers=num_lstm_layers,hidden_size=lstm_hidden_dim, batch_first=True
+            input_size=num_features, num_layers=num_lstm_layers, hidden_size=lstm_hidden_dim, batch_first=True
         )
         self.fc3 = torch.nn.Linear(lstm_hidden_dim, 32)
         self.fc4 = torch.nn.Linear(32, 1)
@@ -59,10 +60,10 @@ class LSTMModule(L.LightningModule):
     def configure_optimizers(self):
         optimizer = optim.AdamW(self.parameters(), lr=0.001)
         scheduler = {
-            'scheduler': ReduceLROnPlateau(optimizer, mode='min', patience=3, factor=0.5),
-            'monitor': 'val_loss',
-            'interval': 'epoch',
-            'frequency': 1
+            "scheduler": ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5),
+            "monitor": "val_loss",
+            "interval": "epoch",
+            "frequency": 1,
         }
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
