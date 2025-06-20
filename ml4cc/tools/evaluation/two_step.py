@@ -19,11 +19,7 @@ def evaluate_training(cfg: DictConfig, metrics_path: str, stage: str):
 
 
 def evaluate_losses(
-        cfg: DictConfig,
-        metrics_path: str,
-        model_name: str = "",
-        loss_name: str = "BCE",
-        results_dir: str = ""
+    cfg: DictConfig, metrics_path: str, model_name: str = "", loss_name: str = "BCE", results_dir: str = ""
 ):
     # Visualize losses for the training.
     losses = g.filter_losses(metrics_path=metrics_path)
@@ -38,8 +34,13 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     # 0. Visualize losses for the training.
     os.makedirs(results_dir, exist_ok=True)
 
-    evaluate_losses(cfg, metrics_path, model_name=cfg.models.two_step.peak_finding.model.name, loss_name="BCE",
-                    results_dir=results_dir)
+    evaluate_losses(
+        cfg,
+        metrics_path,
+        model_name=cfg.models.two_step.peak_finding.model.name,
+        loss_name="BCE",
+        results_dir=results_dir,
+    )
 
     # 1. Collect results
     prediction_dir = os.path.join(cfg.training.predictions_dir, "two_step_pf")
@@ -58,18 +59,16 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
         csp.plot_all_comparisons(results=pid_results, output_path=csp_output_path)
 
     asp_output_path = os.path.join(results_dir, "AUC_stack.png")
-    ewa = vc.EnergyWiseAUC(pids = cfg.dataset.particle_types)
+    ewa = vc.EnergyWiseAUC(pids=cfg.dataset.particle_types)
     ewa.plot_energies(results, output_path=asp_output_path)
-
 
     fr_output_path = os.path.join(results_dir, "fake_rate.png")
     frp = vc.EffFakePlot(eff_fake="fake_rate")
-    frp.plot_energies(results['global'], output_path=fr_output_path)
+    frp.plot_energies(results["global"], output_path=fr_output_path)
 
     eff_output_path = os.path.join(results_dir, "efficiency.png")
     efp = vc.EffFakePlot(eff_fake="efficiency")
-    efp.plot_energies(results['global'], output_path=eff_output_path)
-
+    efp.plot_energies(results["global"], output_path=eff_output_path)
 
     for pid in cfg.dataset.particle_types:
         pid_results = results[pid]
@@ -77,13 +76,9 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
         mroc = vc.MultiROCPlot(pid=pid, n_energies=len(cfg.dataset.particle_energies), ncols=3)
         mroc.plot_curves(pid_results, output_path=multiroc_output_path)
 
-
     global_roc_output_path = os.path.join(results_dir, "global_roc.png")
     grp = vc.GlobalROCPlot()
-    grp.plot_all_curves(results['global'], output_path=global_roc_output_path)
-
-
-
+    grp.plot_all_curves(results["global"], output_path=global_roc_output_path)
 
 
 def evaluate_classification(cfg: DictConfig, metrics_path: str):

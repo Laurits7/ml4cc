@@ -9,7 +9,7 @@ hep.style.use(hep.styles.CMS)
 class GlobalROCPlot:
     def __init__(self, figsize: tuple = (8, 8)):
         self.fig, self.ax = plt.subplots(figsize=figsize)
-    
+
     def _add_curve(self, fpr: np.array, avg_tpr: np.array, std_tpr: np.array, label: str):
         self.ax.plot(fpr, avg_tpr, label=label)
         self.ax.fill_between(
@@ -17,15 +17,20 @@ class GlobalROCPlot:
             avg_tpr - std_tpr,
             avg_tpr + std_tpr,
             alpha=0.2,
-            color=self.ax.lines[-1].get_color()  # Use the same color as the last line
+            color=self.ax.lines[-1].get_color(),  # Use the same color as the last line
         )
-    
+
     def plot_all_curves(self, results: dict, output_path: str = "") -> None:
         for pid, pid_result in results.items():
             mean_auc = pid_result["global_auc"]["mean"]
             std_auc = pid_result["global_auc"]["std"]
             label = f"{pid}: AUC={mean_auc:.3f} ± {std_auc:.3f}"
-            self._add_curve(pid_result['global_roc']["FPRs"], pid_result['global_roc']["avg_TPRs"], pid_result['global_roc']["std_TPRs"], label=label)
+            self._add_curve(
+                pid_result["global_roc"]["FPRs"],
+                pid_result["global_roc"]["avg_TPRs"],
+                pid_result["global_roc"]["std_TPRs"],
+                label=label,
+            )
 
         self.ax.set_xlabel("False Positive Rate (FPR)")
         self.ax.set_ylabel("True Positive Rate (TPR)")
@@ -41,42 +46,34 @@ class GlobalROCPlot:
 
 
 class MultiROCPlot:
-    def __init__(
-        self,
-        pid: str = "muon",
-        n_energies: int = 7,
-        ncols: int = 3,
-        figsize: tuple = (12, 12)
-    ):
+    def __init__(self, pid: str = "muon", n_energies: int = 7, ncols: int = 3, figsize: tuple = (12, 12)):
         self.ncols = ncols
         self.pid = pid
         self.nrows = int(np.ceil(n_energies / ncols))
         self.fig, self.axis = plt.subplots(
-            nrows=self.nrows,
-            ncols=self.ncols,
-            figsize=figsize,
-            sharex=True,
-            sharey=True
+            nrows=self.nrows, ncols=self.ncols, figsize=figsize, sharex=True, sharey=True
         )
 
-    def _add_curve(self, fpr: np.array, tpr: np.array, auc: float, label: str, ax: plt.Axes, print_legend: bool = False):
+    def _add_curve(
+        self, fpr: np.array, tpr: np.array, auc: float, label: str, ax: plt.Axes, print_legend: bool = False
+    ):
         ax.plot(fpr, tpr)
         ax.text(0.1, 0.8, f"AUC={auc:.3f}", fontsize=10)
         ax.set_title(label, fontsize=14)
         if print_legend:
-            ax.legend(loc='upper right', fontsize=10)
+            ax.legend(loc="upper right", fontsize=10)
 
     def plot_curves(self, results: dict, output_path: str = "") -> None:
         for idx, (energy, result) in enumerate(results.items()):
             ax = self.axis.flatten()[idx]
             label = f"{energy} GeV"
-            self._add_curve(result['FPR'], result['TPR'], result['AUC'], label, ax, print_legend=idx == self.ncols)
+            self._add_curve(result["FPR"], result["TPR"], result["AUC"], label, ax, print_legend=idx == self.ncols)
 
         for ax in self.axis.flat:
             ax.label_outer()
 
-        self.fig.text(0.04, 0.5, "True Positive Rate (TPR)", va='center', rotation='vertical', fontsize=20)
-        self.fig.text(0.5, 0.02, "False Positive Rate (FPR)", ha='center', fontsize=20)
+        self.fig.text(0.04, 0.5, "True Positive Rate (TPR)", va="center", rotation="vertical", fontsize=20)
+        self.fig.text(0.5, 0.02, "False Positive Rate (FPR)", ha="center", fontsize=20)
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")
             plt.close("all")
@@ -86,56 +83,61 @@ class MultiROCPlot:
 
 
 class ClassifierScorePlot:
-    def __init__(self,
-                 n_energies: int = 7,  # 7 for FCC, 6 for CEPC
-                 figsize: tuple = (9, 9),
-                 x_min: float = 0,
-                 x_max: float = 50,
-                 num_bins: int = 25,
-                 ncols: int = 3,
-                ):
+    def __init__(
+        self,
+        n_energies: int = 7,  # 7 for FCC, 6 for CEPC
+        figsize: tuple = (9, 9),
+        x_min: float = 0,
+        x_max: float = 50,
+        num_bins: int = 25,
+        ncols: int = 3,
+    ):
         self.x_min = x_min
         self.ncols = ncols
         self.nrows = int(np.ceil(n_energies / ncols))
         self.x_max = x_max
         self.num_bins = num_bins
         self.fig, self.axis = plt.subplots(
-            nrows=self.nrows,
-            ncols=self.ncols,
-            figsize=figsize,
-            sharex=True,
-            sharey=True
+            nrows=self.nrows, ncols=self.ncols, figsize=figsize, sharex=True, sharey=True
         )
         self.bins = np.linspace(self.x_min, self.x_max, self.num_bins)
-    
+
     def _add_histogram(self, ax, preds: np.array, true: np.array, energy: str, print_legend: bool = False):
         sig_mask = true == 1
         bkg_mask = true == 0
         hep.histplot(
             to_bh(preds[sig_mask], bins=self.bins),
-            ax=ax, density=True, histtype='fill', alpha=0.3, hatch="//", label='Signal')
+            ax=ax,
+            density=True,
+            histtype="fill",
+            alpha=0.3,
+            hatch="//",
+            label="Signal",
+        )
         hep.histplot(
             to_bh(preds[bkg_mask], bins=self.bins),
-            ax=ax, density=True, histtype='fill', alpha=0.3, hatch="\\\\", label='Background')
+            ax=ax,
+            density=True,
+            histtype="fill",
+            alpha=0.3,
+            hatch="\\\\",
+            label="Background",
+        )
         ax.set_title(f"{energy} GeV")
         if print_legend:
-            ax.legend(loc='upper right', fontsize=10)
+            ax.legend(loc="upper right", fontsize=10)
 
     def plot_all_comparisons(self, results: dict, output_path: str = "") -> None:
         for idx, (energy, result) in enumerate(results.items()):
             ax = self.axis.flatten()[idx]
             self._add_histogram(
-                ax=ax,
-                preds=result["pred"],
-                true=result["true"],
-                energy=energy,
-                print_legend=idx == self.ncols
+                ax=ax, preds=result["pred"], true=result["true"], energy=energy, print_legend=idx == self.ncols
             )
         for ax in self.axis.flat:
             ax.label_outer()
 
-        self.fig.text(0.04, 0.5, "Number of entries", va='center', rotation='vertical', fontsize=12)
-        self.fig.text(0.5, 0.02, r"$\mathcal{D}_p$", ha='center', fontsize=12)
+        self.fig.text(0.04, 0.5, "Number of entries", va="center", rotation="vertical", fontsize=12)
+        self.fig.text(0.5, 0.02, r"$\mathcal{D}_p$", ha="center", fontsize=12)
 
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")
@@ -145,12 +147,14 @@ class ClassifierScorePlot:
 
 
 class AUCStackPlot:
-    """ For comparing the average AUC scores of different algorithms."""
-    def __init__(self,
-                 color_mapping: dict = {},
-                 name_mapping: dict = {},
-                 marker_mapping: dict = {},
-                 ):
+    """For comparing the average AUC scores of different algorithms."""
+
+    def __init__(
+        self,
+        color_mapping: dict = {},
+        name_mapping: dict = {},
+        marker_mapping: dict = {},
+    ):
         self.color_mapping = color_mapping
         self.name_mapping = name_mapping
         self.marker_mapping = marker_mapping
@@ -187,7 +191,8 @@ class AUCStackPlot:
 
 
 class EnergyWiseAUC:
-    """ For comparing the average AUC scores of different energies of an algorithm."""
+    """For comparing the average AUC scores of different energies of an algorithm."""
+
     def __init__(self, pids: list = None):
         self.pids = pids
         self.fig, self.ax = plt.subplots(figsize=(8, 8))
@@ -223,16 +228,7 @@ class EffFakePlot:
     def _add_line(self, result: dict, pid: str = ""):
         """Adds a line to the plot."""
         key = "FPRs" if self.eff_fake == "fake_rate" else "TPRs"
-        self.ax.errorbar(
-            result["energies"],
-            result[key],
-            xerr=0,
-            ls="",
-            marker='o',
-            ms=5,
-            capsize=5,
-            label=pid
-        )
+        self.ax.errorbar(result["energies"], result[key], xerr=0, ls="", marker="o", ms=5, capsize=5, label=pid)
 
     def plot_energies(self, results: dict, output_path: str = ""):
         for pid, pid_result in results.items():

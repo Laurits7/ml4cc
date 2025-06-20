@@ -11,7 +11,7 @@ def calculate_resolution(truth: np.array, preds: np.array) -> np.array:
 
 
 def collect_resolution_results(results: dict) -> dict:  # TODO: Unfinished
-    """ Collects the resolution results from different energies """
+    """Collects the resolution results from different energies"""
     resolution_results = {}
     for energy, result in results.items():
         resolution, ratios = calculate_resolution(result["truth"], result["preds"])

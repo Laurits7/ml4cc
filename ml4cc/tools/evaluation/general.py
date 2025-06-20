@@ -7,7 +7,6 @@ import awkward as ak
 from omegaconf import DictConfig
 
 
-
 def filter_losses(metrics_path: str):
     metrics_data = pd.read_csv(metrics_path)
     val_loss = np.array(metrics_data["val_loss"])
@@ -20,11 +19,11 @@ def filter_losses(metrics_path: str):
 def collect_all_results(predictions_dir: str, cfg: DictConfig) -> dict:
     """
     Collect all results from the predictions directory.
-    
+
     Parameters:
         predictions_dir (str): Path to the predictions directory.
         cfg (DictConfig): Configuration.
-    
+
     Returns:
         dict: Dictionary containing results for each.
     """
@@ -48,9 +47,5 @@ def collect_all_results(predictions_dir: str, cfg: DictConfig) -> dict:
                 pid_energy_pred.append(data["pred"])
             pid_energy_pred = ak.concatenate(pid_energy_pred, axis=0)
             pid_energy_true = ak.concatenate(pid_energy_true, axis=0)
-            results[pid][energy] = {
-                "true": pid_energy_true,
-                "pred":pid_energy_pred
-            }
+            results[pid][energy] = {"true": pid_energy_true, "pred": pid_energy_pred}
     return results
-

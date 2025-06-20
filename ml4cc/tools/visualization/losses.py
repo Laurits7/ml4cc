@@ -6,13 +6,14 @@ hep.style.use(hep.styles.CMS)
 
 
 class LossesMultiPlot:
-    def __init__(self,
-                 plot_train_losses: bool = False,
-                 loss_name: str = "MSE",
-                 color_mapping: dict = {},
-                 name_mapping: dict = {},
-                 x_max: int = -1
-                 ):
+    def __init__(
+        self,
+        plot_train_losses: bool = False,
+        loss_name: str = "MSE",
+        color_mapping: dict = {},
+        name_mapping: dict = {},
+        x_max: int = -1,
+    ):
         self.plot_train_losses = plot_train_losses
         self.loss_name = loss_name
         self.color_mapping = color_mapping
@@ -24,16 +25,14 @@ class LossesMultiPlot:
         """Adds a line to the plot."""
         if self.plot_train_losses:
             self.ax.plot(
-                results['train_loss'],
-                ls="--",
-                color=self.color_mapping.get(algorithm, None)
-            ) # Train loss always with dashed line
+                results["train_loss"], ls="--", color=self.color_mapping.get(algorithm, None)
+            )  # Train loss always with dashed line
         self.ax.plot(
-            results['val_loss'],
+            results["val_loss"],
             label=self.name_mapping.get(algorithm, algorithm),
             ls="-",
-            color=self.color_mapping.get(algorithm, None)
-        ) # Val loss always with solid line
+            color=self.color_mapping.get(algorithm, None),
+        )  # Val loss always with solid line
         self.ax.legend()
 
     def plot_algorithms(self, results: dict, output_path: str = ""):
@@ -52,12 +51,13 @@ class LossesMultiPlot:
 
 
 class LossesStackPlot:
-    def __init__(self,
-                 loss_name: str = "MSE",
-                 color_mapping: dict = {},
-                 name_mapping: dict = {},
-                 marker_mapping: dict = {},
-                 ):
+    def __init__(
+        self,
+        loss_name: str = "MSE",
+        color_mapping: dict = {},
+        name_mapping: dict = {},
+        marker_mapping: dict = {},
+    ):
         self.loss_name = loss_name
         self.color_mapping = color_mapping
         self.name_mapping = name_mapping

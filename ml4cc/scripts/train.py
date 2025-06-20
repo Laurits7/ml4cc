@@ -35,7 +35,7 @@ class FlatCSVLogger(CSVLogger):
     def __init__(self, save_dir, name):
         # No name or version
         super().__init__(save_dir=save_dir, name=name, version="")
-    
+
     @property
     def log_dir(self):
         # Skip versioned subdirectory
@@ -53,23 +53,15 @@ def base_train(cfg: DictConfig, models_dir: str):
         # save_weights=True,
         filename="model_best",
     )
-    early_stop = EarlyStopping(monitor='val_loss', patience=6, mode='min')
-    lr_monitor = LearningRateMonitor(logging_interval='epoch')
+    early_stop = EarlyStopping(monitor="val_loss", patience=6, mode="min")
+    lr_monitor = LearningRateMonitor(logging_interval="epoch")
     max_epochs = 2 if cfg.training.debug_run else cfg.training.trainer.max_epochs
     trainer = L.Trainer(
         max_epochs=max_epochs,
-        callbacks=[
-            TQDMProgressBar(refresh_rate=10),
-            checkpoint_callback_best,
-            early_stop,
-            lr_monitor
-        ],
-        logger=FlatCSVLogger(
-            save_dir=cfg.training.log_dir,
-            name="metrics"
-        ),
+        callbacks=[TQDMProgressBar(refresh_rate=10), checkpoint_callback_best, early_stop, lr_monitor],
+        logger=FlatCSVLogger(save_dir=cfg.training.log_dir, name="metrics"),
         overfit_batches=1 if cfg.training.debug_run else 0,
-        num_sanity_val_steps=0
+        num_sanity_val_steps=0,
     )
     return trainer, checkpoint_callback_best
 
@@ -283,7 +275,7 @@ def main(cfg: DictConfig):
     elif training_type == "two_step_pf":
         model, best_model_path, metrics_path = train_two_step_peak_finding(cfg, data_type="")
         if cfg.training.model_evaluation:
-            checkpoint = torch.load(best_model_path)#, weights=False)
+            checkpoint = torch.load(best_model_path)  # , weights=False)
             model.load_state_dict(checkpoint["state_dict"])
             model.eval()
             evaluate_two_step_peak_finding(cfg, model, metrics_path)

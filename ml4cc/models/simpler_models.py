@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.nn.utils.rnn import pack_padded_sequence
+
 # from hydra.utils import instantiate
 import importlib
 from omegaconf import OmegaConf
@@ -22,7 +23,7 @@ class DNNModel(nn.Module):
         super().__init__()
         self.fc1 = nn.Linear(
             in_features=hyperparameters.n_features * 2,  # As the mask is concatenated
-            out_features=hyperparameters.linear_layer_1.out_features
+            out_features=hyperparameters.linear_layer_1.out_features,
         )
         self.fc2 = nn.Linear(
             in_features=hyperparameters.linear_layer_1.out_features,
@@ -85,7 +86,7 @@ class CNNModel(nn.Module):
             # Resize the mask to match x.shape[-1]
             # Use interpolation to safely downsample the mask
             mask = mask.unsqueeze(1).float()  # (B, 1, 1650)
-            mask = F.interpolate(mask, size=x.shape[-1], mode='nearest')  # (B, 1, new_len)
+            mask = F.interpolate(mask, size=x.shape[-1], mode="nearest")  # (B, 1, new_len)
 
             # Apply the mask
             x = x * mask
@@ -119,7 +120,7 @@ class RNNModel(nn.Module):
         x = x.unsqueeze(-1)
         lengths = mask.sum(dim=1)
         # Pack the padded sequence
-        packed_x = pack_padded_sequence(x, lengths.cpu(), batch_first=True,enforce_sorted=False)
+        packed_x = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
         ula, (h, _) = self.lstm(x)
         # Output and hidden state
         out = h[-1]  # Take the last output for prediction
@@ -150,10 +151,10 @@ class SimplerModelModule(L.LightningModule):
     def configure_optimizers(self):
         optimizer = optim.AdamW(self.parameters(), lr=0.001)
         scheduler = {
-            'scheduler': ReduceLROnPlateau(optimizer, mode='min', patience=3, factor=0.5),
-            'monitor': 'val_loss',
-            'interval': 'epoch',
-            'frequency': 1
+            "scheduler": ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5),
+            "monitor": "val_loss",
+            "interval": "epoch",
+            "frequency": 1,
         }
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
 

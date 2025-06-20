@@ -66,7 +66,7 @@ class TransformerModule(L.LightningModule):
         self.hyperparameters = hyperparameters
         self.checkpoint = checkpoint
         self.transformer = WaveFormTransformer(
-            input_dim=15, # self.hyperparameters["input_dim"], If windowed, then 15, otherwise 1
+            input_dim=15,  # self.hyperparameters["input_dim"], If windowed, then 15, otherwise 1
             d_model=self.hyperparameters["d_model"],
             num_heads=self.hyperparameters["num_heads"],
             num_layers=self.hyperparameters["num_layers"],
@@ -97,7 +97,6 @@ class TransformerModule(L.LightningModule):
             "frequency": 1,
         }
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
-    
 
     def predict_step(self, batch, batch_idx):
         predicted_labels, _ = self.forward(batch)
@@ -120,5 +119,5 @@ class TransformerModule(L.LightningModule):
             if p.grad is not None:
                 param_norm = p.grad.data.norm(2)
                 total_norm += param_norm.item() ** 2
-        total_norm = total_norm ** 0.5
+        total_norm = total_norm**0.5
         print(f"Gradient norm: {total_norm:.6f}")
