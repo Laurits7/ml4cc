@@ -5,6 +5,7 @@ import ml4cc.tools.evaluation.classification as c
 import ml4cc.tools.evaluation.regression as r
 from ml4cc.tools.visualization import losses as l
 from ml4cc.tools.visualization import classification as vc
+from ml4cc.tools.visualization import regression as vr
 
 
 def evaluate_training(cfg: DictConfig, metrics_path: str, stage: str):
@@ -83,10 +84,7 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     grp.plot_all_curves(results['global'], output_path=global_roc_output_path)
 
 
-
-
-
-def evaluate_classification(cfg: DictConfig, metrics_path: str):
+def evaluate_classification(cfg: DictConfig, metrics_path: str, results_dir: str):
     # Visualize losses for the training.
     evaluate_losses(cfg, metrics_path, model_name=cfg.models.clusterization.model_name, loss_name="MSE")
 
@@ -99,3 +97,16 @@ def evaluate_classification(cfg: DictConfig, metrics_path: str):
     # Evaluate model performance.
     # 2. Prepare results
     results = r.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
+
+    for pid in cfg.dataset.particle_types:
+        pid_results = results[pid]
+        multi_resolution_output_path = os.path.join(results_dir, f"{pid}_multi_resolution.png")
+        mrp = vr.MultiResolutionPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
+        mrp.plot_all_resolutions(pid_results, output_path=multi_resolution_output_path)
+
+
+    for pid in cfg.dataset.particle_types:
+        pid_results = results[pid]
+        multi_comparison_output_path = os.path.join(results_dir, f"{pid}_multi_comparison.png")
+        mcp = vr.MultiComparisonPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
+        mcp.plot_all_comparisons(pid_results, output_path=multi_comparison_output_path)

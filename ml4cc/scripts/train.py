@@ -193,7 +193,7 @@ def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, 
     with torch.no_grad():
         for path in file_list[:num_files]:
             dataset = dl.RowGroupDataset(path)
-            iterable_dataset_ = iterable_dataset(dataset, device=DEVICE)
+            iterable_dataset_ = iterable_dataset(dataset, device=DEVICE, cfg=cfg)
             dataloader = DataLoader(
                 dataset=iterable_dataset_,
                 batch_size=cfg.training.dataloader.batch_size,

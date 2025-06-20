@@ -119,9 +119,9 @@ class MultiComparisonPlot:
         plt.close("all")
 
 
-
 class RegressionStackPlot:
     # TODO: This is only for a single energy, should maybe also do for multiple energies?
+    # This is for comparing different algorithms, not needed for a training run
     def __init__(self,
                  normalize_by_median: bool = True,
                  color_mapping: dict = {},

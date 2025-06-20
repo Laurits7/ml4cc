@@ -1,4 +1,5 @@
 import numpy as np
+import awkward as ak
 
 
 def calculate_resolution(truth: np.array, preds: np.array) -> np.array:
@@ -10,17 +11,24 @@ def calculate_resolution(truth: np.array, preds: np.array) -> np.array:
     return resolution, ratios
 
 
-def collect_resolution_results(results: dict) -> dict:  # TODO: Unfinished
+def collect_resolution_results(results: dict) -> dict:
     """ Collects the resolution results from different energies """
-    resolution_results = {}
-    for energy, result in results.items():
-        resolution, ratios = calculate_resolution(result["truth"], result["preds"])
-        resolution_results[energy] = {
-            "resolution": resolution,
-            "ratios": ratios,
-        }
+    true = ak.sum(results["true"] == 1, axis=-1)
+    pred = results["pred"]
+    resolution, ratios = calculate_resolution(true, pred)
+    resolution_results = {
+        "resolution": resolution,
+        "ratios": ratios,
+        "true": true,
+        "pred": pred
+    }
     return resolution_results
 
 
 def get_per_energy_metrics(results):
-    print(results)
+    per_energy_metrics = {}
+    for pid, pid_results in results.items():
+        per_energy_metrics[pid] = {}
+        for energy, energy_results in pid_results.items():
+            per_energy_metrics[pid][energy] = collect_resolution_results(energy_results)
+    return per_energy_metrics
