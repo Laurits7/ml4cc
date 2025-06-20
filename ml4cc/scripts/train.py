@@ -55,7 +55,7 @@ def base_train(cfg: DictConfig, models_dir: str):
     )
     early_stop = EarlyStopping(monitor='val_loss', patience=6, mode='min')
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
-    max_epochs = 50 if cfg.training.debug_run else cfg.training.trainer.max_epochs
+    max_epochs = 2 if cfg.training.debug_run else cfg.training.trainer.max_epochs
     trainer = L.Trainer(
         max_epochs=max_epochs,
         callbacks=[
@@ -80,6 +80,8 @@ def train_one_step(cfg: DictConfig, data_type: str):
     # datamodule = dl.OneStepDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
     models_dir = cfg.training.models_dir
     datamodule = dl.OneStepWindowedDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
+    metrics_path = os.path.join(cfg.training.log_dir, "metrics.csv")
+    best_model_path = os.path.join(cfg.training.models_dir, "model_best.ckpt")
     if not cfg.training.model_evaluation:
         trainer, checkpoint_callback = base_train(cfg, models_dir=models_dir)
         trainer.fit(model=model, datamodule=datamodule)
@@ -132,6 +134,8 @@ def train_two_step_minimal(cfg: DictConfig, data_type: str):
     print(f"Training {cfg.models.two_step_minimal.model.name} for the two-step minimal training.")
     model = instantiate(cfg.models.two_step_minimal.model)
     models_dir = cfg.training.models_dir
+    metrics_path = os.path.join(cfg.training.log_dir, "metrics.csv")
+    best_model_path = os.path.join(cfg.training.models_dir, "model_best.ckpt")
     datamodule = dl.TwoStepMinimalDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
     if not cfg.training.model_evaluation:
         trainer, checkpoint_callback = base_train(cfg, models_dir=models_dir)
@@ -277,7 +281,7 @@ def main(cfg: DictConfig):
             model.eval()
             evaluate_one_step(cfg, model, metrics_path)
     elif training_type == "two_step_pf":
-        model, best_model_path, metrics_path = train_two_step_peak_finding(cfg, data_type="")  # TODO: separate the trainings, read best model from config
+        model, best_model_path, metrics_path = train_two_step_peak_finding(cfg, data_type="")
         if cfg.training.model_evaluation:
             checkpoint = torch.load(best_model_path)#, weights=False)
             model.load_state_dict(checkpoint["state_dict"])

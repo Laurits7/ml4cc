@@ -2,6 +2,7 @@ import os
 from omegaconf import DictConfig
 import ml4cc.tools.evaluation.general as g
 import ml4cc.tools.evaluation.classification as c
+import ml4cc.tools.evaluation.regression as r
 from ml4cc.tools.visualization import losses as l
 from ml4cc.tools.visualization import classification as vc
 
@@ -96,3 +97,5 @@ def evaluate_classification(cfg: DictConfig, metrics_path: str):
     raw_results = g.collect_all_results(predictions_dir=prediction_dir, cfg=cfg)
 
     # Evaluate model performance.
+    # 2. Prepare results
+    results = r.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")

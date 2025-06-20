@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def calculate_resolution(truth: np.array, preds: np.array) -> np.array:
     """We calculate the resolution as IQR/median as stdev is more affected by outliers"""
     ratios = truth / preds
@@ -19,3 +20,7 @@ def collect_resolution_results(results: dict) -> dict:  # TODO: Unfinished
             "ratios": ratios,
         }
     return resolution_results
+
+
+def get_per_energy_metrics(results):
+    print(results)

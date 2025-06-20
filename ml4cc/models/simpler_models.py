@@ -3,6 +3,7 @@ import lightning as L
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.nn.utils.rnn import pack_padded_sequence
 # from hydra.utils import instantiate
 import importlib
 from omegaconf import OmegaConf
@@ -20,7 +21,8 @@ class DNNModel(nn.Module):
     def __init__(self, hyperparameters):
         super().__init__()
         self.fc1 = nn.Linear(
-            in_features=hyperparameters.n_features, out_features=hyperparameters.linear_layer_1.out_features
+            in_features=hyperparameters.n_features * 2,  # As the mask is concatenated
+            out_features=hyperparameters.linear_layer_1.out_features
         )
         self.fc2 = nn.Linear(
             in_features=hyperparameters.linear_layer_1.out_features,
@@ -35,7 +37,9 @@ class DNNModel(nn.Module):
             out_features=hyperparameters.output_layer.out_features,
         )
 
-    def forward(self, x):
+    def forward(self, x, mask):
+        mask = mask.float()
+        x = torch.concat([x, mask], axis=1)
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         x = torch.relu(self.fc3(x))
@@ -61,15 +65,15 @@ class CNNModel(nn.Module):
         self.flatten = nn.Flatten()
         self.fc1 = nn.Linear(
             # Compute flattened input size manually
-            in_features=16 * ((hyperparameters.num_features // 4) - 3),
+            in_features=6560,
             out_features=hyperparameters.linear_layer_1.out_features,
         )
         self.output = nn.Linear(
             in_features=hyperparameters.linear_layer_1.out_features,
-            out_features=hyperparameters.linear_layer_1.out_features,
+            out_features=hyperparameters.output_layer.out_features,
         )
 
-    def forward(self, x):
+    def forward(self, x, mask):
         # To have a shape of (batch_size, in_channels, sequence_length) ;
         # sequence length is the len of time series
         x = x.unsqueeze(1)
@@ -77,6 +81,15 @@ class CNNModel(nn.Module):
         x = self.pool1(x)
         x = torch.relu(self.conv2(x))
         x = self.pool2(x)
+        if mask is not None:
+            # Resize the mask to match x.shape[-1]
+            # Use interpolation to safely downsample the mask
+            mask = mask.unsqueeze(1).float()  # (B, 1, 1650)
+            mask = F.interpolate(mask, size=x.shape[-1], mode='nearest')  # (B, 1, new_len)
+
+            # Apply the mask
+            x = x * mask
+
         x = self.flatten(x)
         x = self.fc1(x)
         x = self.output(x)
@@ -102,8 +115,11 @@ class RNNModel(nn.Module):
             out_features=hyperparameters.output_layer.out_features,
         )
 
-    def forward(self, x):
+    def forward(self, x, mask):
         x = x.unsqueeze(-1)
+        lengths = mask.sum(dim=1)
+        # Pack the padded sequence
+        packed_x = pack_padded_sequence(x, lengths.cpu(), batch_first=True,enforce_sorted=False)
         ula, (h, _) = self.lstm(x)
         # Output and hidden state
         out = h[-1]  # Take the last output for prediction
@@ -150,8 +166,8 @@ class SimplerModelModule(L.LightningModule):
         return predicted_labels
 
     def forward(self, batch):
-        peaks, target = batch
-        predicted_labels = self.model(peaks).squeeze()
+        peaks, target, mask = batch  # In principle, we should include a mask to assist in the training
+        predicted_labels = self.model(peaks, mask).squeeze(-1)
         return predicted_labels, target
 
 

@@ -32,8 +32,9 @@ class RowGroupDataset(Dataset):
 class BaseIterableDataset(IterableDataset):
     """Base iterable dataset class to be used for different types of trainings."""
 
-    def __init__(self, dataset: Dataset, device: str):
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
         super().__init__()
+        self.cfg = cfg
         self.dataset = dataset
         self.row_groups = [row_group for row_group in self.dataset]
         self.num_rows = sum([rg.num_rows for rg in self.row_groups])
@@ -79,7 +80,7 @@ class BaseIterableDataset(IterableDataset):
             # return individual jets from the dataset
             for idx_wf in range(len(data)):
                 # features, targets
-                yield self._move_to_device(tensors[0][idx_wf]), self._move_to_device(tensors[1][idx_wf])
+                yield self._move_to_device(tensors[0][idx_wf]), self._move_to_device(tensors[1][idx_wf]), self._move_to_device(tensors[2][idx_wf])
 
 
 class BaseDataModule(LightningDataModule):
@@ -283,10 +284,12 @@ class BaseDataModule(LightningDataModule):
             self.train_dataset = self.iter_dataset(
                 dataset=self.train_dataset,
                 device=self.device,
+                cfg=self.cfg
             )
             self.val_dataset = self.iter_dataset(
                 dataset=self.val_dataset,
                 device=self.device,
+                cfg=self.cfg
             )
             self.train_loader = DataLoader(
                 self.train_dataset,
@@ -314,6 +317,7 @@ class BaseDataModule(LightningDataModule):
             self.test_dataset = self.iter_dataset(
                 dataset=self.test_dataset,
                 device=self.device,
+                cfg=self.cfg
             )
             self.test_loader = DataLoader(
                 self.test_dataset,
@@ -336,8 +340,8 @@ class BaseDataModule(LightningDataModule):
 
 
 class OneStepIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
     def build_tensors(self, data: ak.Array):
         """Builds the input and target tensors from the data.
@@ -353,14 +357,16 @@ class OneStepIterableDataset(BaseIterableDataset):
         """
         targets = np.array(data.target == 1, dtype=int)
         targets = np.sum(targets, axis=-1)
+        mask = ak.ones_like(targets)
         targets = torch.tensor(targets, dtype=torch.float32)
         waveform = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
-        return waveform, targets
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return waveform, targets, mask
 
 
 class OneStepWindowedIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
     def build_tensors(self, data: ak.Array):
         """Builds the input and target tensors from the data.
@@ -377,18 +383,20 @@ class OneStepWindowedIterableDataset(BaseIterableDataset):
         waveforms = ak.Array(data.waveform)
         padded_windows = ak.fill_none(ak.pad_none(waveforms, 15, axis=-1), 0) # All windows are padded to 15 size
         zero_window = [0]*15
-        none_padded_waveforms = ak.pad_none(padded_windows, 1650, axis=-2)  # Maximum number of peaks zero padded to 650
-        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)  # TODO: Check if 650 or 1650
+        none_padded_waveforms = ak.pad_none(padded_windows, self.cfg.dataset.max_peak_cands, axis=-2)
+        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)
 
         targets = np.sum(data.target == 1, axis=-1)
+        mask = ak.ones_like(targets)
         targets = torch.tensor(targets, dtype=torch.float32)
         waveform = torch.tensor(ak.Array(padded_waveforms), dtype=torch.float32)
-        return waveform, targets
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return waveform, targets, mask
 
 
 class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
     def build_tensors(self, data: ak.Array, padding_size: int = 1650):
         """This iterable dataset is to be used for the first step (peak finding). For this, we have a target for each
@@ -408,23 +416,25 @@ class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
         waveforms = ak.Array(data.waveform)
         padded_windows = ak.fill_none(ak.pad_none(waveforms, 15, axis=-1), 0) # All windows are padded to 15 size
         zero_window = [0]*15
-        none_padded_waveforms = ak.pad_none(padded_windows, padding_size, axis=-2)  # Maximum number of peaks zero padded to 1650
-        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)  # TODO: Check if 650 or 1650
+        none_padded_waveforms = ak.pad_none(padded_windows, self.cfg.dataset.max_peak_cands, axis=-2)
+        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)
         padded_waveforms = ak.Array(padded_waveforms)
 
         wf_targets = ak.Array(data.target)
         wf_targets = ak.values_astype((wf_targets == 1) + (wf_targets == 2), int)
-        padded_targets = ak.pad_none(wf_targets, padding_size, axis=-1)  # Maximum number of peaks zero padded to 1650
+        padded_targets = ak.pad_none(wf_targets, self.cfg.dataset.max_peak_cands, axis=-1)
         padded_targets = ak.fill_none(padded_targets, -1, axis=-1)  # Fill the padded targets with 0
 
         wf_windows = torch.tensor(padded_waveforms, dtype=torch.float32)
         target_windows = torch.tensor(padded_targets, dtype=torch.float32)
-        return wf_windows, target_windows
+        mask = ak.ones_like(padded_targets)
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return wf_windows, target_windows, mask
 
 
 class TwoStepClusterizationIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
     def build_tensors(self, data: ak.Array):
         """This iterable dataset is to be used for the second step (clusterization).
@@ -440,17 +450,19 @@ class TwoStepClusterizationIterableDataset(BaseIterableDataset):
                 The target values of the data
         """
         peaks = ak.Array(data.pred)
+        mask = ak.fill_none(ak.pad_none(ak.ones_like(data.target), self.cfg.dataset.max_peak_cands, clip=True), 0,)
         targets = ak.sum(data.target == 1, axis=-1)
         targets = torch.tensor(targets, dtype=torch.float32)
         peaks = torch.tensor(peaks, dtype=torch.float32)
-        return peaks, targets
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return peaks, targets, mask
 
 
 class TwoStepMinimalIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
-    def build_tensors(self, data: ak.Array, padding_size: int = 1650):
+    def build_tensors(self, data: ak.Array):
         """This iterable dataset is to be used for the minimal two-step approach,where we only target the primary
         peaks with the peak finding. In principle this allows us to skip clusterization step, as we can sum all the
         predicted peaks. This approach is used for evaluating how much clusterization adds on top of the peak finding.
@@ -469,18 +481,20 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
         waveforms = ak.Array(data.waveform)
         padded_windows = ak.fill_none(ak.pad_none(waveforms, 15, axis=-1), 0) # All windows are padded to 15 size
         zero_window = [0]*15
-        none_padded_waveforms = ak.pad_none(padded_windows, padding_size, axis=-2)  # Maximum number of peaks zero padded to 1650
-        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)  # TODO: Check if 650 or 1650
+        none_padded_waveforms = ak.pad_none(padded_windows, self.cfg.dataset.max_peak_cands, axis=-2)
+        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)
         padded_waveforms = ak.Array(padded_waveforms)
 
         wf_targets = ak.Array(data.target)
         wf_targets = ak.values_astype((wf_targets == 1), int)
-        padded_targets = ak.pad_none(wf_targets, padding_size, axis=-1)  # Maximum number of peaks zero padded to 1650
+        padded_targets = ak.pad_none(wf_targets, self.cfg.dataset.max_peak_cands, axis=-1)
         padded_targets = ak.fill_none(padded_targets, -1, axis=-1)  # Fill the padded targets with 0
 
         wf_windows = torch.tensor(padded_waveforms, dtype=torch.float32)
         target_windows = torch.tensor(padded_targets, dtype=torch.float32)
-        return wf_windows, target_windows
+        mask = ak.ones_like(padded_targets)
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return wf_windows, target_windows, mask
 
 
 class TwoStepMinimalDataModule(BaseDataModule):
