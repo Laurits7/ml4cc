@@ -11,7 +11,6 @@ import os
 import glob
 import hydra
 from hydra.utils import instantiate
-import shutil
 import torch
 import lightning as L
 import awkward as ak
@@ -24,6 +23,7 @@ from ml4cc.tools.data import dataloaders as dl
 from ml4cc.tools.evaluation import one_step as ose
 from ml4cc.tools.evaluation import two_step as tse
 from ml4cc.tools.evaluation import two_step_minimal as tsme
+from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor
 
 torch.set_float32_matmul_precision("medium")  # or 'high'
 
@@ -31,47 +31,58 @@ torch.set_float32_matmul_precision("medium")  # or 'high'
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def base_train(cfg: DictConfig, training_type: str):
+class FlatCSVLogger(CSVLogger):
+    def __init__(self, save_dir, name):
+        # No name or version
+        super().__init__(save_dir=save_dir, name=name, version="")
+
+    @property
+    def log_dir(self):
+        # Skip versioned subdirectory
+        return self.save_dir
+
+
+def base_train(cfg: DictConfig, models_dir: str):
     os.makedirs(cfg.training.log_dir, exist_ok=True)
-    models_dir = (
-        os.path.join(cfg.training.models_dir, training_type) if training_type != "one_step" else cfg.training.models_dir
-    )
     os.makedirs(models_dir, exist_ok=True)
-    checkpoint_callback = ModelCheckpoint(
+    checkpoint_callback_best = ModelCheckpoint(
         dirpath=models_dir,
         monitor="val_loss",
         mode="min",
-        save_top_k=-1,
-        save_weights_only=True,
-        filename="{epoch:02d}-{val_loss:.2f}",
+        save_top_k=1,
+        # save_weights=True,
+        filename="model_best",
     )
+    early_stop = EarlyStopping(monitor="val_loss", patience=6, mode="min")
+    lr_monitor = LearningRateMonitor(logging_interval="epoch")
     max_epochs = 2 if cfg.training.debug_run else cfg.training.trainer.max_epochs
     trainer = L.Trainer(
         max_epochs=max_epochs,
-        callbacks=[
-            TQDMProgressBar(refresh_rate=10),
-            checkpoint_callback,
-        ],
-        logger=CSVLogger(cfg.training.log_dir, name=training_type),
+        callbacks=[TQDMProgressBar(refresh_rate=10), checkpoint_callback_best, early_stop, lr_monitor],
+        logger=FlatCSVLogger(save_dir=cfg.training.log_dir, name="metrics"),
+        overfit_batches=1 if cfg.training.debug_run else 0,
+        num_sanity_val_steps=0,
     )
-    return trainer, checkpoint_callback
+    return trainer, checkpoint_callback_best
 
 
 def train_one_step(cfg: DictConfig, data_type: str):
     print(f"Training {cfg.models.one_step.model.name} for the one-step training.")
     model = instantiate(cfg.models.one_step.model)
-    datamodule = dl.OneStepDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
-    if not cfg.training.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="one_step")
+    # datamodule = dl.OneStepDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
+    models_dir = cfg.training.models_dir
+    datamodule = dl.OneStepWindowedDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
+    metrics_path = os.path.join(cfg.training.log_dir, "metrics.csv")
+    best_model_path = os.path.join(cfg.training.models_dir, "model_best.ckpt")
+    if not cfg.training.model_evaluation:
+        trainer, checkpoint_callback = base_train(cfg, models_dir=models_dir)
         trainer.fit(model=model, datamodule=datamodule)
-
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "best_model.ckpt")
-        shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
-        best_model_path = cfg.models.one_step.model.checkpoint.model
-        metrics_path = cfg.models.one_step.model.checkpoint.losses
+        if not os.path.exists(metrics_path) or not os.path.exists(best_model_path):
+            best_model_path = cfg.models.one_step.model.checkpoint.model
+            metrics_path = cfg.models.one_step.model.checkpoint.losses
     return model, best_model_path, metrics_path
 
 
@@ -79,17 +90,17 @@ def train_two_step_peak_finding(cfg: DictConfig, data_type: str):
     print(f"Training {cfg.models.two_step.peak_finding.model.name} for the two-step peak-finding training.")
     model = instantiate(cfg.models.two_step.peak_finding.model)
     datamodule = dl.TwoStepPeakFindingDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
-    if not cfg.training.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_pf")
+    metrics_path = os.path.join(cfg.training.log_dir, "metrics.csv")
+    best_model_path = os.path.join(cfg.training.models_dir, "model_best.ckpt")
+    if not cfg.training.model_evaluation:
+        trainer, checkpoint_callback = base_train(cfg, models_dir=cfg.training.models_dir)
         trainer.fit(model=model, datamodule=datamodule)
-
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "two_step_pf", "best_model.ckpt")
-        shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
-        best_model_path = cfg.models.two_step.peak_finding.model.checkpoint.model
-        metrics_path = cfg.models.two_step.peak_finding.model.checkpoint.losses
+        if not os.path.exists(metrics_path) or not os.path.exists(best_model_path):
+            best_model_path = cfg.models.two_step.peak_finding.model.checkpoint.model
+            metrics_path = cfg.models.two_step.peak_finding.model.checkpoint.losses
     return model, best_model_path, metrics_path
 
 
@@ -97,35 +108,36 @@ def train_two_step_clusterization(cfg: DictConfig, data_type: str):
     print(f"Training {cfg.models.two_step.clusterization.model.name} for the two-step clusterization training.")
     model = instantiate(cfg.models.two_step.clusterization.model)
     datamodule = dl.TwoStepClusterizationDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
-    if not cfg.training.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_cl")
+    metrics_path = os.path.join(cfg.training.log_dir, "metrics.csv")
+    best_model_path = os.path.join(cfg.training.models_dir, "model_best.ckpt")
+    if not cfg.training.model_evaluation:
+        trainer, checkpoint_callback = base_train(cfg, models_dir=cfg.training.models_dir)
         trainer.fit(model=model, datamodule=datamodule)
-
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "two_step_cl", "best_model.ckpt")
-        shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
-        best_model_path = cfg.models.two_step.clusterization.model.checkpoint.model
-        metrics_path = cfg.models.two_step.clusterization.model.checkpoint.losses
+        if not os.path.exists(metrics_path) or not os.path.exists(best_model_path):
+            best_model_path = cfg.models.two_step.clusterization.model.checkpoint.model
+            metrics_path = cfg.models.two_step.clusterization.model.checkpoint.losses
     return model, best_model_path, metrics_path
 
 
 def train_two_step_minimal(cfg: DictConfig, data_type: str):
     print(f"Training {cfg.models.two_step_minimal.model.name} for the two-step minimal training.")
     model = instantiate(cfg.models.two_step_minimal.model)
+    models_dir = cfg.training.models_dir
+    metrics_path = os.path.join(cfg.training.log_dir, "metrics.csv")
+    best_model_path = os.path.join(cfg.training.models_dir, "model_best.ckpt")
     datamodule = dl.TwoStepMinimalDataModule(cfg=cfg, data_type=data_type, debug_run=cfg.training.debug_run)
-    if not cfg.training.model_evaluation_only:
-        trainer, checkpoint_callback = base_train(cfg, training_type="two_step_minimal")
+    if not cfg.training.model_evaluation:
+        trainer, checkpoint_callback = base_train(cfg, models_dir=models_dir)
         trainer.fit(model=model, datamodule=datamodule)
-
         best_model_path = checkpoint_callback.best_model_path
-        new_best_model_path = os.path.join(cfg.training.models_dir, "best_model.ckpt")
-        shutil.copyfile(best_model_path, new_best_model_path)
         metrics_path = os.path.join(trainer.logger.log_dir, "metrics.csv")
     else:
-        best_model_path = cfg.models.two_step_minimal.model.checkpoint.model
-        metrics_path = cfg.models.two_step_minimal.model.checkpoint.losses
+        if not os.path.exists(metrics_path) or not os.path.exists(best_model_path):
+            best_model_path = cfg.models.two_step.peak_finding.model.checkpoint.model
+            metrics_path = cfg.models.two_step.peak_finding.model.checkpoint.losses
     return model, best_model_path, metrics_path
 
 
@@ -173,7 +185,7 @@ def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, 
     with torch.no_grad():
         for path in file_list[:num_files]:
             dataset = dl.RowGroupDataset(path)
-            iterable_dataset_ = iterable_dataset(dataset, device=DEVICE)
+            iterable_dataset_ = iterable_dataset(dataset, device=DEVICE, cfg=cfg)
             dataloader = DataLoader(
                 dataset=iterable_dataset_,
                 batch_size=cfg.training.dataloader.batch_size,
@@ -192,10 +204,11 @@ def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, 
 def evaluate_one_step(cfg: DictConfig, model, metrics_path: str) -> list:
     model.to(DEVICE)
     model.eval()
-    dir_ = "*" if cfg.evaluation.training.eval_all_always else "test"
+    dir_ = "*" if cfg.evaluation.training.eval_all else "test"
     wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", dir_, "*")
     file_list = glob.glob(wcp_path)
-    iterable_dataset = dl.OneStepIterableDataset
+    # iterable_dataset = dl.OneStepIterableDataset
+    iterable_dataset = dl.OneStepWindowedIterableDataset
 
     # Create prediction files
     create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="one_step")
@@ -248,33 +261,41 @@ def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list
 
 @hydra.main(config_path="../config", config_name="main.yaml", version_base=None)
 def main(cfg: DictConfig):
+    if cfg.training.debug_run:
+        print("Running in debug mode, only a few epochs and files will be processed.")
     training_type = cfg.training.type
     if training_type == "one_step":
         print("Training one-step model.")
         model, best_model_path, metrics_path = train_one_step(cfg, data_type="")
-        checkpoint = torch.load(best_model_path, weights_only=False)
-        model.load_state_dict(checkpoint["state_dict"])
-        model.eval()
-        evaluate_one_step(cfg, model, metrics_path)
-    elif training_type == "two_step":
+        if cfg.training.model_evaluation:
+            checkpoint = torch.load(best_model_path, weights=False)
+            model.load_state_dict(checkpoint["state_dict"])
+            model.eval()
+            evaluate_one_step(cfg, model, metrics_path)
+    elif training_type == "two_step_pf":
         model, best_model_path, metrics_path = train_two_step_peak_finding(cfg, data_type="")
-        checkpoint = torch.load(best_model_path, weights_only=False)
-        model.load_state_dict(checkpoint["state_dict"])
-        model.eval()
-        evaluate_two_step_peak_finding(cfg, model, metrics_path)
-
-        model, best_model_path, metrics_path = train_two_step_clusterization(cfg, data_type="")
-        evaluate_two_step_clusterization(cfg, model, metrics_path)
+        if cfg.training.model_evaluation:
+            checkpoint = torch.load(best_model_path)  # , weights=False)
+            model.load_state_dict(checkpoint["state_dict"])
+            model.eval()
+            evaluate_two_step_peak_finding(cfg, model, metrics_path)
+    elif training_type == "two_step_cl":
+        if cfg.training.model_evaluation:
+            model, best_model_path, metrics_path = train_two_step_clusterization(cfg, data_type="")
+            model.load_state_dict(checkpoint["state_dict"])
+            model.eval()
+            evaluate_two_step_clusterization(cfg, model, metrics_path)
     elif training_type == "two_step_minimal":
         model, best_model_path, metrics_path = train_two_step_minimal(cfg, data_type="")
-        checkpoint = torch.load(best_model_path, weights_only=False)
-        model.load_state_dict(checkpoint["state_dict"])
-        model.eval()
-        evaluate_two_step_minimal(cfg, model, metrics_path)
+        if cfg.training.model_evaluation:
+            checkpoint = torch.load(best_model_path, weights=False)
+            model.load_state_dict(checkpoint["state_dict"])
+            model.eval()
+            evaluate_two_step_minimal(cfg, model, metrics_path)
     else:
         raise ValueError(f"Unknown training type: {training_type}")
 
 
 if __name__ == "__main__":
-    mp.set_start_method("spawn")
+    mp.set_start_method("fork")
     main()  # pylint: disable=E1120

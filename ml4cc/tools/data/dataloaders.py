@@ -32,8 +32,9 @@ class RowGroupDataset(Dataset):
 class BaseIterableDataset(IterableDataset):
     """Base iterable dataset class to be used for different types of trainings."""
 
-    def __init__(self, dataset: Dataset, device: str):
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
         super().__init__()
+        self.cfg = cfg
         self.dataset = dataset
         self.row_groups = [row_group for row_group in self.dataset]
         self.num_rows = sum([rg.num_rows for rg in self.row_groups])
@@ -79,7 +80,9 @@ class BaseIterableDataset(IterableDataset):
             # return individual jets from the dataset
             for idx_wf in range(len(data)):
                 # features, targets
-                yield self._move_to_device(tensors[0][idx_wf]), self._move_to_device(tensors[1][idx_wf])
+                yield self._move_to_device(tensors[0][idx_wf]), self._move_to_device(
+                    tensors[1][idx_wf]
+                ), self._move_to_device(tensors[2][idx_wf])
 
 
 class BaseDataModule(LightningDataModule):
@@ -105,7 +108,9 @@ class BaseDataModule(LightningDataModule):
                 In case of FCC it is the different energies.
         """
         self.cfg = cfg
-        self.task = "two_step" if self.cfg.training.type == "two_step_minimal" else self.cfg.training.type
+        # self.task = "two_step" if self.cfg.training.type == "two_step_minimal" else self.cfg.training.type
+        self.task = "two_step"
+        self.debug_run = debug_run
         self.data_type = data_type
         self.iter_dataset = iter_dataset
         self.device = device
@@ -139,17 +144,15 @@ class BaseDataModule(LightningDataModule):
             if self.clusterization:
                 train_loc = os.path.join(
                     self.cfg.dataset.data_dir,
-                    "two_step",
-                    "predictions",
                     "two_step_pf",
+                    "predictions",
                     "train",
                     f"{self.data_type}_*.parquet",
                 )
                 val_loc = os.path.join(
                     self.cfg.dataset.data_dir,
-                    "two_step",
-                    "predictions",
                     "two_step_pf",
+                    "predictions",
                     "val",
                     f"{self.data_type}_*.parquet",
                 )
@@ -160,16 +163,15 @@ class BaseDataModule(LightningDataModule):
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
                 if self.clusterization:
-                    test_dir = os.path.join(self.cfg.dataset.data_dir, "two_step", "predictions", "two_step_pf", "test")
+                    test_dir = os.path.join(self.cfg.dataset.data_dir, "two_step_pf", "predictions", "test")
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
                 if self.clusterization:
                     test_dir = os.path.join(
                         self.cfg.dataset.data_dir,
-                        "two_step",
-                        "predictions",
                         "two_step_pf",
+                        "predictions",
                         "test",
                         f"{self.data_type}_*.parquet",
                     )
@@ -206,12 +208,8 @@ class BaseDataModule(LightningDataModule):
         if dataset_type == "train":
             if self.cfg.dataset.train_dataset == "combined":
                 if self.clusterization:
-                    train_loc = os.path.join(
-                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "train"
-                    )
-                    val_loc = os.path.join(
-                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "val"
-                    )
+                    train_loc = os.path.join(self.cfg.training.output_dir, "two_step_pf", "predictions", "train")
+                    val_loc = os.path.join(self.cfg.training.output_dir, "two_step_pf", "predictions", "val")
                 else:
                     train_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "train")
                     val_loc = os.path.join(self.cfg.dataset.data_dir, self.task, "val")
@@ -219,17 +217,15 @@ class BaseDataModule(LightningDataModule):
                 if self.clusterization:
                     train_loc = os.path.join(
                         self.cfg.training.output_dir,
-                        "two_step",
-                        "predictions",
                         "two_step_pf",
+                        "predictions",
                         "train",
                         f"{self.data_type}_*.parquet",
                     )
                     val_loc = os.path.join(
                         self.cfg.training.output_dir,
-                        "two_step",
-                        "predictions",
                         "two_step_pf",
+                        "predictions",
                         "val",
                         f"{self.data_type}_*.parquet",
                     )
@@ -247,18 +243,15 @@ class BaseDataModule(LightningDataModule):
         elif dataset_type == "test":
             if self.cfg.dataset.test_dataset == "combined":
                 if self.clusterization:
-                    test_dir = os.path.join(
-                        self.cfg.training.output_dir, "two_step", "predictions", "two_step_pf", "test"
-                    )
+                    test_dir = os.path.join(self.cfg.training.output_dir, "two_step_pf", "predictions", "test")
                 else:
                     test_dir = os.path.join(self.cfg.dataset.data_dir, self.task, "test")
             elif self.cfg.dataset.test_dataset == "separate":
                 if self.clusterization:
                     test_dir = os.path.join(
                         self.cfg.training.output_dir,
-                        "two_step",
-                        "predictions",
                         "two_step_pf",
+                        "predictions",
                         "test",
                         f"{self.data_type}_*.parquet",
                     )
@@ -274,6 +267,7 @@ class BaseDataModule(LightningDataModule):
             raise ValueError(f"Unexpected dataset type: {dataset_type}. Please use 'train' or 'test'.")
 
     def setup(self, stage: str) -> None:
+        batch_size = self.cfg.training.dataloader.batch_size if not self.debug_run else 1
         if stage == "fit":
             if self.cfg.dataset.name == "CEPC":
                 train_dir, val_dir = self.get_CEPC_dataset_path(dataset_type="train")
@@ -283,23 +277,18 @@ class BaseDataModule(LightningDataModule):
                 train_dir, val_dir = self.get_FCC_dataset_path(dataset_type="train")
                 self.train_dataset = RowGroupDataset(data_loc=train_dir)[: self.num_row_groups]
                 self.val_dataset = RowGroupDataset(data_loc=val_dir)[: self.num_row_groups]
-            self.train_dataset = self.iter_dataset(
-                dataset=self.train_dataset,
-                device=self.device,
-            )
-            self.val_dataset = self.iter_dataset(
-                dataset=self.val_dataset,
-                device=self.device,
-            )
+            self.train_dataset = self.iter_dataset(dataset=self.train_dataset, device=self.device, cfg=self.cfg)
+            self.val_dataset = self.iter_dataset(dataset=self.val_dataset, device=self.device, cfg=self.cfg)
             self.train_loader = DataLoader(
                 self.train_dataset,
-                batch_size=self.cfg.training.dataloader.batch_size,
+                batch_size=batch_size,
+                persistent_workers=True,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
                 # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
             self.val_loader = DataLoader(
                 self.val_dataset,
-                batch_size=self.cfg.training.dataloader.batch_size,
+                batch_size=batch_size,
                 persistent_workers=True,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
                 # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
@@ -312,13 +301,11 @@ class BaseDataModule(LightningDataModule):
             else:
                 raise ValueError(f"Unexpected dataset type: {self.cfg.dataset.name}. Please use 'CEPC' or 'FCC'.")
             self.test_dataset = RowGroupDataset(data_loc=test_dir)[: self.num_row_groups]
-            self.test_dataset = self.iter_dataset(
-                dataset=self.test_dataset,
-                device=self.device,
-            )
+            self.test_dataset = self.iter_dataset(dataset=self.test_dataset, device=self.device, cfg=self.cfg)
             self.test_loader = DataLoader(
                 self.test_dataset,
-                batch_size=self.cfg.training.dataloader.batch_size,
+                batch_size=batch_size,
+                persistent_workers=True,
                 num_workers=self.cfg.training.dataloader.num_dataloader_workers,
                 # prefetch_factor=self.cfg.training.dataloader.prefetch_factor,
             )
@@ -336,8 +323,8 @@ class BaseDataModule(LightningDataModule):
 
 
 class OneStepIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
     def build_tensors(self, data: ak.Array):
         """Builds the input and target tensors from the data.
@@ -353,16 +340,48 @@ class OneStepIterableDataset(BaseIterableDataset):
         """
         targets = np.array(data.target == 1, dtype=int)
         targets = np.sum(targets, axis=-1)
+        mask = ak.ones_like(targets)
         targets = torch.tensor(targets, dtype=torch.float32)
         waveform = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
-        return waveform, targets
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return waveform, targets, mask
+
+
+class OneStepWindowedIterableDataset(BaseIterableDataset):
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
+
+    def build_tensors(self, data: ak.Array):
+        """Builds the input and target tensors from the data.
+
+        Parameters:
+            data : ak.Array
+                The data used to build the tensors. The data is a chunk of the dataset loaded from a .parquet file.
+        Returns:
+            features : torch.Tensor
+                The input features of the data
+            targets : torch.Tensor
+                The target values of the data
+        """
+        waveforms = ak.Array(data.waveform)
+        padded_windows = ak.fill_none(ak.pad_none(waveforms, 15, axis=-1), 0)  # All windows are padded to 15 size
+        zero_window = [0] * 15
+        none_padded_waveforms = ak.pad_none(padded_windows, self.cfg.dataset.max_peak_cands, axis=-2)
+        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)
+
+        targets = np.sum(data.target == 1, axis=-1)
+        mask = ak.ones_like(targets)
+        targets = torch.tensor(targets, dtype=torch.float32)
+        waveform = torch.tensor(ak.Array(padded_waveforms), dtype=torch.float32)
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return waveform, targets, mask
 
 
 class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
-    def build_tensors(self, data: ak.Array):
+    def build_tensors(self, data: ak.Array, padding_size: int = 1650):
         """This iterable dataset is to be used for the first step (peak finding). For this, we have a target for each
         waveform window. When building the tensors, we flatten the waveforms, so we predict one value for each window.
         We target both primary and secondary peaks, setting a target of 1 for both of them, whereas background has a
@@ -378,21 +397,27 @@ class TwoStepPeakFindingIterableDataset(BaseIterableDataset):
                 The target values of the data
         """
         waveforms = ak.Array(data.waveform)
+        padded_windows = ak.fill_none(ak.pad_none(waveforms, 15, axis=-1), 0)  # All windows are padded to 15 size
+        zero_window = [0] * 15
+        none_padded_waveforms = ak.pad_none(padded_windows, self.cfg.dataset.max_peak_cands, axis=-2)
+        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)
+        padded_waveforms = ak.Array(padded_waveforms)
+
         wf_targets = ak.Array(data.target)
-        wf_windows: ak.Array = ak.flatten(waveforms, axis=-2)
-        window_size_mask = ak.num(wf_windows) == 15
-        wf_windows = wf_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
         wf_targets = ak.values_astype((wf_targets == 1) + (wf_targets == 2), int)
-        target_windows: ak.Array = ak.flatten(wf_targets, axis=-1)
-        target_windows = target_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
-        wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
-        target_windows = torch.tensor(target_windows, dtype=torch.float32)
-        return wf_windows.unsqueeze(-1), target_windows
+        padded_targets = ak.pad_none(wf_targets, self.cfg.dataset.max_peak_cands, axis=-1)
+        padded_targets = ak.fill_none(padded_targets, -1, axis=-1)  # Fill the padded targets with 0
+
+        wf_windows = torch.tensor(padded_waveforms, dtype=torch.float32)
+        target_windows = torch.tensor(padded_targets, dtype=torch.float32)
+        mask = ak.ones_like(padded_targets)
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return wf_windows, target_windows, mask
 
 
 class TwoStepClusterizationIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
     def build_tensors(self, data: ak.Array):
         """This iterable dataset is to be used for the second step (clusterization).
@@ -408,15 +433,20 @@ class TwoStepClusterizationIterableDataset(BaseIterableDataset):
                 The target values of the data
         """
         peaks = ak.Array(data.pred)
+        mask = ak.fill_none(
+            ak.pad_none(ak.ones_like(data.target), self.cfg.dataset.max_peak_cands, clip=True),
+            0,
+        )
         targets = ak.sum(data.target == 1, axis=-1)
         targets = torch.tensor(targets, dtype=torch.float32)
         peaks = torch.tensor(peaks, dtype=torch.float32)
-        return peaks.unsqueeze(-1), targets
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return peaks, targets, mask
 
 
 class TwoStepMinimalIterableDataset(BaseIterableDataset):
-    def __init__(self, dataset: Dataset, device: str):
-        super().__init__(dataset, device=device)
+    def __init__(self, dataset: Dataset, device: str, cfg: DictConfig):
+        super().__init__(dataset, device=device, cfg=cfg)
 
     def build_tensors(self, data: ak.Array):
         """This iterable dataset is to be used for the minimal two-step approach,where we only target the primary
@@ -435,16 +465,22 @@ class TwoStepMinimalIterableDataset(BaseIterableDataset):
                 The target values of the data
         """
         waveforms = ak.Array(data.waveform)
+        padded_windows = ak.fill_none(ak.pad_none(waveforms, 15, axis=-1), 0)  # All windows are padded to 15 size
+        zero_window = [0] * 15
+        none_padded_waveforms = ak.pad_none(padded_windows, self.cfg.dataset.max_peak_cands, axis=-2)
+        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)
+        padded_waveforms = ak.Array(padded_waveforms)
+
         wf_targets = ak.Array(data.target)
-        wf_windows: ak.Array = ak.flatten(waveforms, axis=-2)
-        window_size_mask = ak.num(wf_windows) == 15
-        wf_windows = wf_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
         wf_targets = ak.values_astype((wf_targets == 1), int)
-        target_windows: ak.Array = ak.flatten(wf_targets, axis=-1)
-        target_windows = target_windows[window_size_mask]  # pylint: disable=unsubscriptable-object
-        wf_windows = torch.tensor(wf_windows, dtype=torch.float32)
-        target_windows = torch.tensor(target_windows, dtype=torch.float32)
-        return wf_windows.unsqueeze(-1), target_windows
+        padded_targets = ak.pad_none(wf_targets, self.cfg.dataset.max_peak_cands, axis=-1)
+        padded_targets = ak.fill_none(padded_targets, -1, axis=-1)  # Fill the padded targets with 0
+
+        wf_windows = torch.tensor(padded_waveforms, dtype=torch.float32)
+        target_windows = torch.tensor(padded_targets, dtype=torch.float32)
+        mask = ak.ones_like(padded_targets)
+        mask = torch.tensor(mask, dtype=torch.bool)
+        return wf_windows, target_windows, mask
 
 
 class TwoStepMinimalDataModule(BaseDataModule):
@@ -499,4 +535,16 @@ class OneStepDataModule(BaseDataModule):
         "primary" peaks as targets.
         """
         iter_dataset = OneStepIterableDataset
+        super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)
+
+
+class OneStepWindowedDataModule(BaseDataModule):
+    def __init__(self, cfg: DictConfig, data_type: str, debug_run: bool = False, device: str = "cpu"):
+        """Data module for the one-step approach. This is a simplified version of the two-step approach, where we only
+        target the primary peaks with the peak finding. In principle this allows us to skip clusterization step, as we
+        can sum all the predicted peaks. This approach is used for evaluating how much clusterization adds on top of the
+        peak finding. The difference with the vanilla peak-finding in the vanilla two-step approach is, that we use only
+        "primary" peaks as targets.
+        """
+        iter_dataset = OneStepWindowedIterableDataset
         super().__init__(cfg=cfg, iter_dataset=iter_dataset, data_type=data_type, debug_run=debug_run, device=device)

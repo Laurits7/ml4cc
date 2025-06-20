@@ -2,5 +2,11 @@ _target_: ml4cc.models.LSTM.LSTMModule
 name: LSTM
 hyperparameters:
     input_dim: ${dataset.input_dim}
+    num_features: 15
     lstm_hidden_dim: 32
     num_lstm_layers: 1
+    regression: false
+
+checkpoint:
+    model: /home/laurits/tmp/testrun/two_step_pf/models/two_step_pf/model_best.ckpt
+    losses: /home/laurits/tmp/testrun/two_step_pf/logs/two_step_pf/metrics/version_0/metrics.csv

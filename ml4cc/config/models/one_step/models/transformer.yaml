@@ -1,14 +1,14 @@
 _target_: ml4cc.models.transformer.TransformerModule
 name: transformer
 hyperparameters:
-    input_dim: ${dataset.input_dim}
-    d_model: 512
+    input_dim: ${dataset.input_dim} # Actually this should be 1 or 15.
+    d_model: 128 #512
     num_heads: 8
-    num_layers: 3
-    hidden_dim: 2048
+    num_layers: 2 #3
+    hidden_dim: 248 #2048
     num_classes: 1
     max_len: ${dataset.input_dim}
-    lr: 0.001
+    lr: 1e-6
 checkpoint:
     model: null
     losses: null

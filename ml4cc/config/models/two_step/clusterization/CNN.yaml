@@ -1,4 +1,4 @@
-_target_: ml4cc.models.simpler_models.DNNModule
+_target_: ml4cc.models.simpler_models.CNNModule
 name: CNN
 hyperparameters:
     conv_layer_1:
@@ -10,12 +10,14 @@ hyperparameters:
     conv_layer_2:
         out_channels: 16
         kernel_size: 4
+    pool_layer_2:
+        kernel_size: 2
     linear_layer_1:
         out_features: 32
     output_layer:
         in_features: 32
         out_features: 1
-    num_features: ${dataset.input_dim} # TODO: Check if this is as done by Guang
+    num_features: ${dataset.max_peak_cands}
 optimizer:
     target: torch.optim.AdamW
     lr: 0.001

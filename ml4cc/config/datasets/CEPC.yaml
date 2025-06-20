@@ -1,5 +1,6 @@
 name: CEPC
 input_dim: 3000
+max_peak_cands: 1580
 branches: null
 tree_path: sim
 particle_types:
