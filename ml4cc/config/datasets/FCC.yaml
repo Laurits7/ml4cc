@@ -1,6 +1,6 @@
 name: FCC
 input_dim: 1200
-max_peak_cands: 645
+max_peak_cands: 700
 branches: null
 tree_path: sim
 particle_types:

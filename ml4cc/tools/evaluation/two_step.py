@@ -1,4 +1,5 @@
 import os
+import json
 from omegaconf import DictConfig
 import ml4cc.tools.evaluation.general as g
 import ml4cc.tools.evaluation.classification as c
@@ -52,6 +53,11 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     # 2. Prepare results
     results = c.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
 
+    # TODO: results to jnon
+    results_json_path = os.path.join(results_dir, "results.json")
+    with open(results_json_path, "wt") as out_file:
+        json.dump(results, out_file)
+
     # 3. Visualize results
     for pid in cfg.dataset.particle_types:
         pid_results = results[pid]
@@ -95,6 +101,11 @@ def evaluate_classification(cfg: DictConfig, metrics_path: str, results_dir: str
     # Evaluate model performance.
     # 2. Prepare results
     results = r.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
+
+    results_json_path = os.path.join(results_dir, "results.json")
+    with open(results_json_path, "wt") as out_file:
+        json.dump(results, out_file)
+
 
     for pid in cfg.dataset.particle_types:
         pid_results = results[pid]

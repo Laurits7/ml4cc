@@ -121,7 +121,7 @@ class RNNModel(nn.Module):
         lengths = mask.sum(dim=1)
         # Pack the padded sequence
         packed_x = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
-        ula, (h, _) = self.lstm(x)
+        ula, (h, _) = self.lstm(packed_x)
         # Output and hidden state
         out = h[-1]  # Take the last output for prediction
         x = self.fc1(out)

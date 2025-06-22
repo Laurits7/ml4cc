@@ -8,7 +8,7 @@ usage() {
   cat << EOF >&2
 Usage: bash enreg/scripts/$PROGNAME [-o] [-s] [-p] [-m] [-c]
   -o : This is used to specify the output directory.
-  -s : Training scenario [Options: one_step, two_step, two_step_minimal, all]
+  -s : Training scenario [Options: one_step, two_step_pf, two_step_cl, two_step_minimal, all]
   -d : Dataset to train on [Options: CEPC, FCC, all]
   -m : [OPTIONAL] Use this flag to run the training on 'manivald'. By default it is run on LUMI
   -c : [Only if two_step training scenario] Clusterization model to be used in training [Options: CNN, DNN, RNN, (DGCNN), all]
