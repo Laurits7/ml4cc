@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import awkward as ak
 from omegaconf import DictConfig
+from ml4cc.tools.visualization import losses as l
+
 
 
 def filter_losses(metrics_path: str):
@@ -49,3 +51,15 @@ def collect_all_results(predictions_dir: str, cfg: DictConfig) -> dict:
             pid_energy_true = ak.concatenate(pid_energy_true, axis=0)
             results[pid][energy] = {"true": pid_energy_true, "pred": pid_energy_pred}
     return results
+
+
+def evaluate_losses(
+    metrics_path: str, model_name: str = "", loss_name: str = "BCE", results_dir: str = ""
+):
+    # Visualize losses for the training.
+    losses = filter_losses(metrics_path=metrics_path)
+    losses_output_path = os.path.join(results_dir, "losses.png")
+
+    lp = l.LossesMultiPlot(loss_name=loss_name)
+    loss_results = {model_name: {"val_loss": losses}}
+    lp.plot_algorithms(results=loss_results, output_path=losses_output_path)

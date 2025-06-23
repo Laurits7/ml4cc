@@ -4,7 +4,6 @@ from omegaconf import DictConfig
 import ml4cc.tools.evaluation.general as g
 import ml4cc.tools.evaluation.classification as c
 import ml4cc.tools.evaluation.regression as r
-from ml4cc.tools.visualization import losses as l
 from ml4cc.tools.visualization import classification as vc
 from ml4cc.tools.visualization import regression as vr
 
@@ -15,29 +14,16 @@ def evaluate_training(cfg: DictConfig, metrics_path: str, stage: str):
         evaluate_peak_finding(cfg, metrics_path, results_dir=results_dir)
     elif stage == "classification":
         results_dir = os.path.join(cfg.training.results_dir, "two_step_cl")
-        evaluate_classification(cfg, metrics_path, results_dir=results_dir)
+        evaluate_clusterization(cfg, metrics_path, results_dir=results_dir)
     else:
         raise ValueError(f"Incorrect evaluation stage: {stage}")
-
-
-def evaluate_losses(
-    cfg: DictConfig, metrics_path: str, model_name: str = "", loss_name: str = "BCE", results_dir: str = ""
-):
-    # Visualize losses for the training.
-    losses = g.filter_losses(metrics_path=metrics_path)
-    losses_output_path = os.path.join(results_dir, "losses.png")
-
-    lp = l.LossesMultiPlot(loss_name=loss_name)
-    loss_results = {model_name: {"val_loss": losses}}
-    lp.plot_algorithms(results=loss_results, output_path=losses_output_path)
 
 
 def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     # 0. Visualize losses for the training.
     os.makedirs(results_dir, exist_ok=True)
 
-    evaluate_losses(
-        cfg,
+    g.evaluate_losses(
         metrics_path,
         model_name=cfg.models.two_step.peak_finding.model.name,
         loss_name="BCE",
@@ -53,7 +39,6 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     # 2. Prepare results
     results = c.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
 
-    # TODO: results to jnon
     results_json_path = os.path.join(results_dir, "results.json")
     with open(results_json_path, "wt") as out_file:
         json.dump(results, out_file)
@@ -88,9 +73,9 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     grp.plot_all_curves(results["global"], output_path=global_roc_output_path)
 
 
-def evaluate_classification(cfg: DictConfig, metrics_path: str, results_dir: str):
+def evaluate_clusterization(cfg: DictConfig, metrics_path: str, results_dir: str):
     # Visualize losses for the training.
-    evaluate_losses(cfg, metrics_path, model_name=cfg.models.clusterization.model_name, loss_name="MSE")
+    g.evaluate_losses(metrics_path, model_name=cfg.models.clusterization.model_name, loss_name="MSE")
 
     # 1. Collect results
     prediction_dir = os.path.join(cfg.training.predictions_dir, "two_step_cl")
@@ -100,7 +85,7 @@ def evaluate_classification(cfg: DictConfig, metrics_path: str, results_dir: str
 
     # Evaluate model performance.
     # 2. Prepare results
-    results = r.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
+    results = r.get_per_energy_metrics(results=raw_results)
 
     results_json_path = os.path.join(results_dir, "results.json")
     with open(results_json_path, "wt") as out_file:
