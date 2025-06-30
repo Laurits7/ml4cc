@@ -23,16 +23,16 @@ class LossesMultiPlot:
 
     def _add_line(self, results: dict, algorithm: str):
         """Adds a line to the plot."""
-        if self.plot_train_losses:
-            self.ax.plot(
-                results["train_loss"], ls="--", color=self.color_mapping.get(algorithm, None)
-            )  # Train loss always with dashed line
         self.ax.plot(
             results["val_loss"],
             label=self.name_mapping.get(algorithm, algorithm),
             ls="-",
             color=self.color_mapping.get(algorithm, None),
         )  # Val loss always with solid line
+        if self.plot_train_losses:
+            self.ax.plot(
+                results["train_loss"], ls="--", color=self.color_mapping.get(algorithm, self.ax.lines[-1].get_color())
+            )  # Train loss always with dashed line
         self.ax.legend()
 
     def plot_algorithms(self, results: dict, output_path: str = ""):
@@ -41,7 +41,7 @@ class LossesMultiPlot:
         self.ax.set_yscale("log")
         self.ax.set_ylabel(f"{self.loss_name} loss [a.u.]")
         self.ax.set_xlabel("epoch")
-        self.ax.set_xlim(0, self.x_max if self.x_max > 0 else 100)
+        self.ax.set_xlim(0, self.x_max if self.x_max > 0 else None)
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")
             plt.close("all")
@@ -82,7 +82,6 @@ class LossesStackPlot:
         for idx, (algorithm, result) in enumerate(results.items()):
             yticklabels.append(algorithm)
             self._add_line(result, algorithm=algorithm, y=idx)
-        self.ax.axvline(1, color="k", ls="--")
         self.ax.set_xlabel(f"{self.loss_name} loss [a.u.]")
         self.ax.set_yticks(np.arange(len(yticklabels)))
         self.ax.set_yticklabels(yticklabels)

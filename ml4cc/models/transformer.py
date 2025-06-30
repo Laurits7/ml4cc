@@ -23,7 +23,7 @@ class PositionalEncoding(nn.Module):
 class WaveFormTransformer(nn.Module):
     def __init__(
         self,
-        input_dim: int,  # 1024 or 3000
+        input_dim: int,  # 1 or 15
         d_model: int,  # 512
         num_heads: int,  # 16
         num_layers: int,  # 3

@@ -6,6 +6,7 @@ import ml4cc.tools.evaluation.classification as c
 import ml4cc.tools.evaluation.regression as r
 from ml4cc.tools.visualization import classification as vc
 from ml4cc.tools.visualization import regression as vr
+from ml4cc.tools.evaluation.general import NumpyEncoder
 
 
 def evaluate_training(cfg: DictConfig, metrics_path: str, stage: str):
@@ -41,7 +42,12 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
 
     results_json_path = os.path.join(results_dir, "results.json")
     with open(results_json_path, "wt") as out_file:
-        json.dump(results, out_file)
+        json.dump(
+            results,
+            out_file,
+            indent=4,
+            cls=NumpyEncoder
+        )
 
     # 3. Visualize results
     for pid in cfg.dataset.particle_types:
@@ -56,21 +62,22 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
 
     fr_output_path = os.path.join(results_dir, "fake_rate.png")
     frp = vc.EffFakePlot(eff_fake="fake_rate")
-    frp.plot_energies(results["global"], output_path=fr_output_path)
+    frp.plot_energies(results, output_path=fr_output_path)
 
     eff_output_path = os.path.join(results_dir, "efficiency.png")
     efp = vc.EffFakePlot(eff_fake="efficiency")
-    efp.plot_energies(results["global"], output_path=eff_output_path)
+    efp.plot_energies(results, output_path=eff_output_path)
 
     for pid in cfg.dataset.particle_types:
-        pid_results = results[pid]
+        energies = [key for key in results[pid].keys() if key != 'global']
+        pid_results = {key: results[pid][key] for key in energies}
         multiroc_output_path = os.path.join(results_dir, f"{pid}_multi_roc.png")
         mroc = vc.MultiROCPlot(pid=pid, n_energies=len(cfg.dataset.particle_energies), ncols=3)
         mroc.plot_curves(pid_results, output_path=multiroc_output_path)
 
     global_roc_output_path = os.path.join(results_dir, "global_roc.png")
     grp = vc.GlobalROCPlot()
-    grp.plot_all_curves(results["global"], output_path=global_roc_output_path)
+    grp.plot_all_curves(results, output_path=global_roc_output_path)
 
 
 def evaluate_clusterization(cfg: DictConfig, metrics_path: str, results_dir: str):
@@ -89,7 +96,12 @@ def evaluate_clusterization(cfg: DictConfig, metrics_path: str, results_dir: str
 
     results_json_path = os.path.join(results_dir, "results.json")
     with open(results_json_path, "wt") as out_file:
-        json.dump(results, out_file)
+        json.dump(
+            results,
+            out_file,
+            indent=4,
+            cls=NumpyEncoder
+        )
 
 
     for pid in cfg.dataset.particle_types:

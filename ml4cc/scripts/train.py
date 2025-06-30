@@ -159,10 +159,11 @@ def get_FCC_evaluation_scenarios(cfg: DictConfig) -> list:
 
 
 def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig, scenario: str):
+    additional_dirs = ["two_step_pf", "two_step_cl"]
     if not scenario == "two_step_cl":
         predictions_dir = cfg.training.predictions_dir
-        base_scenario = "two_step" if "two_step" in scenario else scenario
-        additional_dir_level = scenario if base_scenario == "two_step" else ""
+        base_scenario = "two_step" if "two_step" in scenario else "two_step"  # Temporary, as atm also one-step-windowed uses two-step ntuples
+        additional_dir_level = scenario if scenario in additional_dirs else ""
         base_dir = cfg.dataset.data_dir
         original_dir = os.path.join(base_dir, base_scenario)
         predictions_dir = os.path.join(predictions_dir, additional_dir_level)
@@ -205,13 +206,13 @@ def evaluate_one_step(cfg: DictConfig, model, metrics_path: str) -> list:
     model.to(DEVICE)
     model.eval()
     dir_ = "*" if cfg.evaluation.training.eval_all else "test"
-    wcp_path = os.path.join(cfg.dataset.data_dir, "one_step", dir_, "*")
+    wcp_path = os.path.join(cfg.dataset.data_dir, "two_step", dir_, "*")
     file_list = glob.glob(wcp_path)
     # iterable_dataset = dl.OneStepIterableDataset
     iterable_dataset = dl.OneStepWindowedIterableDataset
 
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="one_step")
+    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="one_step")
 
     # Evaluate training
     ose.evaluate_training(cfg=cfg, metrics_path=metrics_path)
@@ -224,7 +225,7 @@ def evaluate_two_step_peak_finding(cfg: DictConfig, model, metrics_path: str) ->
     file_list = glob.glob(wcp_path)
     iterable_dataset = dl.TwoStepPeakFindingIterableDataset
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_pf")
+    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_pf")
 
     # Evaluate training
     tse.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="peak_finding")
@@ -253,7 +254,7 @@ def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list
     iterable_dataset = dl.TwoStepMinimalIterableDataset
 
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_min")
+    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_minimal")
 
     # Evaluate training
     tsme.evaluate_training(cfg=cfg, metrics_path=metrics_path)
@@ -268,7 +269,7 @@ def main(cfg: DictConfig):
         print("Training one-step model.")
         model, best_model_path, metrics_path = train_one_step(cfg, data_type="")
         if cfg.training.model_evaluation:
-            checkpoint = torch.load(best_model_path, weights=False)
+            checkpoint = torch.load(best_model_path)#, weights=False)
             model.load_state_dict(checkpoint["state_dict"])
             model.eval()
             evaluate_one_step(cfg, model, metrics_path)
@@ -280,15 +281,16 @@ def main(cfg: DictConfig):
             model.eval()
             evaluate_two_step_peak_finding(cfg, model, metrics_path)
     elif training_type == "two_step_cl":
+        model, best_model_path, metrics_path = train_two_step_clusterization(cfg, data_type="")
         if cfg.training.model_evaluation:
-            model, best_model_path, metrics_path = train_two_step_clusterization(cfg, data_type="")
+            checkpoint = torch.load(best_model_path)#, weights=False)
             model.load_state_dict(checkpoint["state_dict"])
             model.eval()
             evaluate_two_step_clusterization(cfg, model, metrics_path)
     elif training_type == "two_step_minimal":
         model, best_model_path, metrics_path = train_two_step_minimal(cfg, data_type="")
         if cfg.training.model_evaluation:
-            checkpoint = torch.load(best_model_path, weights=False)
+            checkpoint = torch.load(best_model_path)#, weights=False)
             model.load_state_dict(checkpoint["state_dict"])
             model.eval()
             evaluate_two_step_minimal(cfg, model, metrics_path)

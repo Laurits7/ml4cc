@@ -113,26 +113,30 @@ class RegressionStackPlot:
         normalize_by_median: bool = True,
         color_mapping: dict = {},
         name_mapping: dict = {},
-        marker_mapping: dict = {},
     ):
         self.normalize_by_median = normalize_by_median
         self.color_mapping = color_mapping
         self.name_mapping = name_mapping
-        self.marker_mapping = marker_mapping
         self.fig, self.ax = plt.subplots(figsize=(8, 8))
+        self.pid_marker_mapping = {
+            "muon": "^",
+            "K": "s",
+            "pi": "o"
+        }
 
     def _add_line(self, results: dict, algorithm: str, y: int):
-        self.ax.errorbar(
-            results["median"],
-            y,
-            xerr=results["IQR"],
-            label=self.name_mapping.get(algorithm, algorithm),
-            color=self.color_mapping.get(algorithm, None),
-            marker=self.marker_mapping.get(algorithm, "o"),
-            ls="",
-            ms=10,
-            capsize=5,
-        )
+        for pid, pid_results in results.items():
+            self.ax.errorbar(
+                pid_results["median"],
+                y,
+                xerr=pid_results["resolution"],
+                label=self.name_mapping.get(algorithm, algorithm),
+                color=self.color_mapping.get(algorithm, None),
+                marker=self.pid_marker_mapping.get(pid, "o"),
+                ls="",
+                ms=10,
+                capsize=5,
+            )
 
     def plot_algorithms(self, results: dict, output_path: str = ""):
         yticklabels = []

@@ -22,13 +22,13 @@ class GlobalROCPlot:
 
     def plot_all_curves(self, results: dict, output_path: str = "") -> None:
         for pid, pid_result in results.items():
-            mean_auc = pid_result["global_auc"]["mean"]
-            std_auc = pid_result["global_auc"]["std"]
+            mean_auc = pid_result['global']["AUC"]["mean"]
+            std_auc = pid_result['global']["AUC"]["std"]
             label = f"{pid}: AUC={mean_auc:.3f} ± {std_auc:.3f}"
             self._add_curve(
-                pid_result["global_roc"]["FPRs"],
-                pid_result["global_roc"]["avg_TPRs"],
-                pid_result["global_roc"]["std_TPRs"],
+                pid_result['global']["ROC"]["FPRs"],
+                pid_result['global']["ROC"]["avg_TPRs"],
+                pid_result['global']["ROC"]["std_TPRs"],
                 label=label,
             )
 
@@ -129,6 +129,7 @@ class ClassifierScorePlot:
 
     def plot_all_comparisons(self, results: dict, output_path: str = "") -> None:
         for idx, (energy, result) in enumerate(results.items()):
+            if energy == "global": continue
             ax = self.axis.flatten()[idx]
             self._add_histogram(
                 ax=ax, preds=result["pred"], true=result["true"], energy=energy, print_legend=idx == self.ncols
@@ -159,19 +160,25 @@ class AUCStackPlot:
         self.name_mapping = name_mapping
         self.marker_mapping = marker_mapping
         self.fig, self.ax = plt.subplots(figsize=(8, 8))
+        self.pid_marker_mapping = {
+            "muon": "^",
+            "K": "s",
+            "pi": "o"
+        }
 
     def _add_line(self, results: dict, algorithm: str, y: int):
-        self.ax.errorbar(
-            np.mean(results["AUCs"]),
-            y,
-            xerr=np.std(results["AUCs"]),
-            label=self.name_mapping.get(algorithm, algorithm),
-            color=self.color_mapping.get(algorithm, None),
-            marker=self.marker_mapping.get(algorithm, "o"),
-            ls="",
-            ms=10,
-            capsize=5,
-        )
+        for pid, pid_results in results.items():
+            self.ax.errorbar(
+                pid_results["AUC"]["mean"],
+                y,
+                xerr=pid_results["AUC"]["std"],
+                label=self.name_mapping.get(algorithm, algorithm),
+                color=self.color_mapping.get(algorithm, None),
+                marker=self.pid_marker_mapping.get(pid, "o"),
+                ls="",
+                ms=10,
+                capsize=5,
+            )
 
     def plot_algorithms(self, results: dict, output_path: str = ""):
         yticklabels = []
@@ -199,8 +206,8 @@ class EnergyWiseAUC:
 
     def plot_energies(self, results: dict, output_path: str = ""):
         for pid in self.pids:
-            pid_results = results[pid]
-            energies = list(pid_results.keys())
+            energies = [key for key in results[pid].keys() if key != 'global']
+            pid_results = {key: results[pid][key] for key in energies}
             aucs = [value["AUC"] for value in pid_results.values()]
             self.ax.plot(energies, aucs, label=pid, ls="--", marker="o")
         self.ax.set_ylabel(f"AUC score")
@@ -232,7 +239,7 @@ class EffFakePlot:
 
     def plot_energies(self, results: dict, output_path: str = ""):
         for pid, pid_result in results.items():
-            self._add_line(pid_result, pid=pid)
+            self._add_line(pid_result['global'], pid=pid)
         self.ax.set_xlabel("Energy [GeV]")
         ylabel = "Efficiency" if self.eff_fake == "efficiency" else "Fake rate"
         self.ax.set_ylabel(ylabel)

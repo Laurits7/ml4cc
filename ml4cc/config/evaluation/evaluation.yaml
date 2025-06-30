@@ -2,4 +2,4 @@ dataset:
   num_evaluation_waveforms: 1000
   results_output_dir: ${training.results_dir}/data
 training:
-  eval_all_always: false
+  eval_all: ${training.eval_all}

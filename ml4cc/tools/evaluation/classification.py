@@ -107,7 +107,7 @@ def get_per_energy_metrics(
             all_results[pid][energy] = calculate_metrics(
                 truth=true, predictions=pred, at_fakerate=at_fakerate, at_efficiency=at_efficiency, signal=signal
             )
-    all_results["global"] = calculate_global_metrics(all_results)
+        all_results[pid]["global"] = calculate_global_metrics(all_results[pid])
     return all_results
 
 
@@ -160,7 +160,7 @@ def calculate_global_roc(all_rocs: list) -> dict:
     return global_roc
 
 
-def calculate_global_metrics(all_single_results: dict) -> dict:
+def calculate_global_metrics(pid_results: dict) -> dict:
     """
     Calculate global metrics across all energies.
 
@@ -172,21 +172,20 @@ def calculate_global_metrics(all_single_results: dict) -> dict:
     """
     print("Calculating global metrics...")
     all_results = {}
-    for pid, pid_results in all_single_results.items():
-        all_pred = []
-        all_true = []
-        all_rocs = []
-        all_aucs = []
-        all_results[pid] = {"FPRs": [], "TPRs": [], "energies": []}
-        for energy, energy_results in pid_results.items():
-            all_pred.extend(energy_results["pred"])
-            all_true.extend(energy_results["true"])
-            all_rocs.append({"FPR": energy_results["FPR"], "TPR": energy_results["TPR"]})
-            all_results[pid]["FPRs"].append(energy_results["FPR"][energy_results["eff_cut_idx"]])
-            all_results[pid]["TPRs"].append(energy_results["TPR"][energy_results["fr_cut_idx"]])
-            all_aucs.append(energy_results["AUC"])
-            all_results[pid]["energies"].append(energy)
-        all_results[pid]["avg_auc"] = roc_auc_score(all_true, all_pred)
-        all_results[pid]["global_auc"] = calculate_global_auc(all_aucs)
-        all_results[pid]["global_roc"] = calculate_global_roc(all_rocs)
+    all_pred = []
+    all_true = []
+    all_rocs = []
+    all_aucs = []
+    all_results = {"FPRs": [], "TPRs": [], "energies": []}
+    for energy, energy_results in pid_results.items():
+        all_pred.extend(energy_results["pred"])
+        all_true.extend(energy_results["true"])
+        all_rocs.append({"FPR": energy_results["FPR"], "TPR": energy_results["TPR"]})
+        all_results["FPRs"].append(energy_results["FPR"][energy_results["eff_cut_idx"]])
+        all_results["TPRs"].append(energy_results["TPR"][energy_results["fr_cut_idx"]])
+        all_aucs.append(energy_results["AUC"])
+        all_results["energies"].append(energy)
+    all_results["AUC_mean"] = roc_auc_score(all_true, all_pred)
+    all_results["AUC"] = calculate_global_auc(all_aucs)
+    all_results["ROC"] = calculate_global_roc(all_rocs)
     return all_results

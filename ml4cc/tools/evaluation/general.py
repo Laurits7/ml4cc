@@ -1,5 +1,6 @@
 import os
 import glob
+import json
 import warnings
 import numpy as np
 import pandas as pd
@@ -8,14 +9,43 @@ from omegaconf import DictConfig
 from ml4cc.tools.visualization import losses as l
 
 
+class NumpyEncoder(json.JSONEncoder):
+    """ Custom encoder for numpy data types """
+    def default(self, obj):
+        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
+                            np.int16, np.int32, np.int64, np.uint8,
+                            np.uint16, np.uint32, np.uint64)):
+            return int(obj)
+        elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
+            return float(obj)
+        elif isinstance(obj, (np.complex_, np.complex64, np.complex128)):
+            return {'real': obj.real, 'imag': obj.imag}
+        elif isinstance(obj, np.ndarray) or isinstance(obj, ak.Array):
+            return obj.tolist()
+        elif isinstance(obj, (np.bool_)):
+            return bool(obj)
+        elif isinstance(obj, (np.void)): 
+            return None
+        return json.JSONEncoder.default(self, obj)
+
 
 def filter_losses(metrics_path: str):
-    metrics_data = pd.read_csv(metrics_path)
-    val_loss = np.array(metrics_data["val_loss"])
-    # train_loss = np.array(metrics_data['train_loss'])
-    val_loss = val_loss[~np.isnan(val_loss)]
-    # train_loss = train_loss[~np.isnan(train_loss)]
-    return val_loss  # , train_loss
+    data = pd.read_csv(metrics_path)
+    last_epoch = int(max(data['epoch'].dropna()))
+    epoch_last_train_losses = []
+    all_epoch_train_losses = []
+    for idx_epoch in range(last_epoch + 1):
+        epoch_train_losses = np.array(data.loc[data['epoch'] == idx_epoch, 'train_loss'])
+        epoch_train_losses = epoch_train_losses[~np.isnan(epoch_train_losses)]
+        all_epoch_train_losses.append(epoch_train_losses)
+        epoch_last_train_losses.append(epoch_train_losses[-1])
+    val_losses = np.array(data['val_loss'])
+    val_losses = val_losses[~np.isnan(val_losses)]
+    return {
+        "val_loss": val_losses,
+        "train_loss": epoch_last_train_losses,
+        "all_train_losses": all_epoch_train_losses
+    }
 
 
 def collect_all_results(predictions_dir: str, cfg: DictConfig) -> dict:
@@ -60,6 +90,6 @@ def evaluate_losses(
     losses = filter_losses(metrics_path=metrics_path)
     losses_output_path = os.path.join(results_dir, "losses.png")
 
-    lp = l.LossesMultiPlot(loss_name=loss_name)
-    loss_results = {model_name: {"val_loss": losses}}
+    lp = l.LossesMultiPlot(loss_name=loss_name, plot_train_losses=True)
+    loss_results = {model_name: losses}
     lp.plot_algorithms(results=loss_results, output_path=losses_output_path)

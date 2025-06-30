@@ -1,10 +1,9 @@
 import os
 import json
-import awkward as ak
-from ml4cc.tools.data import io
-from ml4cc.tools.visualization import regression as r
+from ml4cc.tools.evaluation import regression as r
 from ml4cc.tools.evaluation import general as g
 from ml4cc.tools.visualization import regression as vr
+from ml4cc.tools.evaluation.general import NumpyEncoder
 
 
 def evaluate_training(cfg, metrics_path):
@@ -12,7 +11,7 @@ def evaluate_training(cfg, metrics_path):
     os.makedirs(results_dir, exist_ok=True)
     predictions_dir = cfg.training.predictions_dir
 
-    g.evaluate_losses(metrics_path, model_name=cfg.models.clusterization.model_name, loss_name="MSE")
+    g.evaluate_losses(metrics_path, model_name=cfg.models.one_step.model.name, loss_name="MSE")
 
     # 1. Collect results
     if not os.path.exists(predictions_dir):
@@ -21,11 +20,16 @@ def evaluate_training(cfg, metrics_path):
 
     # Evaluate model performance.
     # 2. Prepare results
-    results = r.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
+    results = r.get_per_energy_metrics(results=raw_results)
 
     results_json_path = os.path.join(results_dir, "results.json")
     with open(results_json_path, "wt") as out_file:
-        json.dump(results, out_file)
+        json.dump(
+            results,
+            out_file,
+            indent=4,
+            cls=NumpyEncoder
+        )
 
 
     for pid in cfg.dataset.particle_types:
