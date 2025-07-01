@@ -11,10 +11,10 @@ from ml4cc.tools.evaluation.general import NumpyEncoder
 
 def evaluate_training(cfg: DictConfig, metrics_path: str, stage: str):
     if stage == "peak_finding":
-        results_dir = os.path.join(cfg.training.results_dir, "two_step_pf")
+        results_dir = os.path.join(cfg.training.results_dir)
         evaluate_peak_finding(cfg, metrics_path, results_dir=results_dir)
-    elif stage == "classification":
-        results_dir = os.path.join(cfg.training.results_dir, "two_step_cl")
+    elif stage == "clusterization":
+        results_dir = os.path.join(cfg.training.results_dir)
         evaluate_clusterization(cfg, metrics_path, results_dir=results_dir)
     else:
         raise ValueError(f"Incorrect evaluation stage: {stage}")
@@ -81,11 +81,12 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
 
 
 def evaluate_clusterization(cfg: DictConfig, metrics_path: str, results_dir: str):
+    os.makedirs(results_dir, exist_ok=True)
     # Visualize losses for the training.
-    g.evaluate_losses(metrics_path, model_name=cfg.models.clusterization.model_name, loss_name="MSE")
+    g.evaluate_losses(metrics_path, model_name=cfg.models.two_step.clusterization.model.name, loss_name="MSE")
 
     # 1. Collect results
-    prediction_dir = os.path.join(cfg.training.predictions_dir, "two_step_cl")
+    prediction_dir = os.path.join(cfg.training.predictions_dir)
     if not os.path.exists(prediction_dir):
         raise FileNotFoundError(f"Prediction directory {prediction_dir} does not exist.")
     raw_results = g.collect_all_results(predictions_dir=prediction_dir, cfg=cfg)

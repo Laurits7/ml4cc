@@ -162,6 +162,7 @@ def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig
     additional_dirs = ["two_step_pf", "two_step_cl"]
     if not scenario == "two_step_cl":
         predictions_dir = cfg.training.predictions_dir
+        print("prediction_dir:", predictions_dir)
         base_scenario = "two_step" if "two_step" in scenario else "two_step"  # Temporary, as atm also one-step-windowed uses two-step ntuples
         additional_dir_level = scenario if scenario in additional_dirs else ""
         base_dir = cfg.dataset.data_dir
@@ -183,8 +184,11 @@ def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig
 
 def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, model, cfg: DictConfig, scenario: str):
     num_files = 2 if cfg.training.debug_run else None
+    print("Creating prediction files")
+    print("file list", file_list)
     with torch.no_grad():
         for path in file_list[:num_files]:
+            print("Processing path: ", path)
             dataset = dl.RowGroupDataset(path)
             iterable_dataset_ = iterable_dataset(dataset, device=DEVICE, cfg=cfg)
             dataloader = DataLoader(
@@ -234,8 +238,8 @@ def evaluate_two_step_peak_finding(cfg: DictConfig, model, metrics_path: str) ->
 def evaluate_two_step_clusterization(cfg: DictConfig, model, metrics_path: str) -> list:
     model.to(DEVICE)
     model.eval()
-    dir_ = "*" if cfg.evaluation.training.eval_all_always else "test"
-    wcp_path = os.path.join(cfg.training.output_dir, "two_step", "predictions", "two_step_pf", dir_, "*")
+    dir_ = "*" if cfg.evaluation.training.eval_all else "test"
+    wcp_path = os.path.join(cfg.training.output_dir, "two_step_pf", "predictions", dir_, "*")
     file_list = glob.glob(wcp_path)
     iterable_dataset = dl.TwoStepClusterizationIterableDataset
 

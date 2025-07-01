@@ -66,5 +66,7 @@ if [ "$TRAINING_SCENARIO" = "all" ] ; then
     echo Currently only single training scenario is supported
 fi
 
+# Apparently Hydra fails to set multilevel config in-place. This is just a workaround to load the correct config.
+sed -i "/clusterization@clusterization.model/ s/: .*/: $CLUSTERIZATION_MODEL/" ml4cc/config/models/two_step/two_step.yaml
 
-sbatch $TRAINING_SCRIPT python3 ml4cc/scripts/train.py training.output_dir=$BASE_DIR datasets@dataset=$TRAINING_DATASET environment@host=$HOST training.type=$TRAINING_SCENARIO training.model_evaluation=$EVALUATION # models.two_step.clusterization@clusterization.model=$CLUSTERIZATION_MODEL
+sbatch $TRAINING_SCRIPT python3 ml4cc/scripts/train.py training.output_dir=$BASE_DIR datasets@dataset=$TRAINING_DATASET environment@host=$HOST training.type=$TRAINING_SCENARIO training.model_evaluation=$EVALUATION

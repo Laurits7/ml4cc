@@ -88,7 +88,7 @@ class ClassifierScorePlot:
         n_energies: int = 7,  # 7 for FCC, 6 for CEPC
         figsize: tuple = (9, 9),
         x_min: float = 0,
-        x_max: float = 50,
+        x_max: float = 1,
         num_bins: int = 25,
         ncols: int = 3,
     ):
@@ -123,7 +123,8 @@ class ClassifierScorePlot:
             hatch="\\\\",
             label="Background",
         )
-        ax.set_title(f"{energy} GeV")
+        ax.set_title(f"{energy} GeV", fontsize=16)
+        ax.set_yscale('log')
         if print_legend:
             ax.legend(loc="upper right", fontsize=10)
 
@@ -137,8 +138,8 @@ class ClassifierScorePlot:
         for ax in self.axis.flat:
             ax.label_outer()
 
-        self.fig.text(0.04, 0.5, "Number of entries", va="center", rotation="vertical", fontsize=12)
-        self.fig.text(0.5, 0.02, r"$\mathcal{D}_p$", ha="center", fontsize=12)
+        self.fig.text(0.04, 0.5, "Number of entries", va="center", rotation="vertical", fontsize=16)
+        self.fig.text(0.5, 0.02, r"$\mathcal{D}_p$", ha="center", fontsize=16)
 
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")
