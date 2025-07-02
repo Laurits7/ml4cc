@@ -268,7 +268,7 @@ def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list
     iterable_dataset = dl.TwoStepMinimalIterableDataset
 
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_minimal")
+    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_minimal")
 
     # Evaluate training
     tsme.evaluate_training(cfg=cfg, metrics_path=metrics_path)

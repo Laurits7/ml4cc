@@ -29,7 +29,7 @@ class MultiResolutionPlot:
         bins = np.linspace(self.x_min, self.x_max, self.num_bins)
         hep.histplot(to_bh(ratios, bins=bins), ax=ax, density=True)
         ax.axvline(x=1, ls="--", color="k")
-        ax.set_title(f"{energy} GeV")
+        ax.set_title(f"{energy} GeV", fontsize=16)
         ax.text(0.95, 0.95, f"IQR={resolution:.2f}", ha="right", va="top", transform=ax.transAxes, fontsize=10)
 
     def plot_all_resolutions(self, results: dict, output_path: str = "") -> None:
@@ -39,8 +39,8 @@ class MultiResolutionPlot:
         for ax in self.axis.flat:
             ax.label_outer()
 
-        self.fig.text(0.04, 0.5, "Number of entries", va="center", rotation="vertical", fontsize=12)
-        self.fig.text(0.5, 0.02, r"$n_{cls}^{true}/n_{cls}^{pred}$", ha="center", fontsize=12)
+        self.fig.text(0.04, 0.5, "Number of entries", va="center", rotation="vertical", fontsize=16)
+        self.fig.text(0.5, 0.02, r"$n_{cls}^{true}/n_{cls}^{pred}$", ha="center", fontsize=16)
 
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")
@@ -82,7 +82,7 @@ class MultiComparisonPlot:
             hatch="\\\\",
             label="Reconstructed",
         )
-        ax.set_title(f"{energy} GeV")
+        ax.set_title(f"{energy} GeV", fontsize=16)
         if print_legend:
             ax.legend(loc="upper right", fontsize=10)
 
@@ -95,8 +95,8 @@ class MultiComparisonPlot:
         for ax in self.axis.flat:
             ax.label_outer()
 
-        self.fig.text(0.04, 0.5, "Number of entries", va="center", rotation="vertical", fontsize=12)
-        self.fig.text(0.5, 0.02, "Number of primary clusters", ha="center", fontsize=12)
+        self.fig.text(0.04, 0.5, "Number of entries", va="center", rotation="vertical", fontsize=16)
+        self.fig.text(0.5, 0.02, "Number of primary clusters", ha="center", fontsize=16)
 
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")

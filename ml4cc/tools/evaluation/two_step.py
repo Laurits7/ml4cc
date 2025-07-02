@@ -35,7 +35,7 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     prediction_dir = os.path.join(cfg.training.predictions_dir, "two_step_pf")
     if not os.path.exists(prediction_dir):
         raise FileNotFoundError(f"Prediction directory {prediction_dir} does not exist.")
-    raw_results = g.collect_all_results(predictions_dir=prediction_dir, cfg=cfg)
+    raw_results = g.collect_all_results(predictions_dir=prediction_dir, cfg=cfg, target="pad_targets")
 
     # 2. Prepare results
     results = c.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
