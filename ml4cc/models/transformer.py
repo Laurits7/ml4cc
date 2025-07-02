@@ -23,7 +23,7 @@ class PositionalEncoding(nn.Module):
 class WaveFormTransformer(nn.Module):
     def __init__(
         self,
-        input_dim: int,  # 1024 or 3000
+        input_dim: int,  # 1 or 15
         d_model: int,  # 512
         num_heads: int,  # 16
         num_layers: int,  # 3
@@ -37,20 +37,24 @@ class WaveFormTransformer(nn.Module):
         self.positional_encoding = PositionalEncoding(d_model, max_len)
 
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout
+            d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout, batch_first=True
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
         self.peak_finding_classifier = nn.Linear(d_model, num_classes)
         self.layernorm = nn.LayerNorm(d_model)
 
-    def forward(self, x):
+    def forward(self, x, mask):
         mean = x.mean(dim=1, keepdim=True)
         std = x.std(dim=1, keepdim=True)
+        if mask is not None:
+            # Make sure mask is bool and of shape [batch_size, seq_len]
+            # Transformer expects True where the token is **ignored**
+            mask = mask.bool()
         x = (x - mean) / (std + 1e-6)
         x = self.input_projection(x)
         x = self.positional_encoding(x)
-        x = self.transformer_encoder(x)
+        x = self.transformer_encoder(x, src_key_padding_mask=mask)
         # x = self.layernorm(x)
         # Shape: [batch_size, seq_length, num_classes]
         x = self.peak_finding_classifier(x)
@@ -107,10 +111,8 @@ class TransformerModule(L.LightningModule):
         return predicted_labels
 
     def forward(self, batch):
-        waveform, target = batch
-        predicted_labels = self.transformer(waveform).squeeze()
-        print("PREDICTED:", predicted_labels)
-        print("TARGET:", target)
+        waveform, target, mask = batch
+        predicted_labels = self.transformer(waveform, mask).squeeze()
         return predicted_labels, target
 
     def on_after_backward(self):

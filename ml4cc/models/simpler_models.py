@@ -66,7 +66,7 @@ class CNNModel(nn.Module):
         self.flatten = nn.Flatten()
         self.fc1 = nn.Linear(
             # Compute flattened input size manually
-            in_features=6560,
+            in_features=2752,
             out_features=hyperparameters.linear_layer_1.out_features,
         )
         self.output = nn.Linear(
@@ -121,7 +121,7 @@ class RNNModel(nn.Module):
         lengths = mask.sum(dim=1)
         # Pack the padded sequence
         packed_x = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
-        ula, (h, _) = self.lstm(x)
+        ula, (h, _) = self.lstm(packed_x)
         # Output and hidden state
         out = h[-1]  # Take the last output for prediction
         x = self.fc1(out)

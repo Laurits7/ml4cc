@@ -1,34 +1,39 @@
 import os
-import glob
-import awkward as ak
-from ml4cc.tools.data import io
-from ml4cc.tools.visualization import losses as l
-from ml4cc.tools.visualization import regression as r
+import json
+from ml4cc.tools.evaluation import regression as r
 from ml4cc.tools.evaluation import general as g
+from ml4cc.tools.visualization import regression as vr
+from ml4cc.tools.evaluation.general import NumpyEncoder
 
 
 def evaluate_training(cfg, metrics_path):
     results_dir = cfg.training.results_dir
     os.makedirs(results_dir, exist_ok=True)
     predictions_dir = cfg.training.predictions_dir
-    test_dir = os.path.join(predictions_dir, "test")
-    test_wcp = glob.glob(os.path.join(test_dir, "*"))
-    all_true = []
-    all_preds = []
-    for path in test_wcp:
-        data = ak.from_parquet(path)
-        all_true.append(ak.sum(data.target, axis=-1))
-        all_preds.append(data.pred)
 
-    truth = ak.flatten(all_true, axis=None)
-    preds = ak.flatten(all_preds, axis=None)
+    g.evaluate_losses(metrics_path, model_name=cfg.models.one_step.model.name, loss_name="MSE")
 
-    resolution_output_path = os.path.join(results_dir, "resolution.pdf")
-    r.evaluate_resolution(truth, preds, output_path=resolution_output_path)
+    # 1. Collect results
+    if not os.path.exists(predictions_dir):
+        raise FileNotFoundError(f"Prediction directory {predictions_dir} does not exist.")
+    raw_results = g.collect_all_results(predictions_dir=predictions_dir, cfg=cfg)
 
-    distribution_output_path = os.path.join(results_dir, "true_pred_distributions.pdf")
-    r.plot_true_pred_distributions(truth, preds, output_path=distribution_output_path)
+    # Evaluate model performance.
+    # 2. Prepare results
+    results = r.get_per_energy_metrics(results=raw_results)
 
-    val_loss = g.filter_losses(metrics_path)
-    losses_output_path = os.path.join(cfg.training.output_dir, "losses.png")
-    l.plot_loss_evolution(val_loss=val_loss, train_loss=None, output_path=losses_output_path)
+    results_json_path = os.path.join(results_dir, "results.json")
+    with open(results_json_path, "wt") as out_file:
+        json.dump(results, out_file, indent=4, cls=NumpyEncoder)
+
+    for pid in cfg.dataset.particle_types:
+        pid_results = results[pid]
+        multi_resolution_output_path = os.path.join(results_dir, f"{pid}_multi_resolution.png")
+        mrp = vr.MultiResolutionPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
+        mrp.plot_all_resolutions(pid_results, output_path=multi_resolution_output_path)
+
+    for pid in cfg.dataset.particle_types:
+        pid_results = results[pid]
+        multi_comparison_output_path = os.path.join(results_dir, f"{pid}_multi_comparison.png")
+        mcp = vr.MultiComparisonPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
+        mcp.plot_all_comparisons(pid_results, output_path=multi_comparison_output_path)

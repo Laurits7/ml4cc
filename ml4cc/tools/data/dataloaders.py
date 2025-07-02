@@ -338,8 +338,7 @@ class OneStepIterableDataset(BaseIterableDataset):
             targets : torch.Tensor
                 The target values of the data
         """
-        targets = np.array(data.target == 1, dtype=int)
-        targets = np.sum(targets, axis=-1)
+        targets = ak.sum(data.target == 1, axis=-1)
         mask = ak.ones_like(targets)
         targets = torch.tensor(targets, dtype=torch.float32)
         waveform = torch.tensor(ak.Array(data.waveform), dtype=torch.float32)
@@ -367,12 +366,14 @@ class OneStepWindowedIterableDataset(BaseIterableDataset):
         padded_windows = ak.fill_none(ak.pad_none(waveforms, 15, axis=-1), 0)  # All windows are padded to 15 size
         zero_window = [0] * 15
         none_padded_waveforms = ak.pad_none(padded_windows, self.cfg.dataset.max_peak_cands, axis=-2)
-        padded_waveforms = ak.fill_none(none_padded_waveforms, zero_window, axis=-2)
+        mask = ak.ones_like(data.target)
+        mask = ak.pad_none(mask, self.cfg.dataset.max_peak_cands, axis=-1)
+        mask = ak.fill_none(mask, 0, axis=-1)
+        padded_waveforms = ak.Array(ak.fill_none(none_padded_waveforms, zero_window, axis=-2))
 
         targets = np.sum(data.target == 1, axis=-1)
-        mask = ak.ones_like(targets)
         targets = torch.tensor(targets, dtype=torch.float32)
-        waveform = torch.tensor(ak.Array(padded_waveforms), dtype=torch.float32)
+        waveform = torch.tensor(padded_waveforms, dtype=torch.float32)
         mask = torch.tensor(mask, dtype=torch.bool)
         return waveform, targets, mask
 
