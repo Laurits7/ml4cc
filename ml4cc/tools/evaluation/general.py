@@ -10,42 +10,52 @@ from ml4cc.tools.visualization import losses as l
 
 
 class NumpyEncoder(json.JSONEncoder):
-    """ Custom encoder for numpy data types """
+    """Custom encoder for numpy data types"""
+
     def default(self, obj):
-        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
-                            np.int16, np.int32, np.int64, np.uint8,
-                            np.uint16, np.uint32, np.uint64)):
+        if isinstance(
+            obj,
+            (
+                np.int_,
+                np.intc,
+                np.intp,
+                np.int8,
+                np.int16,
+                np.int32,
+                np.int64,
+                np.uint8,
+                np.uint16,
+                np.uint32,
+                np.uint64,
+            ),
+        ):
             return int(obj)
         elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
             return float(obj)
         elif isinstance(obj, (np.complex_, np.complex64, np.complex128)):
-            return {'real': obj.real, 'imag': obj.imag}
+            return {"real": obj.real, "imag": obj.imag}
         elif isinstance(obj, np.ndarray) or isinstance(obj, ak.Array):
             return obj.tolist()
         elif isinstance(obj, (np.bool_)):
             return bool(obj)
-        elif isinstance(obj, (np.void)): 
+        elif isinstance(obj, (np.void)):
             return None
         return json.JSONEncoder.default(self, obj)
 
 
 def filter_losses(metrics_path: str):
     data = pd.read_csv(metrics_path)
-    last_epoch = int(max(data['epoch'].dropna()))
+    last_epoch = int(max(data["epoch"].dropna()))
     epoch_last_train_losses = []
     all_epoch_train_losses = []
     for idx_epoch in range(last_epoch + 1):
-        epoch_train_losses = np.array(data.loc[data['epoch'] == idx_epoch, 'train_loss'])
+        epoch_train_losses = np.array(data.loc[data["epoch"] == idx_epoch, "train_loss"])
         epoch_train_losses = epoch_train_losses[~np.isnan(epoch_train_losses)]
         all_epoch_train_losses.append(epoch_train_losses)
         epoch_last_train_losses.append(epoch_train_losses[-1])
-    val_losses = np.array(data['val_loss'])
+    val_losses = np.array(data["val_loss"])
     val_losses = val_losses[~np.isnan(val_losses)]
-    return {
-        "val_loss": val_losses,
-        "train_loss": epoch_last_train_losses,
-        "all_train_losses": all_epoch_train_losses
-    }
+    return {"val_loss": val_losses, "train_loss": epoch_last_train_losses, "all_train_losses": all_epoch_train_losses}
 
 
 def collect_all_results(predictions_dir: str, cfg: DictConfig, target: str = "target") -> dict:
@@ -83,9 +93,7 @@ def collect_all_results(predictions_dir: str, cfg: DictConfig, target: str = "ta
     return results
 
 
-def evaluate_losses(
-    metrics_path: str, model_name: str = "", loss_name: str = "BCE", results_dir: str = ""
-):
+def evaluate_losses(metrics_path: str, model_name: str = "", loss_name: str = "BCE", results_dir: str = ""):
     # Visualize losses for the training.
     losses = filter_losses(metrics_path=metrics_path)
     losses_output_path = os.path.join(results_dir, "losses.png")

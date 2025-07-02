@@ -163,7 +163,9 @@ def save_predictions(input_path: str, all_predictions: ak.Array, all_targets: ak
     if not scenario == "two_step_cl":
         predictions_dir = cfg.training.predictions_dir
         print("prediction_dir:", predictions_dir)
-        base_scenario = "two_step" if "two_step" in scenario else "two_step"  # Temporary, as atm also one-step-windowed uses two-step ntuples
+        base_scenario = (
+            "two_step" if "two_step" in scenario else "two_step"
+        )  # Temporary, as atm also one-step-windowed uses two-step ntuples
         additional_dir_level = scenario if scenario in additional_dirs else ""
         base_dir = cfg.dataset.data_dir
         original_dir = os.path.join(base_dir, base_scenario)
@@ -208,11 +210,7 @@ def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, 
             all_predictions = ak.concatenate(all_predictions, axis=0)
             all_targets = ak.concatenate(all_targets, axis=0)
             save_predictions(
-                input_path=path,
-                all_predictions=all_predictions,
-                all_targets=all_targets,
-                cfg=cfg,
-                scenario=scenario
+                input_path=path, all_predictions=all_predictions, all_targets=all_targets, cfg=cfg, scenario=scenario
             )
 
 
@@ -283,7 +281,7 @@ def main(cfg: DictConfig):
         print("Training one-step model.")
         model, best_model_path, metrics_path = train_one_step(cfg, data_type="")
         if cfg.training.model_evaluation:
-            checkpoint = torch.load(best_model_path)#, weights=False)
+            checkpoint = torch.load(best_model_path)  # , weights=False)
             model.load_state_dict(checkpoint["state_dict"])
             model.eval()
             evaluate_one_step(cfg, model, metrics_path)
@@ -297,14 +295,14 @@ def main(cfg: DictConfig):
     elif training_type == "two_step_cl":
         model, best_model_path, metrics_path = train_two_step_clusterization(cfg, data_type="")
         if cfg.training.model_evaluation:
-            checkpoint = torch.load(best_model_path)#, weights=False)
+            checkpoint = torch.load(best_model_path)  # , weights=False)
             model.load_state_dict(checkpoint["state_dict"])
             model.eval()
             evaluate_two_step_clusterization(cfg, model, metrics_path)
     elif training_type == "two_step_minimal":
         model, best_model_path, metrics_path = train_two_step_minimal(cfg, data_type="")
         if cfg.training.model_evaluation:
-            checkpoint = torch.load(best_model_path)#, weights=False)
+            checkpoint = torch.load(best_model_path)  # , weights=False)
             model.load_state_dict(checkpoint["state_dict"])
             model.eval()
             evaluate_two_step_minimal(cfg, model, metrics_path)

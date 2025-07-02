@@ -17,23 +17,20 @@ def prepare_regression_results(raw_results):
         all_true = []
         all_pred = []
         for energy, energy_results in pid_results.items():
-            pred = ak.sum(energy_results['pred'] > 0.5, axis=-1)
-            true = ak.sum(energy_results['true'] == 1, axis=-1)
+            pred = ak.sum(energy_results["pred"] > 0.5, axis=-1)
+            true = ak.sum(energy_results["true"] == 1, axis=-1)
             resolution, median, ratios = r.calculate_resolution(true, pred)
             res_results[pid][energy] = {
-                'pred': pred,
-                'true': true,
-                'ratios': ratios,
-                'resolution': resolution,
-                'median': median
+                "pred": pred,
+                "true": true,
+                "ratios": ratios,
+                "resolution": resolution,
+                "median": median,
             }
             all_true.append(true)
             all_pred.append(pred)
-        results_all = {
-            "true": ak.concatenate(all_true, axis=-1),
-            "pred": ak.concatenate(all_pred, axis=-1)
-        }
-        res_results[pid]['global'] = r.collect_resolution_results(results_all)
+        results_all = {"true": ak.concatenate(all_true, axis=-1), "pred": ak.concatenate(all_pred, axis=-1)}
+        res_results[pid]["global"] = r.collect_resolution_results(results_all)
     return res_results
 
 
@@ -58,12 +55,7 @@ def evaluate_training(cfg: DictConfig, metrics_path: str):
 
     results_json_path = os.path.join(results_dir, "results_pf.json")
     with open(results_json_path, "wt") as out_file:
-        json.dump(
-            cls_results,
-            out_file,
-            indent=4,
-            cls=NumpyEncoder
-        )
+        json.dump(cls_results, out_file, indent=4, cls=NumpyEncoder)
 
     # 3. Visualize results
     for pid in cfg.dataset.particle_types:
@@ -85,7 +77,7 @@ def evaluate_training(cfg: DictConfig, metrics_path: str):
     efp.plot_energies(cls_results, output_path=eff_output_path)
 
     for pid in cfg.dataset.particle_types:
-        energies = [key for key in cls_results[pid].keys() if key != 'global']
+        energies = [key for key in cls_results[pid].keys() if key != "global"]
         pid_results = {key: cls_results[pid][key] for key in energies}
         multiroc_output_path = os.path.join(results_dir, f"{pid}_multi_roc.png")
         mroc = vc.MultiROCPlot(pid=pid, n_energies=len(cfg.dataset.particle_energies), ncols=3)
@@ -95,17 +87,11 @@ def evaluate_training(cfg: DictConfig, metrics_path: str):
     grp = vc.GlobalROCPlot()
     grp.plot_all_curves(cls_results, output_path=global_roc_output_path)
 
-
     # Prepare raw results for regression
     res_results = prepare_regression_results(raw_results)
     results_json_path = os.path.join(results_dir, "results_cl.json")
     with open(results_json_path, "wt") as out_file:
-        json.dump(
-            res_results,
-            out_file,
-            indent=4,
-            cls=NumpyEncoder
-        )
+        json.dump(res_results, out_file, indent=4, cls=NumpyEncoder)
 
     for pid in cfg.dataset.particle_types:
         pid_results = res_results[pid]
@@ -126,14 +112,9 @@ def evaluate_training(cfg: DictConfig, metrics_path: str):
             "global": {
                 "resolution": res_results[pid]["global"]["resolution"],
                 "median": res_results[pid]["global"]["median"],
-                "AUC": cls_results[pid]["global"]["AUC"]
+                "AUC": cls_results[pid]["global"]["AUC"],
             }
         }
     all_results_json_path = os.path.join(results_dir, "results.json")
     with open(all_results_json_path, "wt") as out_file:
-        json.dump(
-            all_results,
-            out_file,
-            indent=4,
-            cls=NumpyEncoder
-        )
+        json.dump(all_results, out_file, indent=4, cls=NumpyEncoder)

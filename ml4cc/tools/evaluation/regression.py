@@ -19,7 +19,7 @@ def collect_resolution_results(results: dict) -> dict:
         "median": median,
         "ratios": ratios,
         "true": results["true"],
-        "pred": results["pred"]
+        "pred": results["pred"],
     }
     return resolution_results
 
@@ -35,9 +35,6 @@ def get_per_energy_metrics(results):
             all_pred.append(res["pred"])
             all_true.append(res["true"])
             per_energy_metrics[pid][energy] = collect_resolution_results(res)
-        results_all = {
-            "true": ak.concatenate(all_true, axis=-1),
-            "pred": ak.concatenate(all_pred, axis=-1)
-        }
-        per_energy_metrics[pid]['global'] = collect_resolution_results(results_all)
+        results_all = {"true": ak.concatenate(all_true, axis=-1), "pred": ak.concatenate(all_pred, axis=-1)}
+        per_energy_metrics[pid]["global"] = collect_resolution_results(results_all)
     return per_energy_metrics

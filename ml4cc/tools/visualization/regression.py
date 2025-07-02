@@ -118,11 +118,7 @@ class RegressionStackPlot:
         self.color_mapping = color_mapping
         self.name_mapping = name_mapping
         self.fig, self.ax = plt.subplots(figsize=(8, 8))
-        self.pid_marker_mapping = {
-            "muon": "^",
-            "K": "s",
-            "pi": "o"
-        }
+        self.pid_marker_mapping = {"muon": "^", "K": "s", "pi": "o"}
 
     def _add_line(self, results: dict, algorithm: str, y: int):
         for pid, pid_results in results.items():

@@ -37,7 +37,7 @@ class LSTMModule(L.LightningModule):
         self.lstm = LSTM(
             num_features=self.hyperparameters["num_features"],
             lstm_hidden_dim=self.hyperparameters["lstm_hidden_dim"],
-            num_lstm_layers=self.hyperparameters["num_lstm_layers"]
+            num_lstm_layers=self.hyperparameters["num_lstm_layers"],
         )
 
     def training_step(self, batch, batch_idx):

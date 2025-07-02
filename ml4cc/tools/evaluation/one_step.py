@@ -24,13 +24,7 @@ def evaluate_training(cfg, metrics_path):
 
     results_json_path = os.path.join(results_dir, "results.json")
     with open(results_json_path, "wt") as out_file:
-        json.dump(
-            results,
-            out_file,
-            indent=4,
-            cls=NumpyEncoder
-        )
-
+        json.dump(results, out_file, indent=4, cls=NumpyEncoder)
 
     for pid in cfg.dataset.particle_types:
         pid_results = results[pid]

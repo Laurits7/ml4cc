@@ -22,13 +22,13 @@ class GlobalROCPlot:
 
     def plot_all_curves(self, results: dict, output_path: str = "") -> None:
         for pid, pid_result in results.items():
-            mean_auc = pid_result['global']["AUC"]["mean"]
-            std_auc = pid_result['global']["AUC"]["std"]
+            mean_auc = pid_result["global"]["AUC"]["mean"]
+            std_auc = pid_result["global"]["AUC"]["std"]
             label = f"{pid}: AUC={mean_auc:.3f} ± {std_auc:.3f}"
             self._add_curve(
-                pid_result['global']["ROC"]["FPRs"],
-                pid_result['global']["ROC"]["avg_TPRs"],
-                pid_result['global']["ROC"]["std_TPRs"],
+                pid_result["global"]["ROC"]["FPRs"],
+                pid_result["global"]["ROC"]["avg_TPRs"],
+                pid_result["global"]["ROC"]["std_TPRs"],
                 label=label,
             )
 
@@ -128,13 +128,14 @@ class ClassifierScorePlot:
             label="Background",
         )
         ax.set_title(f"{energy} GeV", fontsize=16)
-        ax.set_yscale('log')
+        ax.set_yscale("log")
         if print_legend:
             ax.legend(loc="upper right", fontsize=10)
 
     def plot_all_comparisons(self, results: dict, output_path: str = "") -> None:
         for idx, (energy, result) in enumerate(results.items()):
-            if energy == "global": continue
+            if energy == "global":
+                continue
             ax = self.axis.flatten()[idx]
             self._add_histogram(
                 ax=ax, preds=result["pred"], true=result["true"], energy=energy, print_legend=idx == self.ncols
@@ -165,11 +166,7 @@ class AUCStackPlot:
         self.name_mapping = name_mapping
         self.marker_mapping = marker_mapping
         self.fig, self.ax = plt.subplots(figsize=(8, 8))
-        self.pid_marker_mapping = {
-            "muon": "^",
-            "K": "s",
-            "pi": "o"
-        }
+        self.pid_marker_mapping = {"muon": "^", "K": "s", "pi": "o"}
 
     def _add_line(self, results: dict, algorithm: str, y: int):
         for pid, pid_results in results.items():
@@ -210,7 +207,7 @@ class EnergyWiseAUC:
 
     def plot_energies(self, results: dict, output_path: str = ""):
         for pid in self.pids:
-            energies = np.array([key for key in results[pid].keys() if key != 'global'])
+            energies = np.array([key for key in results[pid].keys() if key != "global"])
             pid_results = {key: results[pid][key] for key in energies}
             aucs = np.array([value["AUC"] for value in pid_results.values()])
 
@@ -218,12 +215,12 @@ class EnergyWiseAUC:
             mean_auc = np.mean(aucs)
             lower_than_average_mask = aucs < mean_auc
             for value, loc in zip(aucs[lower_than_average_mask], energies[lower_than_average_mask]):
-                self.ax.vlines(loc, ymin=value, ymax=mean_auc, color='red', ls='--')
+                self.ax.vlines(loc, ymin=value, ymax=mean_auc, color="red", ls="--")
             for value, loc in zip(aucs[~lower_than_average_mask], energies[~lower_than_average_mask]):
-                self.ax.vlines(loc, ymin=mean_auc, ymax=value, color='green', ls='--')
-            self.ax.scatter(energies[lower_than_average_mask], aucs[lower_than_average_mask], color='red', s=80)
-            self.ax.scatter(energies[~lower_than_average_mask], aucs[~lower_than_average_mask], color='green', s=80)
-            self.ax.axhline(mean_auc, xmin=0, xmax=len(energies), ls='--', color='k')
+                self.ax.vlines(loc, ymin=mean_auc, ymax=value, color="green", ls="--")
+            self.ax.scatter(energies[lower_than_average_mask], aucs[lower_than_average_mask], color="red", s=80)
+            self.ax.scatter(energies[~lower_than_average_mask], aucs[~lower_than_average_mask], color="green", s=80)
+            self.ax.axhline(mean_auc, xmin=0, xmax=len(energies), ls="--", color="k")
         self.ax.set_ylabel(f"AUC score")
         self.ax.set_xlabel("Energy [GeV]")
         self.ax.set_xscale("log")
@@ -254,11 +251,11 @@ class EffFakePlot:
 
     def plot_energies(self, results: dict, output_path: str = ""):
         for pid, pid_result in results.items():
-            self._add_line(pid_result['global'], pid=pid)
+            self._add_line(pid_result["global"], pid=pid)
         self.ax.set_xlabel("Energy [GeV]")
         ylabel = "Efficiency" if self.eff_fake == "efficiency" else "Fake rate"
         self.ax.set_ylabel(ylabel)
-        self.ax.set_xscale('log')
+        self.ax.set_xscale("log")
         self.ax.legend()
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")

@@ -102,7 +102,7 @@ class LossesStackPlot2:
         name_mapping: dict = {},
         marker_mapping: dict = {},
     ):
-        """ Plots losses relative to one indicated by the 'baseline_algo'.
+        """Plots losses relative to one indicated by the 'baseline_algo'.
         If not set, uses the worst performing algo"""
         self.loss_name = loss_name
         self.color_mapping = color_mapping
@@ -113,9 +113,9 @@ class LossesStackPlot2:
 
     def _add_line(self, results: dict, algorithm: str, y: int, baseline_value):
         self.ax.errorbar(
-            results["mean"]/baseline_value,
+            results["mean"] / baseline_value,
             y,
-            xerr=results["err"]/baseline_value,
+            xerr=results["err"] / baseline_value,
             label=self.name_mapping.get(algorithm, algorithm),
             color=self.color_mapping.get(algorithm, None),
             marker=self.marker_mapping.get(algorithm, "o"),
@@ -131,13 +131,13 @@ class LossesStackPlot2:
             yticklabels.append(self.name_mapping.get(algorithm, algorithm))
             processed_results[algorithm] = {
                 "mean": np.mean(result["best_losses"]),
-                "err": np.std(result["best_losses"])
+                "err": np.std(result["best_losses"]),
             }
         max_mean = np.max([result["mean"] for _, result in processed_results.items()])
         baseline_value = processed_results[algorithm]["mean"] if self.baseline_algo is not None else max_mean
         for idx, (algorithm, result) in enumerate(processed_results.items()):
             self._add_line(result, algorithm=algorithm, y=idx, baseline_value=baseline_value)
-        self.ax.axvline(1, ls='--', color='k')
+        self.ax.axvline(1, ls="--", color="k")
         self.ax.set_xlabel(f"{self.loss_name} loss [a.u.]")
         self.ax.set_yticks(np.arange(len(yticklabels)))
         self.ax.set_yticklabels(yticklabels)

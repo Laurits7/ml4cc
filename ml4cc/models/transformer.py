@@ -37,8 +37,7 @@ class WaveFormTransformer(nn.Module):
         self.positional_encoding = PositionalEncoding(d_model, max_len)
 
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout,
-            batch_first=True
+            d_model=d_model, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout, batch_first=True
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 

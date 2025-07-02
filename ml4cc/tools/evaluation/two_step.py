@@ -42,12 +42,7 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
 
     results_json_path = os.path.join(results_dir, "results.json")
     with open(results_json_path, "wt") as out_file:
-        json.dump(
-            results,
-            out_file,
-            indent=4,
-            cls=NumpyEncoder
-        )
+        json.dump(results, out_file, indent=4, cls=NumpyEncoder)
 
     # 3. Visualize results
     for pid in cfg.dataset.particle_types:
@@ -69,7 +64,7 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     efp.plot_energies(results, output_path=eff_output_path)
 
     for pid in cfg.dataset.particle_types:
-        energies = [key for key in results[pid].keys() if key != 'global']
+        energies = [key for key in results[pid].keys() if key != "global"]
         pid_results = {key: results[pid][key] for key in energies}
         multiroc_output_path = os.path.join(results_dir, f"{pid}_multi_roc.png")
         mroc = vc.MultiROCPlot(pid=pid, n_energies=len(cfg.dataset.particle_energies), ncols=3)
@@ -97,13 +92,7 @@ def evaluate_clusterization(cfg: DictConfig, metrics_path: str, results_dir: str
 
     results_json_path = os.path.join(results_dir, "results.json")
     with open(results_json_path, "wt") as out_file:
-        json.dump(
-            results,
-            out_file,
-            indent=4,
-            cls=NumpyEncoder
-        )
-
+        json.dump(results, out_file, indent=4, cls=NumpyEncoder)
 
     for pid in cfg.dataset.particle_types:
         pid_results = results[pid]
