@@ -75,7 +75,7 @@ def collect_all_results(predictions_dir: str, cfg: DictConfig) -> dict:
             pid_energy_pred = []
             for pid_energy_file in pid_energy_files:
                 data = ak.from_parquet(pid_energy_file)
-                pid_energy_true.append(data["target"])
+                pid_energy_true.append(data["pad_targets"])
                 pid_energy_pred.append(data["pred"])
             pid_energy_pred = ak.concatenate(pid_energy_pred, axis=0)
             pid_energy_true = ak.concatenate(pid_energy_true, axis=0)

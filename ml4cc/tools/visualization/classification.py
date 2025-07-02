@@ -37,6 +37,8 @@ class GlobalROCPlot:
         self.ax.legend()
         self.ax.set_xlim(0, 1)
         self.ax.set_ylim(0, 1)
+        # self.ax.set_yscale("log")
+        # self.ax.set_xscale("log")
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")
             plt.close("all")
@@ -60,6 +62,8 @@ class MultiROCPlot:
         ax.plot(fpr, tpr)
         ax.text(0.1, 0.8, f"AUC={auc:.3f}", fontsize=10)
         ax.set_title(label, fontsize=14)
+        # ax.set_yscale("log")
+        # ax.set_xscale("log")
         if print_legend:
             ax.legend(loc="upper right", fontsize=10)
 
@@ -184,9 +188,8 @@ class AUCStackPlot:
     def plot_algorithms(self, results: dict, output_path: str = ""):
         yticklabels = []
         for idx, (algorithm, result) in enumerate(results.items()):
-            yticklabels.append(algorithm)
+            yticklabels.append(self.name_mapping.get(algorithm, algorithm))
             self._add_line(result, algorithm=algorithm, y=idx)
-        self.ax.axvline(1, color="k", ls="--")
         self.ax.set_xlabel(f"AUC score")
         self.ax.set_yticks(np.arange(len(yticklabels)))
         self.ax.set_yticklabels(yticklabels)
@@ -207,12 +210,23 @@ class EnergyWiseAUC:
 
     def plot_energies(self, results: dict, output_path: str = ""):
         for pid in self.pids:
-            energies = [key for key in results[pid].keys() if key != 'global']
+            energies = np.array([key for key in results[pid].keys() if key != 'global'])
             pid_results = {key: results[pid][key] for key in energies}
-            aucs = [value["AUC"] for value in pid_results.values()]
-            self.ax.plot(energies, aucs, label=pid, ls="--", marker="o")
+            aucs = np.array([value["AUC"] for value in pid_results.values()])
+
+            # Calculate mean AUC:
+            mean_auc = np.mean(aucs)
+            lower_than_average_mask = aucs < mean_auc
+            for value, loc in zip(aucs[lower_than_average_mask], energies[lower_than_average_mask]):
+                self.ax.vlines(loc, ymin=value, ymax=mean_auc, color='red', ls='--')
+            for value, loc in zip(aucs[~lower_than_average_mask], energies[~lower_than_average_mask]):
+                self.ax.vlines(loc, ymin=mean_auc, ymax=value, color='green', ls='--')
+            self.ax.scatter(energies[lower_than_average_mask], aucs[lower_than_average_mask], color='red', s=80)
+            self.ax.scatter(energies[~lower_than_average_mask], aucs[~lower_than_average_mask], color='green', s=80)
+            self.ax.axhline(mean_auc, xmin=0, xmax=len(energies), ls='--', color='k')
         self.ax.set_ylabel(f"AUC score")
         self.ax.set_xlabel("Energy [GeV]")
+        self.ax.set_xscale("log")
         self.fig.legend()
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")
@@ -244,6 +258,7 @@ class EffFakePlot:
         self.ax.set_xlabel("Energy [GeV]")
         ylabel = "Efficiency" if self.eff_fake == "efficiency" else "Fake rate"
         self.ax.set_ylabel(ylabel)
+        self.ax.set_xscale('log')
         self.ax.legend()
         if output_path != "":
             plt.savefig(output_path, bbox_inches="tight")

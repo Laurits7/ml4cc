@@ -158,7 +158,7 @@ def get_FCC_evaluation_scenarios(cfg: DictConfig) -> list:
     return evaluation_scenarios
 
 
-def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig, scenario: str):
+def save_predictions(input_path: str, all_predictions: ak.Array, all_targets: ak.Array, cfg: DictConfig, scenario: str):
     additional_dirs = ["two_step_pf", "two_step_cl"]
     if not scenario == "two_step_cl":
         predictions_dir = cfg.training.predictions_dir
@@ -177,6 +177,7 @@ def save_predictions(input_path: str, all_predictions: ak.Array, cfg: DictConfig
     input_data = ak.from_parquet(input_path)
     output_data = ak.copy(input_data)
     output_data["pred"] = ak.Array(all_predictions)  # pylint: disable=E1137
+    output_data["pad_targets"] = ak.Array(all_targets)  # pylint: disable=E1137
     print(f"Saving predictions to {output_path}")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     ak.to_parquet(output_data, output_path, row_group_size=cfg.preprocessing.row_group_size)
@@ -198,12 +199,21 @@ def create_prediction_files(file_list: list, iterable_dataset: IterableDataset, 
                 # prefetch_factor=cfg.training.dataloader.prefetch_factor,
             )
             all_predictions = []
+            all_targets = []
             for i, batch in enumerate(dataloader):
-                predictions, _ = model(batch)
+                predictions, targets = model(batch)
 
                 all_predictions.append(predictions.detach().cpu().numpy())
+                all_targets.append(targets.detach().cpu().numpy())
             all_predictions = ak.concatenate(all_predictions, axis=0)
-            save_predictions(input_path=path, all_predictions=all_predictions, cfg=cfg, scenario=scenario)
+            all_targets = ak.concatenate(all_targets, axis=0)
+            save_predictions(
+                input_path=path,
+                all_predictions=all_predictions,
+                all_targets=all_targets,
+                cfg=cfg,
+                scenario=scenario
+            )
 
 
 def evaluate_one_step(cfg: DictConfig, model, metrics_path: str) -> list:
@@ -229,7 +239,7 @@ def evaluate_two_step_peak_finding(cfg: DictConfig, model, metrics_path: str) ->
     file_list = glob.glob(wcp_path)
     iterable_dataset = dl.TwoStepPeakFindingIterableDataset
     # Create prediction files
-    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_pf")
+    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_pf")
 
     # Evaluate training
     tse.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="peak_finding")
@@ -258,7 +268,7 @@ def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list
     iterable_dataset = dl.TwoStepMinimalIterableDataset
 
     # Create prediction files
-    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_minimal")
+    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_minimal")
 
     # Evaluate training
     tsme.evaluate_training(cfg=cfg, metrics_path=metrics_path)

@@ -66,7 +66,7 @@ def calculate_metrics(
         dict: Contains ROC results and the chosen threshold.
     """
     print("Calculating metrics...")
-    roc_results = thresholded_roc_curve(truth, predictions)
+    roc_results = thresholded_roc_curve(truth, predictions, signal=signal)
     update = {}
     if at_fakerate != -1:
         fr_threshold, idx = get_metric_cut(roc_results, at_fakerate=at_fakerate)

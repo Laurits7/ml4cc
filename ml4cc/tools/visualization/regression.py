@@ -141,7 +141,7 @@ class RegressionStackPlot:
     def plot_algorithms(self, results: dict, output_path: str = ""):
         yticklabels = []
         for idx, (algorithm, result) in enumerate(results.items()):
-            yticklabels.append(algorithm)
+            yticklabels.append(self.name_mapping.get(algorithm, algorithm))
             self._add_line(result, algorithm=algorithm, y=idx)
         self.ax.axvline(1, color="k", ls="--")
         self.ax.set_xlabel("Response")

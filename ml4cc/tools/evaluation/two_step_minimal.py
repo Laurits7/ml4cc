@@ -48,13 +48,13 @@ def evaluate_training(cfg: DictConfig, metrics_path: str):
     )
 
     # 1. Collect results
-    prediction_dir = os.path.join(cfg.training.predictions_dir, "two_step_minimal")  # TODO: Change path to not include tsm in the end
+    prediction_dir = os.path.join(cfg.training.predictions_dir)
     if not os.path.exists(prediction_dir):
         raise FileNotFoundError(f"Prediction directory {prediction_dir} does not exist.")
     raw_results = g.collect_all_results(predictions_dir=prediction_dir, cfg=cfg)
 
     # 2. Prepare results
-    cls_results = c.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
+    cls_results = c.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="primary")
 
     results_json_path = os.path.join(results_dir, "results_pf.json")
     with open(results_json_path, "wt") as out_file:
