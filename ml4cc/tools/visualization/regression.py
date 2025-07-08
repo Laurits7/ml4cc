@@ -149,3 +149,53 @@ class RegressionStackPlot:
         else:
             plt.show()
             plt.close("all")
+
+
+class RelativeRegressionStackPlot:
+    # TODO: This is only for a single energy, should maybe also do for multiple energies?
+    # This is for comparing different algorithms, not needed for a training run
+    def __init__(
+        self,
+        normalize_by_median: bool = True,
+        color_mapping: dict = {},
+        name_mapping: dict = {},
+    ):
+        self.normalize_by_median = normalize_by_median
+        self.color_mapping = color_mapping
+        self.name_mapping = name_mapping
+        self.fig, self.ax = plt.subplots(figsize=(8, 8))
+        self.pid_marker_mapping = {"muon": "^", "K": "s", "pi": "o"}
+
+    def _add_line(self, results: dict, algorithm: str, y: int, baseline_value: float):
+        for pid, pid_results in results.items():
+            self.ax.errorbar(
+                pid_results["resolution"] / baseline_value,
+                y,
+                label=self.name_mapping.get(algorithm, algorithm),
+                color=self.color_mapping.get(algorithm, None),
+                marker=self.pid_marker_mapping.get(pid, "o"),
+                ls="",
+                ms=10,
+                capsize=5,
+            )
+
+    def plot_algorithms(self, results: dict, output_path: str = ""):
+        yticklabels = []
+        algo_maxs = []
+        for _, algo_results in results.items():
+            algo_maxs.append(np.max([result["resolution"] for _, result in algo_results.items()]))
+        max_mean = np.max(algo_maxs)
+        for idx, (algorithm, result) in enumerate(results.items()):
+            yticklabels.append(self.name_mapping.get(algorithm, algorithm))
+            self._add_line(result, algorithm=algorithm, y=idx, baseline_value=max_mean)
+
+        self.ax.axvline(1, color="k", ls="--")
+        self.ax.set_xlabel("Resolution improvement")
+        self.ax.set_yticks(np.arange(len(yticklabels)))
+        self.ax.set_yticklabels(yticklabels)
+        if output_path != "":
+            plt.savefig(output_path, bbox_inches="tight")
+            plt.close("all")
+        else:
+            plt.show()
+            plt.close("all")

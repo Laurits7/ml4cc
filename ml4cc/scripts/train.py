@@ -224,7 +224,7 @@ def evaluate_one_step(cfg: DictConfig, model, metrics_path: str) -> list:
     iterable_dataset = dl.OneStepWindowedIterableDataset
 
     # Create prediction files
-    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="one_step")
+    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="one_step")
 
     # Evaluate training
     ose.evaluate_training(cfg=cfg, metrics_path=metrics_path)
@@ -266,7 +266,7 @@ def evaluate_two_step_minimal(cfg: DictConfig, model, metrics_path: str) -> list
     iterable_dataset = dl.TwoStepMinimalIterableDataset
 
     # Create prediction files
-    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_minimal")
+    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_minimal")
 
     # Evaluate training
     tsme.evaluate_training(cfg=cfg, metrics_path=metrics_path)

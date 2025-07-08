@@ -45,12 +45,20 @@ class WaveFormTransformer(nn.Module):
         self.layernorm = nn.LayerNorm(d_model)
 
     def forward(self, x, mask):
-        mean = x.mean(dim=1, keepdim=True)
-        std = x.std(dim=1, keepdim=True)
         if mask is not None:
             # Make sure mask is bool and of shape [batch_size, seq_len]
             # Transformer expects True where the token is **ignored**
-            mask = mask.bool()
+            valid_mask = ~mask.bool()  # Now True = real data
+            valid_mask = valid_mask.unsqueeze(-1)  # [B, L, 1]
+            
+            # Zero out padding tokens before computing stats
+            x_masked = x * valid_mask
+            lengths = valid_mask.sum(dim=1, keepdim=True)  # [B, 1, 1]
+            mean = x_masked.sum(dim=1, keepdim=True) / (lengths + 1e-6)
+            std = torch.sqrt(((x_masked - mean) ** 2 * valid_mask).sum(dim=1, keepdim=True) / (lengths + 1e-6))
+        else:
+            mean = x.mean(dim=1, keepdim=True)
+            std = x.std(dim=1, keepdim=True)
         x = (x - mean) / (std + 1e-6)
         x = self.input_projection(x)
         x = self.positional_encoding(x)
@@ -77,6 +85,7 @@ class TransformerModule(L.LightningModule):
             hidden_dim=self.hyperparameters["hidden_dim"],
             num_classes=self.hyperparameters["num_classes"],
             max_len=self.hyperparameters["max_len"],
+            dropout=self.hyperparameters["dropout"]
         )
         self.lr = self.hyperparameters["lr"]
 

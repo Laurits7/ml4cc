@@ -138,7 +138,7 @@ class LossesStackPlot2:
         for idx, (algorithm, result) in enumerate(processed_results.items()):
             self._add_line(result, algorithm=algorithm, y=idx, baseline_value=baseline_value)
         self.ax.axvline(1, ls="--", color="k")
-        self.ax.set_xlabel(f"{self.loss_name} loss [a.u.]")
+        self.ax.set_xlabel(f"{self.loss_name} loss improvement")
         self.ax.set_yticks(np.arange(len(yticklabels)))
         self.ax.set_yticklabels(yticklabels)
         if output_path != "":
