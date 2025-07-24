@@ -1,5 +1,6 @@
 import os
 import json
+import awkward as ak
 from omegaconf import DictConfig
 import ml4cc.tools.evaluation.general as g
 import ml4cc.tools.evaluation.classification as c
@@ -18,6 +19,30 @@ def evaluate_training(cfg: DictConfig, metrics_path: str, stage: str):
         evaluate_clusterization(cfg, metrics_path, results_dir=results_dir)
     else:
         raise ValueError(f"Incorrect evaluation stage: {stage}")
+
+
+def prepare_regression_results(raw_results):
+    res_results = {}
+    for pid, pid_results in raw_results.items():
+        res_results[pid] = {}
+        all_true = []
+        all_pred = []
+        for energy, energy_results in pid_results.items():
+            pred = ak.sum(energy_results["pred"] > 0.5, axis=-1)
+            true = ak.sum(energy_results["true"] == 1, axis=-1)
+            resolution, median, ratios = r.calculate_resolution(true, pred)
+            res_results[pid][energy] = {
+                "pred": pred,
+                "true": true,
+                "ratios": ratios,
+                "resolution": resolution,
+                "median": median,
+            }
+            all_true.append(true)
+            all_pred.append(pred)
+        results_all = {"true": ak.concatenate(all_true, axis=-1), "pred": ak.concatenate(all_pred, axis=-1)}
+        res_results[pid]["global"] = r.collect_resolution_results(results_all)
+    return res_results
 
 
 def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
@@ -39,10 +64,6 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
 
     # 2. Prepare results
     results = c.get_per_energy_metrics(results=raw_results, at_fakerate=0.01, at_efficiency=0.9, signal="both")
-
-    results_json_path = os.path.join(results_dir, "results.json")
-    with open(results_json_path, "wt") as out_file:
-        json.dump(results, out_file, indent=4, cls=NumpyEncoder)
 
     # 3. Visualize results
     for pid in cfg.dataset.particle_types:
@@ -74,6 +95,32 @@ def evaluate_peak_finding(cfg: DictConfig, metrics_path: str, results_dir: str):
     grp = vc.GlobalROCPlot()
     grp.plot_all_curves(results, output_path=global_roc_output_path)
 
+    #  Evaluate also regression here. How many secondary peaks are there and what are the distributions - amount of secondary peaks among the detected peaks.
+    results_reg = prepare_regression_results(raw_results)
+
+    all_results = {}
+    # Merge regression and cls results:
+    for pid in results.keys():
+        all_results[pid] = {}
+        for energy in results[pid].keys():
+            all_results[pid][energy] = {**results[pid][energy], **results_reg[pid][energy]}
+
+    results_json_path = os.path.join(results_dir, "results.json")
+    with open(results_json_path, "wt") as out_file:
+        json.dump(all_results, out_file, indent=4, cls=NumpyEncoder)
+
+    for pid in cfg.dataset.particle_types:
+        pid_results = results_reg[pid]
+        multi_resolution_output_path = os.path.join(results_dir, f"PF_{pid}_multi_resolution.png")
+        mrp = vr.MultiResolutionPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
+        mrp.plot_all_resolutions(pid_results, output_path=multi_resolution_output_path)
+
+    for pid in cfg.dataset.particle_types:
+        pid_results = results_reg[pid]
+        multi_comparison_output_path = os.path.join(results_dir, f"PF_{pid}_multi_comparison.png")
+        mcp = vr.MultiComparisonPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
+        mcp.plot_all_comparisons(pid_results, output_path=multi_comparison_output_path)
+
 
 def evaluate_clusterization(cfg: DictConfig, metrics_path: str, results_dir: str):
     os.makedirs(results_dir, exist_ok=True)
@@ -96,12 +143,12 @@ def evaluate_clusterization(cfg: DictConfig, metrics_path: str, results_dir: str
 
     for pid in cfg.dataset.particle_types:
         pid_results = results[pid]
-        multi_resolution_output_path = os.path.join(results_dir, f"{pid}_multi_resolution.png")
+        multi_resolution_output_path = os.path.join(results_dir, f"CL_{pid}_multi_resolution.png")
         mrp = vr.MultiResolutionPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
         mrp.plot_all_resolutions(pid_results, output_path=multi_resolution_output_path)
 
     for pid in cfg.dataset.particle_types:
         pid_results = results[pid]
-        multi_comparison_output_path = os.path.join(results_dir, f"{pid}_multi_comparison.png")
+        multi_comparison_output_path = os.path.join(results_dir, f"CL_{pid}_multi_comparison.png")
         mcp = vr.MultiComparisonPlot(n_energies=len(cfg.dataset.particle_energies), ncols=3)
         mcp.plot_all_comparisons(pid_results, output_path=multi_comparison_output_path)

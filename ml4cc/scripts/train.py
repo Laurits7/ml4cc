@@ -237,7 +237,7 @@ def evaluate_two_step_peak_finding(cfg: DictConfig, model, metrics_path: str) ->
     file_list = glob.glob(wcp_path)
     iterable_dataset = dl.TwoStepPeakFindingIterableDataset
     # Create prediction files
-    create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_pf")
+    # create_prediction_files(file_list, iterable_dataset=iterable_dataset, model=model, cfg=cfg, scenario="two_step_pf")
 
     # Evaluate training
     tse.evaluate_training(cfg=cfg, metrics_path=metrics_path, stage="peak_finding")

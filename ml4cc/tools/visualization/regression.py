@@ -152,8 +152,6 @@ class RegressionStackPlot:
 
 
 class RelativeRegressionStackPlot:
-    # TODO: This is only for a single energy, should maybe also do for multiple energies?
-    # This is for comparing different algorithms, not needed for a training run
     def __init__(
         self,
         normalize_by_median: bool = True,
@@ -169,8 +167,9 @@ class RelativeRegressionStackPlot:
     def _add_line(self, results: dict, algorithm: str, y: int, baseline_value: float):
         for pid, pid_results in results.items():
             self.ax.errorbar(
-                pid_results["resolution"] / baseline_value,
+                pid_results["mean_resolution"] / baseline_value,
                 y,
+                xerr=pid_results["std_resolution"] / baseline_value,
                 label=self.name_mapping.get(algorithm, algorithm),
                 color=self.color_mapping.get(algorithm, None),
                 marker=self.pid_marker_mapping.get(pid, "o"),
@@ -183,7 +182,7 @@ class RelativeRegressionStackPlot:
         yticklabels = []
         algo_maxs = []
         for _, algo_results in results.items():
-            algo_maxs.append(np.max([result["resolution"] for _, result in algo_results.items()]))
+            algo_maxs.append([result["mean_resolution"] for _, result in algo_results.items()])
         max_mean = np.max(algo_maxs)
         for idx, (algorithm, result) in enumerate(results.items()):
             yticklabels.append(self.name_mapping.get(algorithm, algorithm))

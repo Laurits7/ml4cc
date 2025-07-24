@@ -25,7 +25,7 @@ class LSTM(torch.nn.Module):
         padded_out, _ = pad_packed_sequence(ula, batch_first=True)
         out = F.relu(self.fc3(padded_out))
         out = self.fc4(out)
-        out = torch.sigmoid(out)  # use torch.sigmoid, not F.sigmoid (deprecated)
+        out = torch.sigmoid(out)
         return out
 
 

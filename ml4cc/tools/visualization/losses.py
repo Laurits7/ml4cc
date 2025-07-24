@@ -50,6 +50,67 @@ class LossesMultiPlot:
             plt.close("all")
 
 
+class LossesMultiRunPlot:
+    def __init__(
+        self,
+        plot_train_losses: bool = False,
+        loss_name: str = "MSE",
+        color_mapping: dict = {},
+        name_mapping: dict = {},
+        x_max: int = -1,
+    ):
+        self.plot_train_losses = plot_train_losses
+        self.loss_name = loss_name
+        self.color_mapping = color_mapping
+        self.name_mapping = name_mapping
+        self.fig, self.ax = plt.subplots(figsize=(8, 8))
+        self.x_max = x_max
+
+    def _add_line(self, results: dict, algorithm: str):
+        """Adds a line to the plot."""
+        self.ax.plot(
+            results["mean_val_loss"],
+            label=self.name_mapping.get(algorithm, algorithm),
+            ls="-",
+            color=self.color_mapping.get(algorithm, None),
+        )  # Val loss always with solid line
+        self.ax.fill_between(
+            x=np.arange(len(results["mean_val_loss"])),
+            y1=results["mean_val_loss"] - results["std_val_loss"],
+            y2=results["mean_val_loss"] + results["std_val_loss"],
+            ls="-",
+            alpha=0.3,
+            color=self.color_mapping.get(algorithm, self.ax.lines[-1].get_color()),
+        )  # Val loss always with solid line
+        if self.plot_train_losses:
+            self.ax.plot(
+                results["mean_train_loss"], ls="--", color=self.color_mapping.get(algorithm, self.ax.lines[-1].get_color())
+            )  # Train loss always with dashed line
+            self.ax.fill_between(
+                x=np.arange(len(results["mean_train_loss"])),
+                y1=results["mean_train_loss"] - results["std_train_loss"],
+                y2=results["mean_train_loss"] + results["std_train_loss"],
+                ls="-",
+                alpha=0.3,
+                color=self.color_mapping.get(algorithm, self.ax.lines[-1].get_color()),
+            )  # Val loss always with solid line
+        self.ax.legend()
+
+    def plot_algorithms(self, results: dict, output_path: str = ""):
+        for idx, (algorithm, result) in enumerate(results.items()):
+            self._add_line(result, algorithm=algorithm)
+        self.ax.set_yscale("log")
+        self.ax.set_ylabel(f"{self.loss_name} loss [a.u.]")
+        self.ax.set_xlabel("epoch")
+        self.ax.set_xlim(0, self.x_max if self.x_max > 0 else None)
+        if output_path != "":
+            plt.savefig(output_path, bbox_inches="tight")
+            plt.close("all")
+        else:
+            plt.show()
+            plt.close("all")
+
+
 class LossesStackPlot:
     def __init__(
         self,

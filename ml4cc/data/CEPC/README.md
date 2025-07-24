@@ -81,3 +81,14 @@ peakFinding/test/signal_noise05_{0..49}  ---> train/ignal_noise05_{100..149}
 
 To make the input files a bit more ML training friendly, we will only the necessary data from the raw **.root** files
 and will work with **.parquet** files for the ML training:
+
+Preprocessing results in the following statistics:
+train: 1 312 500 (8750 per file; 150 files)
+test: 1 400 000 (10 000 per file; 140 files)
+val: 187 500 (1250 per file; 150 files)
+
+However, in order to have comparable results with FCC, the dataset size will be reduced to be:
+
+train: 1 312 500 (8750 per file; 150 files)
+test: 1 400 000 (10 000 per file; 140 files)
+val: 187 500 (1250 per file; 150 files)
